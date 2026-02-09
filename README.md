@@ -1,4 +1,4 @@
-OpenClaw接入AINFT保姆级使用教程
+# OpenClaw接入AINFT保姆级使用教程
 
 
 
@@ -12,17 +12,17 @@ OpenClaw，曾用名 ClawdBot 或 Moltbot，是一个开源的个人 AI 助理�
 
 
 
-第一步：申请api
+## 申请api key
 
 登录https://chat.ainft.com/
 在https://chat.ainft.com/key 页面中申请api_key
 
 ![ainft_key.png](imgs%2Fainft_key.png)
 
-安装前的准备
+## 安装前的准备
 在开始安装之前，需要确保你的系统满足以下基本要求。OpenClaw 主要为类 Unix 环境设计，但在 Windows 上可以通过 WSL2 (Windows Subsystem for Linux 2) 完美运行。
 
-系统要求:
+### 系统要求:
 Node.js: 版本需要大于或等于 22。Node.js 是 OpenClaw 的运行环境。
 操作系统: macOS, Linux, 或 Windows (通过 WSL2)。
 包管理器: 如果选择从源码编译，需要安装 pnpm。对于大多数用户，推荐使用 npm，它会随 Node.js 一起安装。
@@ -35,12 +35,12 @@ Node.js: 版本需要大于或等于 22。Node.js 是 OpenClaw 的运行环境�
 node -v
 ```
 
-开始安装 OpenClaw
+## 开始安装 OpenClaw
 OpenClaw 提供了多种安装方式，以适应不同用户的需求。对于初学者，官方推荐使用一键安装脚本，它能自动处理大部分环境配置。
 
 
 
-快速安装 (推荐)
+### 快速安装 (推荐)
 这是最简单、最快捷的安装方式。它会自动检测你的操作系统，安装必要的依赖，并将 openclaw 命令部署到全局。
 
 
@@ -50,3 +50,7 @@ OpenClaw 提供了多种安装方式，以适应不同用户的需求。对于�
 ```bash
 curl -fsSL https://openclaw.bot/install.sh | bash
 ```
+
+### 初始化与配置
+
+等待几分钟后会出现
