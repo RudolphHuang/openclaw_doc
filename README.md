@@ -143,3 +143,12 @@ nano ~/.openclaw/openclaw.json
     }
 }
 ```
+### 使用命令重启openclaw
+```bash
+openclaw gateway restart
+```
+
+### 尝试调用模型
+```bash
+openclaw agent --agent main --message "你好"
+```
