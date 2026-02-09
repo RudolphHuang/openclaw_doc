@@ -21,6 +21,7 @@ OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 
 - [编辑配置文件](#编辑配置文件)
 - [调试](#调试)
 - [访问与使用 OpenClaw](#访问与使用-openclaw)
+- [常用 CLI 命令](#常用-cli-命令)
 
 ---
 
@@ -51,6 +52,10 @@ OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 
 node -v
 ```
 
+![nodejs.png](imgs/nodejs.png)
+
+若版本低于 v22.0.0 或提示命令未找到，请先到 [Node.js 官网](https://nodejs.org/) 安装或升级。
+
 ---
 
 ## 开始安装 OpenClaw
@@ -70,15 +75,17 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 ---
 
 ## 初始化与配置
-- 安装完成后，下一步是进行初始化配置，让 OpenClaw 连接到AINFT的大语言模型 (LLM) 并设置好通信渠道。
-- onboard 向导是完成初始配置最简单的方式。它会一步步引导你设置所有必需的选项。
 
-执行安装命令后，等待几分钟后会出现 **Onboarding 向导**：
+- 安装完成后，下一步是进行初始化配置，让 OpenClaw 连接到 AINFT 的大语言模型（LLM）并设置通信渠道。
+- **Onboarding 向导**是完成初始配置最简单的方式，会一步步引导你设置所有必需选项。
+
+执行安装命令后，等待几分钟会出现 **Onboarding 向导**：
 
 ![onboarding0.png](imgs/onboarding0.png)
 
-> 如果中途关闭向导还可以使用命令，重新启动向导
-```
+若中途关闭了向导，可使用以下命令重新启动（并安装 daemon）：
+
+```bash
 openclaw onboard --install-daemon
 ```
 
@@ -126,11 +133,26 @@ nano ~/.openclaw/openclaw.json
         "apiKey": "{AINFT_API_KEY}",
         "api": "openai-completions",
         "models": [
-          { "id": "gpt-5-nano", "name": "gpt-5-nano" },
-          { "id": "gpt-5-mini", "name": "gpt-5-mini" },
-          { "id": "qwen/qwen3-30b-a3b", "name": "qwen/qwen3-30b-a3b" },
-          { "id": "gemini-3-flash-preview", "name": "gemini-3-flash-preview" },
-          { "id": "claude-haiku-4-5-20251001", "name": "claude-haiku-4-5-20251001" }
+          {
+            "id": "gpt-5-nano",
+            "name": "gpt-5-nano"
+          },
+          {
+            "id": "gpt-5-mini",
+            "name": "gpt-5-mini"
+          },
+          {
+            "id": "qwen/qwen3-30b-a3b",
+            "name": "qwen/qwen3-30b-a3b"
+          },
+          {
+            "id": "gemini-3-flash-preview",
+            "name": "gemini-3-flash-preview"
+          },
+          {
+            "id": "claude-haiku-4-5-20251001",
+            "name": "claude-haiku-4-5-20251001"
+          }
         ]
       }
     }
@@ -189,14 +211,14 @@ openclaw agent --agent main --message "你好"
 
 ### Gateway 常用命令
 
-| 操作            | 命令                           |
-|---------------|------------------------------|
-| 安装 Gateway    | `openclaw gateway install`   |
+| 操作            | 命令                                                  |
+|---------------|-----------------------------------------------------|
+| 安装 Gateway    | `openclaw gateway install`                          |
 | 启动 Gateway    | `openclaw gateway start`（若不可用可试 `openclaw gateway`） |
-| 停止 Gateway    | `openclaw gateway stop`      |
-| 重启 Gateway    | `openclaw gateway restart`   |
-| 卸载 Gateway    | `openclaw gateway uninstall` |
-| 查看 Gateway 状态 | `openclaw gateway status`    |
+| 停止 Gateway    | `openclaw gateway stop`                             |
+| 重启 Gateway    | `openclaw gateway restart`                          |
+| 卸载 Gateway    | `openclaw gateway uninstall`                        |
+| 查看 Gateway 状态 | `openclaw gateway status`                           |
 
 ### 检查运行状态
 
@@ -260,11 +282,37 @@ openclaw tui
 
 在 TUI 中可像在聊天软件中一样发消息，并支持以下**斜杠命令**：
 
-| 命令 | 说明 |
-| ------ | ------ |
-| `/status` | 查看当前状态 |
-| `/session <key>` | 切换到指定聊天会话 |
-| `/model <name>` | 为当前会话临时切换大语言模型 |
-| `/help` | 查看所有可用命令 |
+| 命令               | 说明             |
+|------------------|----------------|
+| `/status`        | 查看当前状态         |
+| `/session <key>` | 切换到指定聊天会话      |
+| `/model <name>`  | 为当前会话临时切换大语言模型 |
+| `/help`          | 查看所有可用命令       |
 
 TUI 提供专注、无干扰的交互体验，适合开发者和命令行用户。
+
+## 常用 CLI 命令
+
+除了图形化界面，openclaw 的命令行工具本身也极其强大，是自动化和高级配置的关键。
+以下是一些在日常使用中非常实用的命令：
+openclaw models status 用于检查已配置的 AI 模型及其 API Key 的状态，包括是否有效或即将过期。确保模型可用是助理正常工作的前提。
+
+```bash
+openclaw models status
+```
+
+openclaw channels list 可以列出所有已配置的通信渠道及其当前状态。
+
+```bash
+openclaw channels list
+```
+
+openclaw memory search 是一个非常强大的功能，它允许你对 AI 助理的长期记忆进行语义搜索。你之前告诉它的所有信息，都可以通过这个命令快速找回。
+```bash
+openclaw memory search "我上次提到的那个项目叫什么名字"
+```
+
+最后，如果想深入了解某个命令或功能的更多用法，openclaw docs 命令可以帮助你快速搜索官方文档。
+```
+openclaw docs "how to create a new skill"
+```
