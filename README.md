@@ -53,4 +53,9 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 
 ### 初始化与配置
 
-等待几分钟后会出现
+等待几分钟后会出现Onboarding向导
+![Onboarding.png](imgs%2FOnboarding.png)
+
+这个向导会询问你以下关键信息：
+AI 模型配置: 你需要提供一个大语言模型服务的 API Key，例如 Anthropic Claude、OpenAI GPT 或其他兼容的服务。
+我们这一步先选择Skip for now 跳过，后面再手动配置
