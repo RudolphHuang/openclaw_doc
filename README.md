@@ -93,6 +93,7 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 nano ~/.openclaw/openclaw.json
 ```
 ### 添加AINFT配置
+复制并粘贴以下配置内容，将{AINFT_API_KEY}替换为刚才申请的AINFT API Key：
 ```json
 {
   "models": {
@@ -100,7 +101,7 @@ nano ~/.openclaw/openclaw.json
     "providers": {
       "ainft": {
         "baseUrl": "https://chat.ainft.com/webapi/",
-        "apiKey": "sk-............",
+        "apiKey": "{AINFT_API_KEY}",
         "api": "openai-completions",
         "models": [
           {
