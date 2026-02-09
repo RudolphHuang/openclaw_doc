@@ -2,14 +2,11 @@
 
 ---
 
-OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 助理项目。它并非运行在云端的 SaaS 服务，而是部署在你自己的计算机上，让你能够
-**完全掌控自己的数据与工作流**。通过 WhatsApp、Telegram、飞书、钉钉等日常聊天工具，你就可以与它交互，让它处理邮件、管理日历、编写代码，甚至控制你的智能家居。
+OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 助理项目。它并非运行在云端的 SaaS 服务，而是部署在你自己的计算机上，让你能够**完全掌控自己的数据与工作流**。通过 WhatsApp、Telegram、飞书、钉钉等日常聊天工具，你就可以与它交互，让它处理邮件、管理日历、编写代码，甚至控制你的智能家居。
 
-这个项目的核心理念在于，它不仅仅是一个能对话的聊天机器人，更是一个能**实际执行任务的「行动者」**
-。它拥有持久的记忆，可以访问你的文件系统和网络，并通过不断学习和扩展「技能」（Skills）来变得更强大。
+这个项目的核心理念在于，它不仅仅是一个能对话的聊天机器人，更是一个能**实际执行任务的「行动者」**。它拥有持久的记忆，可以访问你的文件系统和网络，并通过不断学习和扩展「技能」（Skills）来变得更强大。
 
-由于其开源和可本地部署的特性，OpenClaw 吸引了大量开发者和技术爱好者，社区中涌现出许多富有创造力的用法，从自动化公司运营到管理个人生活，展现了个人
-AI 助理的巨大潜力。
+由于其开源和可本地部署的特性，OpenClaw 吸引了大量开发者和技术爱好者，社区中涌现出许多富有创造力的用法，从自动化公司运营到管理个人生活，展现了个人 AI 助理的巨大潜力。
 
 > 本篇教程将从零开始，详细介绍如何下载、安装并开始使用 OpenClaw，接入 AINFT 平台 API，帮助你搭建属于自己的第一个 AI 助理。
 
@@ -23,6 +20,7 @@ AI 助理的巨大潜力。
 - [初始化与配置](#初始化与配置)
 - [编辑配置文件](#编辑配置文件)
 - [调试](#调试)
+- [访问与使用 OpenClaw](#访问与使用-openclaw)
 
 ---
 
@@ -37,8 +35,7 @@ AI 助理的巨大潜力。
 
 ## 安装前的准备
 
-在开始安装之前，需要确保你的系统满足以下基本要求。OpenClaw 主要为类 Unix 环境设计，但在 Windows 上可以通过 **WSL2**（Windows
-Subsystem for Linux 2）完美运行。
+在开始安装之前，需要确保你的系统满足以下基本要求。OpenClaw 主要为类 Unix 环境设计，但在 Windows 上可以通过 **WSL2**（Windows Subsystem for Linux 2）完美运行。
 
 ### 系统要求
 
@@ -73,10 +70,17 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 ---
 
 ## 初始化与配置
+- 安装完成后，下一步是进行初始化配置，让 OpenClaw 连接到AINFT的大语言模型 (LLM) 并设置好通信渠道。
+- onboard 向导是完成初始配置最简单的方式。它会一步步引导你设置所有必需的选项。
 
-等待几分钟后会出现 **Onboarding 向导**：
+执行安装命令后，等待几分钟后会出现 **Onboarding 向导**：
 
 ![onboarding0.png](imgs/onboarding0.png)
+
+> 如果中途关闭向导还可以使用命令，重新启动向导
+```
+openclaw onboard --install-daemon
+```
 
 向导会询问你以下关键信息：
 
@@ -110,8 +114,7 @@ nano ~/.openclaw/openclaw.json
 
 ### 添加 AINFT 提供商配置
 
-将下面内容合并到配置文件的 **models** 相关区域，并把 `{AINFT_API_KEY}`
-替换为你在 [API Key 管理页面](https://chat.ainft.com/key) 申请的 Key：
+将下面内容合并到配置文件的 **models** 相关区域，并把 `{AINFT_API_KEY}` 替换为你在 [API Key 管理页面](https://chat.ainft.com/key) 申请的 Key：
 
 ```json
 {
@@ -189,7 +192,7 @@ openclaw agent --agent main --message "你好"
 | 操作            | 命令                           |
 |---------------|------------------------------|
 | 安装 Gateway    | `openclaw gateway install`   |
-| 启动 Gateway    | `openclaw gateway start`     |
+| 启动 Gateway    | `openclaw gateway start`（若不可用可试 `openclaw gateway`） |
 | 停止 Gateway    | `openclaw gateway stop`      |
 | 重启 Gateway    | `openclaw gateway restart`   |
 | 卸载 Gateway    | `openclaw gateway uninstall` |
@@ -210,44 +213,58 @@ openclaw agent --agent main --message "你好"
 openclaw doctor
 ```
 
-> openclaw status 命令则用于检查 Gateway 服务的实时运行状态，包括它是否在线、连接了哪些聊天会话等。
+根据输出中的提示逐项排查即可。`openclaw gateway status`（或 `openclaw status`）可查看 Gateway 是否在线、连接了哪些聊天会话等实时状态；若一切正常，会显示 Gateway 正在运行且相关服务状态良好。
 
-```bash
-openclaw status
-```
-
-如果一切正常，它会显示 Gateway 正在运行，并且相关的服务状态良好。
+---
 
 ## 访问与使用 OpenClaw
 
-配置完成后，你有多种方式可以与你的 AI 助理进行交互。最常用的两种是 Web 控制台和终端界面。
+配置完成后，可通过 **Web 控制台**或**终端界面（TUI）**与 AI 助理交互。
 
-### 使用 Web 控制台 (Dashboard)
+### 使用 Web 控制台（Dashboard）
 
-OpenClaw 自带一个功能强大的 Web 控制台，官方称之为 Dashboard 或 Control UI。这是管理和使用 OpenClaw 最直观的方式。
-通过以下命令可以一键在浏览器中打开 Dashboard（前提是已启动 Gateway）：
+OpenClaw 自带的 Web 控制台称为 **Dashboard**（或 Control UI），是管理和使用 OpenClaw 最直观的方式。
 
-```bash 
+先确保 Gateway 已启动，在终端执行：
+
+```bash
 openclaw dashboard
 ```
 
-该命令会自动生成一个包含临时登录令牌的 URL，并尝试用默认浏览器打开它。URL 通常是 http://127.0.0.1:18789 后面的端口号可能会因你的配置而异。
-![dashboard.png](imgs%2Fdashboard.png)
+命令会生成带临时登录令牌的 URL，并尝试用默认浏览器打开。地址一般为 `http://127.0.0.1:18789`，端口可能因配置而异。
 
-在 Dashboard 中，你可以：
-直接与 AI 助理聊天。
-管理和配置各种“技能”（Skills）。
-设置定时任务（Cron Jobs），让助理在特定时间自动执行操作。
-查看实时日志，方便排查问题。
-编辑 OpenClaw 的所有配置文件。
-安装和更新 OpenClaw 自身。
+![dashboard.png](imgs/dashboard.png)
 
-### 使用终端界面 (TUI)
-对于更喜欢在终端中工作的用户，OpenClaw 提供了一个纯文本的终端用户界面（TUI）。
+在 Dashboard 中你可以：
 
-首先确保 Gateway 服务正在运行，然后执行：
+- 直接与 AI 助理聊天
+- 管理和配置各种「技能」（Skills）
+- 设置定时任务（Cron Jobs），让助理在指定时间自动执行操作
+- 查看实时日志，便于排查问题
+- 编辑 OpenClaw 的配置文件
+- 安装和更新 OpenClaw 自身
+
+### 使用终端界面（TUI）
+
+习惯在终端操作的用户可使用 OpenClaw 的纯文本终端界面 **TUI**。
+
+确保 Gateway 已运行后执行：
+
 ```bash
 openclaw tui
 ```
-这会启动一个全屏的终端应用，界面清晰地分为聊天记录区、状态栏和输入框。
-![tui.png](imgs%2Ftui.png)
+
+会启动全屏终端应用，界面分为聊天记录区、状态栏和输入框。
+
+![tui.png](imgs/tui.png)
+
+在 TUI 中可像在聊天软件中一样发消息，并支持以下**斜杠命令**：
+
+| 命令 | 说明 |
+| ------ | ------ |
+| `/status` | 查看当前状态 |
+| `/session <key>` | 切换到指定聊天会话 |
+| `/model <name>` | 为当前会话临时切换大语言模型 |
+| `/help` | 查看所有可用命令 |
+
+TUI 提供专注、无干扰的交互体验，适合开发者和命令行用户。
