@@ -92,8 +92,8 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 # vim ~/.openclaw/openclaw.json
 nano ~/.openclaw/openclaw.json
 ```
-### 添加AINFT配置
-复制并粘贴以下配置内容，将{AINFT_API_KEY}替换为刚才申请的AINFT API Key：
+### 添加AINFT 提供商配置
+复制并粘贴以下配置内容models相关区域，将{AINFT_API_KEY}替换为刚才申请的AINFT API Key：
 ```json
 {
   "models": {
@@ -127,4 +127,19 @@ nano ~/.openclaw/openclaw.json
         ]
       }
     }
+  }
+}
+```
+### 设置gpt-5-nano为默认模型
+在 openclaw.json 文件的 agents一节中参考如下设置ainft/gpt-5-nano为当前默认模型
+```json
+{
+    "agents": {
+        "defaults": {
+            "model": {
+                "primary": "ainft/gpt-5-nano"
+            }
+        }
+    }
+}
 ```

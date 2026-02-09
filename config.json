@@ -1,0 +1,34 @@
+{
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "ainft": {
+        "baseUrl": "https://chat.ainft.com/webapi/",
+        "apiKey": "{AINFT_API_KEY}",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "gpt-5-nano",
+            "name": "gpt-5-nano"
+          },
+          {
+            "id": "gpt-5-mini",
+            "name": "gpt-5-mini"
+          },
+          {
+            "id": "qwen/qwen3-30b-a3b",
+            "name": "qwen/qwen3-30b-a3b"
+          },
+          {
+            "id": "gemini-3-flash-preview",
+            "name": "gemini-3-flash-preview"
+          },
+          {
+            "id": "claude-haiku-4-5-20251001",
+            "name": "claude-haiku-4-5-20251001"
+          }
+        ]
+      }
+    }
+  }
+}
