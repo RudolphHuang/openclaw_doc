@@ -34,3 +34,19 @@ Node.js: 版本需要大于或等于 22。Node.js 是 OpenClaw 的运行环境�
 ```bash
 node -v
 ```
+
+开始安装 OpenClaw
+OpenClaw 提供了多种安装方式，以适应不同用户的需求。对于初学者，官方推荐使用一键安装脚本，它能自动处理大部分环境配置。
+
+
+
+快速安装 (推荐)
+这是最简单、最快捷的安装方式。它会自动检测你的操作系统，安装必要的依赖，并将 openclaw 命令部署到全局。
+
+
+
+对于 macOS 或 Linux 系统，请在终端中执行以下命令：
+
+```bash
+curl -fsSL https://openclaw.bot/install.sh | bash
+```
