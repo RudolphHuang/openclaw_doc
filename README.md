@@ -85,9 +85,45 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 完成后会启动 UI 界面，在浏览器中访问并进行对话即可。
 
 ## 编辑配置文件
+### 打开配置文件
 配置文件位于 ~/.openclaw/openclaw.json，OpenClaw 启动时会自动读取。
 ```bash
 # 您也可以使用其他编辑器，如vim。
 # vim ~/.openclaw/openclaw.json
 nano ~/.openclaw/openclaw.json
+```
+### 添加AINFT配置
+```json
+{
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "ainft": {
+        "baseUrl": "https://chat.ainft.com/webapi/",
+        "apiKey": "sk-............",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "gpt-5-nano",
+            "name": "gpt-5-nano"
+          },
+          {
+            "id": "gpt-5-mini",
+            "name": "gpt-5-mini"
+          },
+          {
+            "id": "qwen/qwen3-30b-a3b",
+            "name": "qwen/qwen3-30b-a3b"
+          },
+          {
+            "id": "gemini-3-flash-preview",
+            "name": "gemini-3-flash-preview"
+          },
+          {
+            "id": "claude-haiku-4-5-20251001",
+            "name": "claude-haiku-4-5-20251001"
+          }
+        ]
+      }
+    }
 ```
