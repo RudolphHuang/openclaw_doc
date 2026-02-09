@@ -18,6 +18,7 @@ OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 
 - [安装前的准备](#安装前的准备)
 - [开始安装 OpenClaw](#开始安装-openclaw)
 - [初始化与配置](#初始化与配置)
+- [编辑配置文件](#编辑配置文件)
 
 ---
 
@@ -70,30 +71,42 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 
 等待几分钟后会出现 **Onboarding 向导**：
 
-![onboarding0.png](imgs%2Fonboarding0.png)
+![onboarding0.png](imgs/onboarding0.png)
+
 向导会询问你以下关键信息：
 
 - **AI 模型配置**：需要提供大语言模型服务的 API Key（如 Anthropic Claude、OpenAI GPT 或其它兼容服务）。  
   → 这一步先选择 **Skip for now** 跳过，后面再手动配置。
-![onboarding1.png](imgs%2Fonboarding1.png)
+
+  ![onboarding1.png](imgs/onboarding1.png)
 
 - **通信渠道**：设置希望通过哪个聊天软件与 OpenClaw 交流（如 Telegram、WhatsApp）。目前多为国外软件，可先跳过，后续可参考集成飞书、钉钉等软件的教程。
 
-- **Skills**：建议无脑选 **Yes**（先按空格键再按 Enter），或直接跳过。  
-![onboarding2.png](imgs%2Fonboarding2.png)
+- **Skills**：建议选择 **Yes**（先按空格键再按 Enter），或直接跳过。
+
+  ![onboarding2.png](imgs/onboarding2.png)
 
 完成后会启动 UI 界面，在浏览器中访问并进行对话即可。
 
+---
+
 ## 编辑配置文件
+
+完成 Onboarding 后，需要手动将 AINFT 配置写入 OpenClaw，并设为默认模型。
+
 ### 打开配置文件
-配置文件位于 ~/.openclaw/openclaw.json，OpenClaw 启动时会自动读取。
+
+配置文件路径：`~/.openclaw/openclaw.json`，OpenClaw 启动时会自动读取。
+
 ```bash
-# 您也可以使用其他编辑器，如vim。
-# vim ~/.openclaw/openclaw.json
 nano ~/.openclaw/openclaw.json
+# 也可使用其他编辑器，如：vim ~/.openclaw/openclaw.json
 ```
-### 添加AINFT 提供商配置
-复制并粘贴以下配置内容models相关区域，将{AINFT_API_KEY}替换为刚才申请的AINFT API Key：
+
+### 添加 AINFT 提供商配置
+
+将下面内容合并到配置文件的 **models** 相关区域，并把 `{AINFT_API_KEY}` 替换为你在 [API Key 管理页面](https://chat.ainft.com/key) 申请的 Key：
+
 ```json
 {
   "models": {
@@ -104,51 +117,48 @@ nano ~/.openclaw/openclaw.json
         "apiKey": "{AINFT_API_KEY}",
         "api": "openai-completions",
         "models": [
-          {
-            "id": "gpt-5-nano",
-            "name": "gpt-5-nano"
-          },
-          {
-            "id": "gpt-5-mini",
-            "name": "gpt-5-mini"
-          },
-          {
-            "id": "qwen/qwen3-30b-a3b",
-            "name": "qwen/qwen3-30b-a3b"
-          },
-          {
-            "id": "gemini-3-flash-preview",
-            "name": "gemini-3-flash-preview"
-          },
-          {
-            "id": "claude-haiku-4-5-20251001",
-            "name": "claude-haiku-4-5-20251001"
-          }
+          { "id": "gpt-5-nano", "name": "gpt-5-nano" },
+          { "id": "gpt-5-mini", "name": "gpt-5-mini" },
+          { "id": "qwen/qwen3-30b-a3b", "name": "qwen/qwen3-30b-a3b" },
+          { "id": "gemini-3-flash-preview", "name": "gemini-3-flash-preview" },
+          { "id": "claude-haiku-4-5-20251001", "name": "claude-haiku-4-5-20251001" }
         ]
       }
     }
   }
 }
 ```
-### 设置gpt-5-nano为默认模型
-在 openclaw.json 文件的 agents一节中参考如下设置ainft/gpt-5-nano为当前默认模型
+
+### 设置默认模型
+
+在 `openclaw.json` 的 **agents** 部分中，将默认模型设为 `ainft/gpt-5-nano`，例如：
+
 ```json
 {
-    "agents": {
-        "defaults": {
-            "model": {
-                "primary": "ainft/gpt-5-nano"
-            }
-        }
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "ainft/gpt-5-nano"
+      }
     }
+  }
 }
 ```
-### 使用命令重启openclaw
+
+### 重启 OpenClaw
+
+修改配置后需要重启网关使配置生效：
+
 ```bash
 openclaw gateway restart
 ```
 
-### 尝试调用模型
+### 验证：尝试调用模型
+
+在终端中发送一条测试消息：
+
 ```bash
 openclaw agent --agent main --message "你好"
 ```
+
+若返回正常回复，说明 AINFT 已成功接入。
