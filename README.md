@@ -75,6 +75,23 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 ```bash
 iwr -useb https://openclaw.ai/install.ps1 | iex
 ```
+
+### 故障排查
+在某些系统环境下，尤其是在 macOS 上通过 Homebrew 安装了 libvips 库时，可能会遇到 sharp 模块的安装错误。sharp 是一个用于图像处理的库。此时，可以尝试使用以下命令强制安装预编译的二进制文件，绕过本地编译：
+```bash
+SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install -g openclaw@latest
+```
+安装完成后，一个常见的问题是终端提示 openclaw: command not found。这通常是因为 npm 全局安装目录没有被添加到系统的 PATH 环境变量中。
+可以通过以下命令找到 npm 的全局路径：
+```bash
+npm prefix -g
+```
+假设输出的路径是 /usr/local，那么二进制文件的路径就是 /usr/local/bin。需要将这个路径添加到你的 Shell 配置文件中（如 ~/.zshrc 或 ~/.bashrc）：
+```bash
+export PATH="$(npm prefix -g)/bin:$PATH"
+```
+修改配置文件后，需要重启终端，或者执行 source ~/.zshrc (或对应的文件名) 使其生效。之后，openclaw 命令应该就可以正常使用了。
+
 ---
 
 ## 初始化与配置
