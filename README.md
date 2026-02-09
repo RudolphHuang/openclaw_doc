@@ -1,68 +1,85 @@
-# OpenClaw接入AINFT保姆级使用教程
+# OpenClaw 接入 AINFT 保姆级使用教程
 
+---
 
+OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 助理项目。它并非运行在云端的 SaaS 服务，而是部署在你自己的计算机上，让你能够**完全掌控自己的数据与工作流**。通过 WhatsApp、Telegram、飞书、钉钉等日常聊天工具，你就可以与它交互，让它处理邮件、管理日历、编写代码，甚至控制你的智能家居。
 
-OpenClaw，曾用名 ClawdBot 或 Moltbot，是一个开源的个人 AI 助理项目。它并非运行在云端的 SaaS 服务，而是部署在你自己的计算机上，让你能够完全掌控自己的数据与工作流。通过 WhatsApp、Telegram、飞书、钉钉等日常聊天工具，你就可以与它交互，让它处理邮件、管理日历、编写代码，甚至控制你的智能家居。
+这个项目的核心理念在于，它不仅仅是一个能对话的聊天机器人，更是一个能**实际执行任务的「行动者」**。它拥有持久的记忆，可以访问你的文件系统和网络，并通过不断学习和扩展「技能」（Skills）来变得更强大。
 
-这个项目的核心理念在于，它不仅仅是一个能对话的聊天机器人，更是一个能实际执行任务的“行动者”。它拥有持久的记忆，可以访问你的文件系统和网络，并通过不断学习和扩展“技能”（Skills）来变得更强大。
 由于其开源和可本地部署的特性，OpenClaw 吸引了大量开发者和技术爱好者，社区中涌现出许多富有创造力的用法，从自动化公司运营到管理个人生活，展现了个人 AI 助理的巨大潜力。
 
-本篇教程将从零开始，详细介绍如何下载、安装并开始使用 OpenClaw，接入AINFT平台API，帮助你搭建属于自己的第一个 AI 助理。
+> 本篇教程将从零开始，详细介绍如何下载、安装并开始使用 OpenClaw，接入 AINFT 平台 API，帮助你搭建属于自己的第一个 AI 助理。
 
+---
 
+## 目录
 
+- [申请 API Key](#申请-api-key)
+- [安装前的准备](#安装前的准备)
+- [开始安装 OpenClaw](#开始安装-openclaw)
+- [初始化与配置](#初始化与配置)
 
-## 申请api key
+---
 
-登录https://chat.ainft.com/
-在https://chat.ainft.com/key 页面中申请api_key
+## 申请 API Key
 
-![ainft_key.png](imgs%2Fainft_key.png)
+1. 登录 [AINFT 聊天平台](https://chat.ainft.com/)
+2. 在 [API Key 管理页面](https://chat.ainft.com/key) 申请你的 `api_key`
+
+![ainft_key.png](imgs/ainft_key.png)
+
+---
 
 ## 安装前的准备
-在开始安装之前，需要确保你的系统满足以下基本要求。OpenClaw 主要为类 Unix 环境设计，但在 Windows 上可以通过 WSL2 (Windows Subsystem for Linux 2) 完美运行。
 
-### 系统要求:
-Node.js: 版本需要大于或等于 22。Node.js 是 OpenClaw 的运行环境。
-操作系统: macOS, Linux, 或 Windows (通过 WSL2)。
-包管理器: 如果选择从源码编译，需要安装 pnpm。对于大多数用户，推荐使用 npm，它会随 Node.js 一起安装。
+在开始安装之前，需要确保你的系统满足以下基本要求。OpenClaw 主要为类 Unix 环境设计，但在 Windows 上可以通过 **WSL2**（Windows Subsystem for Linux 2）完美运行。
 
+### 系统要求
 
+| 项目       | 要求说明 |
+| ---------- | -------- |
+| **Node.js** | 版本 ≥ 22，作为 OpenClaw 的运行环境 |
+| **操作系统** | macOS、Linux，或 Windows（通过 WSL2） |
+| **包管理器** | 从源码编译需安装 pnpm；推荐使用随 Node.js 安装的 npm |
 
-确认环境最简单的方式是打开你的终端（Terminal）并输入以下命令检查 Node.js 版本：
+确认环境最简单的方式是打开终端，输入以下命令检查 Node.js 版本：
 
 ```bash
 node -v
 ```
 
+---
+
 ## 开始安装 OpenClaw
-OpenClaw 提供了多种安装方式，以适应不同用户的需求。对于初学者，官方推荐使用一键安装脚本，它能自动处理大部分环境配置。
 
+OpenClaw 提供了多种安装方式，以适应不同用户的需求。对于初学者，**官方推荐使用一键安装脚本**，它能自动处理大部分环境配置。
 
+### 快速安装（推荐）
 
-### 快速安装 (推荐)
-这是最简单、最快捷的安装方式。它会自动检测你的操作系统，安装必要的依赖，并将 openclaw 命令部署到全局。
+这是最简单、最快捷的安装方式，会自动检测你的操作系统，安装必要依赖，并将 `openclaw` 命令部署到全局。
 
-
-
-对于 macOS 或 Linux 系统，请在终端中执行以下命令：
+在 **macOS** 或 **Linux** 终端中执行：
 
 ```bash
 curl -fsSL https://openclaw.bot/install.sh | bash
 ```
 
-### 初始化与配置
+---
 
-等待几分钟后会出现Onboarding向导
-![Onboarding.png](imgs%2FOnboarding.png)
+## 初始化与配置
 
-这个向导会询问你以下关键信息：
-AI 模型配置: 你需要提供一个大语言模型服务的 API Key，例如 Anthropic Claude、OpenAI GPT 或其他兼容的服务。
-我们这一步先选择Skip for now 跳过，后面再手动配置
+等待几分钟后会出现 **Onboarding 向导**：
 
-通信渠道: 设置你希望通过哪个聊天软件与 OpenClaw 交流，比如 Telegram 或 WhatsApp。向导会引导你完成配对。目前都是一些国外软件，我们先跳过，后面你可以看看其他集成到飞书、钉钉等软件的教程。
+![Onboarding.png](imgs/Onboarding.png)
 
-后面会问你要不要 skills，无脑选 Yes 就行（先按空格键再按 Enter 回车键），或者直接跳过。Hooks 的话推荐安装。
+向导会询问你以下关键信息：
 
-完成后，应该就会启动一个 UI 界面，访问它试试，然后在里面开始对话。
+- **AI 模型配置**：需要提供大语言模型服务的 API Key（如 Anthropic Claude、OpenAI GPT 或其它兼容服务）。  
+  → 这一步先选择 **Skip for now** 跳过，后面再手动配置。
 
+- **通信渠道**：设置希望通过哪个聊天软件与 OpenClaw 交流（如 Telegram、WhatsApp）。目前多为国外软件，可先跳过，后续可参考集成飞书、钉钉等软件的教程。
+
+- **Skills**：建议无脑选 **Yes**（先按空格键再按 Enter），或直接跳过。  
+- **Hooks**：推荐安装。
+
+完成后会启动 UI 界面，在浏览器中访问并进行对话即可。
