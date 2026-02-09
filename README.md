@@ -71,7 +71,10 @@ OpenClaw 提供了多种安装方式，以适应不同用户的需求。对于�
 ```bash
 curl -fsSL https://openclaw.bot/install.sh | bash
 ```
-
+对于使用 PowerShell 的 Windows 用户，请执行以下命令：
+```bash
+iwr -useb https://openclaw.ai/install.ps1 | iex
+```
 ---
 
 ## 初始化与配置
@@ -93,16 +96,16 @@ openclaw onboard --install-daemon
 
 - **AI 模型配置**：需要提供大语言模型服务的 API Key（如 Anthropic Claude、OpenAI GPT 或其它兼容服务）。  
   → 这一步先选择 **Skip for now** 跳过，后面再手动配置。
-
-  ![onboarding1.png](imgs/onboarding1.png)
+![onboarding3.png](imgs%2Fonboarding3.png)
 
 - **通信渠道**：设置希望通过哪个聊天软件与 OpenClaw 交流（如 Telegram、WhatsApp）。目前多为国外软件，可先跳过，后续可参考集成飞书、钉钉等软件的教程。
+  ![onboarding1.png](imgs/onboarding1.png)
 
 - **Skills**：建议选择 **Yes**（先按空格键再按 Enter），或直接跳过。
 
   ![onboarding2.png](imgs/onboarding2.png)
 
-完成后会启动 UI 界面，在浏览器中访问并进行对话即可。
+完成后会启动 UI 界面,但我们还需要手动编辑配置文件，已实现连接AINFT
 
 ---
 
