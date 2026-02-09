@@ -172,11 +172,11 @@ nano ~/.openclaw/openclaw.json
           {
             "id": "claude-sonnet-4-5-20250929",
             "name": "claude-sonnet-4-5-20250929"
-          }
+          },
           {
             "id": "claude-haiku-4-5-20251001",
             "name": "claude-haiku-4-5-20251001"
-          }
+          },
           {
             "id": "gemini-3-pro-preview",
             "name": "gemini-3-pro-preview"
