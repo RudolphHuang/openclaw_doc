@@ -70,16 +70,16 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 
 等待几分钟后会出现 **Onboarding 向导**：
 
-![Onboarding.png](imgs/Onboarding.png)
-
+![onboarding0.png](imgs%2Fonboarding0.png)
 向导会询问你以下关键信息：
 
 - **AI 模型配置**：需要提供大语言模型服务的 API Key（如 Anthropic Claude、OpenAI GPT 或其它兼容服务）。  
   → 这一步先选择 **Skip for now** 跳过，后面再手动配置。
+![onboarding1.png](imgs%2Fonboarding1.png)
 
 - **通信渠道**：设置希望通过哪个聊天软件与 OpenClaw 交流（如 Telegram、WhatsApp）。目前多为国外软件，可先跳过，后续可参考集成飞书、钉钉等软件的教程。
 
 - **Skills**：建议无脑选 **Yes**（先按空格键再按 Enter），或直接跳过。  
-- **Hooks**：推荐安装。
+![onboarding2.png](imgs%2Fonboarding2.png)
 
 完成后会启动 UI 界面，在浏览器中访问并进行对话即可。
