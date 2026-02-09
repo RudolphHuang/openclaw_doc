@@ -231,14 +231,14 @@ openclaw agent --agent main --message "你好"
 
 ### Gateway 常用命令
 
-| 操作            | 命令                                                  |
-|---------------|-----------------------------------------------------|
-| 安装 Gateway    | `openclaw gateway install`                          |
-| 启动 Gateway    | `openclaw gateway start`（若不可用可试 `openclaw gateway`） |
-| 停止 Gateway    | `openclaw gateway stop`                             |
-| 重启 Gateway    | `openclaw gateway restart`                          |
-| 卸载 Gateway    | `openclaw gateway uninstall`                        |
-| 查看 Gateway 状态 | `openclaw gateway status`                           |
+| 操作            | 命令                                                 |
+|---------------|----------------------------------------------------|
+| 安装 Gateway    | `openclaw gateway install`                         |
+| 启动 Gateway    | `openclaw gateway start` |
+| 停止 Gateway    | `openclaw gateway stop`                            |
+| 重启 Gateway    | `openclaw gateway restart`                         |
+| 卸载 Gateway    | `openclaw gateway uninstall`                       |
+| 查看 Gateway 状态 | `openclaw gateway status`                          |
 
 ### 检查运行状态
 
