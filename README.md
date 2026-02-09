@@ -83,3 +83,11 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 ![onboarding2.png](imgs%2Fonboarding2.png)
 
 完成后会启动 UI 界面，在浏览器中访问并进行对话即可。
+
+## 编辑配置文件
+配置文件位于 ~/.openclaw/openclaw.json，OpenClaw 启动时会自动读取。
+```bash
+# 您也可以使用其他编辑器，如vim。
+# vim ~/.openclaw/openclaw.json
+nano ~/.openclaw/openclaw.json
+```
