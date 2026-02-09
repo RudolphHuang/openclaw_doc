@@ -59,3 +59,10 @@ curl -fsSL https://openclaw.bot/install.sh | bash
 这个向导会询问你以下关键信息：
 AI 模型配置: 你需要提供一个大语言模型服务的 API Key，例如 Anthropic Claude、OpenAI GPT 或其他兼容的服务。
 我们这一步先选择Skip for now 跳过，后面再手动配置
+
+通信渠道: 设置你希望通过哪个聊天软件与 OpenClaw 交流，比如 Telegram 或 WhatsApp。向导会引导你完成配对。目前都是一些国外软件，我们先跳过，后面你可以看看其他集成到飞书、钉钉等软件的教程。
+
+后面会问你要不要 skills，无脑选 Yes 就行（先按空格键再按 Enter 回车键），或者直接跳过。Hooks 的话推荐安装。
+
+完成后，应该就会启动一个 UI 界面，访问它试试，然后在里面开始对话。
+
