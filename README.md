@@ -122,7 +122,7 @@ openclaw onboard --install-daemon
 
   ![onboarding2.png](imgs/onboarding2.png)
 
-完成后会启动 UI 界面,但我们还需要手动编辑配置文件，已实现连接AINFT
+完成后会启动 UI 界面,但我们还需要手动编辑配置文件，用以实现连接AINFT
 
 ---
 
