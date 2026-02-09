@@ -154,24 +154,36 @@ nano ~/.openclaw/openclaw.json
         "api": "openai-completions",
         "models": [
           {
-            "id": "gpt-5-nano",
-            "name": "gpt-5-nano"
+            "id": "gpt-5.2",
+            "name": "gpt-5.2
           },
           {
             "id": "gpt-5-mini",
             "name": "gpt-5-mini"
           },
           {
-            "id": "qwen/qwen3-30b-a3b",
-            "name": "qwen/qwen3-30b-a3b"
+            "id": "gpt-5-nano",
+            "name": "gpt-5-nano"
+          },
+          {
+            "id": "claude-opus-4-5-20251101",
+            "name": "claude-opus-4-5-20251101"
+          },
+          {
+            "id": "claude-sonnet-4-5-20250929",
+            "name": "claude-sonnet-4-5-20250929"
+          }
+          {
+            "id": "claude-haiku-4-5-20251001",
+            "name": "claude-haiku-4-5-20251001"
+          }
+          {
+            "id": "gemini-3-pro-preview",
+            "name": "gemini-3-pro-preview"
           },
           {
             "id": "gemini-3-flash-preview",
             "name": "gemini-3-flash-preview"
-          },
-          {
-            "id": "claude-haiku-4-5-20251001",
-            "name": "claude-haiku-4-5-20251001"
           }
         ]
       }
