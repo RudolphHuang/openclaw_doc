@@ -17,6 +17,7 @@ OpenClaw，曾用名 ClawdBot 或 Moltbot，是一个开源的个人 AI 助理�
 登录https://chat.ainft.com/
 在https://chat.ainft.com/key 页面中申请api_key
 
+![ainft_key.png](imgs%2Fainft_key.png)
 
 安装前的准备
 在开始安装之前，需要确保你的系统满足以下基本要求。OpenClaw 主要为类 Unix 环境设计，但在 Windows 上可以通过 WSL2 (Windows Subsystem for Linux 2) 完美运行。
