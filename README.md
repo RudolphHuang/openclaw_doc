@@ -211,7 +211,7 @@ openclaw gateway restart
 ```bash
 openclaw agent --agent main --message "你好"
 ```
-
+![hello.png](imgs%2Fhello.png)
 若返回正常回复，说明 AINFT 已成功接入。
 
 ---
