@@ -233,3 +233,21 @@ openclaw dashboard
 
 该命令会自动生成一个包含临时登录令牌的 URL，并尝试用默认浏览器打开它。URL 通常是 http://127.0.0.1:18789 后面的端口号可能会因你的配置而异。
 ![dashboard.png](imgs%2Fdashboard.png)
+
+在 Dashboard 中，你可以：
+直接与 AI 助理聊天。
+管理和配置各种“技能”（Skills）。
+设置定时任务（Cron Jobs），让助理在特定时间自动执行操作。
+查看实时日志，方便排查问题。
+编辑 OpenClaw 的所有配置文件。
+安装和更新 OpenClaw 自身。
+
+### 使用终端界面 (TUI)
+对于更喜欢在终端中工作的用户，OpenClaw 提供了一个纯文本的终端用户界面（TUI）。
+
+首先确保 Gateway 服务正在运行，然后执行：
+```bash
+openclaw tui
+```
+这会启动一个全屏的终端应用，界面清晰地分为聊天记录区、状态栏和输入框。
+![tui.png](imgs%2Ftui.png)
