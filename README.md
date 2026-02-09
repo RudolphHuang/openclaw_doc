@@ -155,7 +155,7 @@ nano ~/.openclaw/openclaw.json
         "models": [
           {
             "id": "gpt-5.2",
-            "name": "gpt-5.2
+            "name": "gpt-5.2"
           },
           {
             "id": "gpt-5-mini",
