@@ -2,11 +2,14 @@
 
 ---
 
-OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 助理项目。它并非运行在云端的 SaaS 服务，而是部署在你自己的计算机上，让你能够**完全掌控自己的数据与工作流**。通过 WhatsApp、Telegram、飞书、钉钉等日常聊天工具，你就可以与它交互，让它处理邮件、管理日历、编写代码，甚至控制你的智能家居。
+OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 助理项目。它并非运行在云端的 SaaS 服务，而是部署在你自己的计算机上，让你能够
+**完全掌控自己的数据与工作流**。通过 WhatsApp、Telegram、飞书、钉钉等日常聊天工具，你就可以与它交互，让它处理邮件、管理日历、编写代码，甚至控制你的智能家居。
 
-这个项目的核心理念在于，它不仅仅是一个能对话的聊天机器人，更是一个能**实际执行任务的「行动者」**。它拥有持久的记忆，可以访问你的文件系统和网络，并通过不断学习和扩展「技能」（Skills）来变得更强大。
+这个项目的核心理念在于，它不仅仅是一个能对话的聊天机器人，更是一个能**实际执行任务的「行动者」**
+。它拥有持久的记忆，可以访问你的文件系统和网络，并通过不断学习和扩展「技能」（Skills）来变得更强大。
 
-由于其开源和可本地部署的特性，OpenClaw 吸引了大量开发者和技术爱好者，社区中涌现出许多富有创造力的用法，从自动化公司运营到管理个人生活，展现了个人 AI 助理的巨大潜力。
+由于其开源和可本地部署的特性，OpenClaw 吸引了大量开发者和技术爱好者，社区中涌现出许多富有创造力的用法，从自动化公司运营到管理个人生活，展现了个人
+AI 助理的巨大潜力。
 
 > 本篇教程将从零开始，详细介绍如何下载、安装并开始使用 OpenClaw，接入 AINFT 平台 API，帮助你搭建属于自己的第一个 AI 助理。
 
@@ -34,15 +37,16 @@ OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 
 
 ## 安装前的准备
 
-在开始安装之前，需要确保你的系统满足以下基本要求。OpenClaw 主要为类 Unix 环境设计，但在 Windows 上可以通过 **WSL2**（Windows Subsystem for Linux 2）完美运行。
+在开始安装之前，需要确保你的系统满足以下基本要求。OpenClaw 主要为类 Unix 环境设计，但在 Windows 上可以通过 **WSL2**（Windows
+Subsystem for Linux 2）完美运行。
 
 ### 系统要求
 
-| 项目       | 要求说明 |
-| ---------- | -------- |
-| **Node.js** | 版本 ≥ 22，作为 OpenClaw 的运行环境 |
-| **操作系统** | macOS、Linux，或 Windows（通过 WSL2） |
-| **包管理器** | 从源码编译需安装 pnpm；推荐使用随 Node.js 安装的 npm |
+| 项目          | 要求说明                                |
+|-------------|-------------------------------------|
+| **Node.js** | 版本 ≥ 22，作为 OpenClaw 的运行环境           |
+| **操作系统**    | macOS、Linux，或 Windows（通过 WSL2）      |
+| **包管理器**    | 从源码编译需安装 pnpm；推荐使用随 Node.js 安装的 npm |
 
 确认环境最简单的方式是打开终端，输入以下命令检查 Node.js 版本：
 
@@ -106,7 +110,8 @@ nano ~/.openclaw/openclaw.json
 
 ### 添加 AINFT 提供商配置
 
-将下面内容合并到配置文件的 **models** 相关区域，并把 `{AINFT_API_KEY}` 替换为你在 [API Key 管理页面](https://chat.ainft.com/key) 申请的 Key：
+将下面内容合并到配置文件的 **models** 相关区域，并把 `{AINFT_API_KEY}`
+替换为你在 [API Key 管理页面](https://chat.ainft.com/key) 申请的 Key：
 
 ```json
 {
@@ -181,23 +186,23 @@ openclaw agent --agent main --message "你好"
 
 ### Gateway 常用命令
 
-| 操作 | 命令 |
-| ------ | ------ |
-| 安装 Gateway | `openclaw gateway install` |
-| 启动 Gateway | `openclaw gateway start` |
-| 停止 Gateway | `openclaw gateway stop` |
-| 重启 Gateway | `openclaw gateway restart` |
-| 卸载 Gateway | `openclaw gateway uninstall` |
-| 查看 Gateway 状态 | `openclaw gateway status` |
+| 操作            | 命令                           |
+|---------------|------------------------------|
+| 安装 Gateway    | `openclaw gateway install`   |
+| 启动 Gateway    | `openclaw gateway start`     |
+| 停止 Gateway    | `openclaw gateway stop`      |
+| 重启 Gateway    | `openclaw gateway restart`   |
+| 卸载 Gateway    | `openclaw gateway uninstall` |
+| 查看 Gateway 状态 | `openclaw gateway status`    |
 
 ### 检查运行状态
 
 完成 Onboarding 和配置文件修改后，建议用以下命令确认安装与配置是否正常：
 
-| 命令 | 说明 |
-| ------ | ------ |
-| `openclaw doctor` | 对系统环境和配置文件做全面健康检查，并给出修复建议；**遇到问题时应优先使用**。 |
-| `openclaw gateway status` | 查看 Gateway 运行状态。 |
+| 命令                        | 说明                                        |
+|---------------------------|-------------------------------------------|
+| `openclaw doctor`         | 对系统环境和配置文件做全面健康检查，并给出修复建议；**遇到问题时应优先使用**。 |
+| `openclaw gateway status` | 查看 Gateway 运行状态。                          |
 
 示例：
 
@@ -210,5 +215,20 @@ openclaw doctor
 ```bash
 openclaw status
 ```
+
 如果一切正常，它会显示 Gateway 正在运行，并且相关的服务状态良好。
 
+## 访问与使用 OpenClaw
+
+配置完成后，你有多种方式可以与你的 AI 助理进行交互。最常用的两种是 Web 控制台和终端界面。
+
+### 使用 Web 控制台 (Dashboard)
+
+OpenClaw 自带一个功能强大的 Web 控制台，官方称之为 Dashboard 或 Control UI。这是管理和使用 OpenClaw 最直观的方式。
+通过以下命令可以一键在浏览器中打开 Dashboard（前提是已启动 Gateway）：
+
+```bash 
+openclaw dashboard
+```
+
+该命令会自动生成一个包含临时登录令牌的 URL，并尝试用默认浏览器打开它。URL 通常是 http://127.0.0.1:18789/，后面的端口号可能会因你的配置而异。
