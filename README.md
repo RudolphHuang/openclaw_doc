@@ -113,7 +113,7 @@ openclaw onboard --install-daemon
 
 - **AI 模型配置**：需要提供大语言模型服务的 API Key（如 Anthropic Claude、OpenAI GPT 或其它兼容服务）。  
   → 这一步先选择 **Skip for now** 跳过，后面再手动配置。
-![onboarding3.png](imgs%2Fonboarding3.png)
+![onboarding3.png](imgs/onboarding3.png)
 
 - **通信渠道**：设置希望通过哪个聊天软件与 OpenClaw 交流（如 Telegram、WhatsApp）。目前多为国外软件，可先跳过，后续可参考集成飞书、钉钉等软件的教程。
   ![onboarding1.png](imgs/onboarding1.png)
@@ -311,28 +311,34 @@ openclaw tui
 
 TUI 提供专注、无干扰的交互体验，适合开发者和命令行用户。
 
+---
+
 ## 常用 CLI 命令
 
 除了图形化界面，openclaw 的命令行工具本身也极其强大，是自动化和高级配置的关键。
+
 以下是一些在日常使用中非常实用的命令：
-openclaw models status 用于检查已配置的 AI 模型及其 API Key 的状态，包括是否有效或即将过期。确保模型可用是助理正常工作的前提。
+
+**openclaw models status** 用于检查已配置的 AI 模型及其 API Key 的状态，包括是否有效或即将过期。确保模型可用是助理正常工作的前提。
 
 ```bash
 openclaw models status
 ```
 
-openclaw channels list 可以列出所有已配置的通信渠道及其当前状态。
+**openclaw channels list** 可以列出所有已配置的通信渠道及其当前状态。
 
 ```bash
 openclaw channels list
 ```
 
-openclaw memory search 是一个非常强大的功能，它允许你对 AI 助理的长期记忆进行语义搜索。你之前告诉它的所有信息，都可以通过这个命令快速找回。
+**openclaw memory search** 是一个非常强大的功能，它允许你对 AI 助理的长期记忆进行语义搜索。你之前告诉它的所有信息，都可以通过这个命令快速找回。
+
 ```bash
 openclaw memory search "我上次提到的那个项目叫什么名字"
 ```
 
-最后，如果想深入了解某个命令或功能的更多用法，openclaw docs 命令可以帮助你快速搜索官方文档。
-```
+最后，如果想深入了解某个命令或功能的更多用法，**openclaw docs** 命令可以帮助你快速搜索官方文档。
+
+```bash
 openclaw docs "how to create a new skill"
 ```
