@@ -232,3 +232,4 @@ openclaw dashboard
 ```
 
 该命令会自动生成一个包含临时登录令牌的 URL，并尝试用默认浏览器打开它。URL 通常是 http://127.0.0.1:18789 后面的端口号可能会因你的配置而异。
+![dashboard.png](imgs%2Fdashboard.png)
