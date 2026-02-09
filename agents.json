@@ -1,0 +1,9 @@
+{
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "ainft/gpt-5-nano"
+      }
+    }
+  }
+}
