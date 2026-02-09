@@ -19,6 +19,7 @@ OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 
 - [开始安装 OpenClaw](#开始安装-openclaw)
 - [初始化与配置](#初始化与配置)
 - [编辑配置文件](#编辑配置文件)
+- [调试](#调试)
 
 ---
 
@@ -162,3 +163,52 @@ openclaw agent --agent main --message "你好"
 ```
 
 若返回正常回复，说明 AINFT 已成功接入。
+
+---
+
+## 调试
+
+配置或运行遇到问题时，可先了解 Gateway 的作用，再用自带的诊断命令排查。
+
+### Gateway 核心服务
+
+在配置过程中，你会频繁遇到一个概念：**Gateway**。
+
+- **Gateway** 是 OpenClaw 的核心进程，相当于「心脏」，常驻后台运行。
+- 它负责：与大语言模型的连接、与 WhatsApp / Telegram 等聊天工具的会话维护、以及所有事件与指令的处理。
+- 你通过聊天工具发的每条消息都会先到 Gateway，由 Gateway 调用 AI 模型并返回结果或执行操作。
+- 将 Gateway 安装为系统服务后，就相当于拥有一个**永不离线的数字助理**。
+
+### Gateway 常用命令
+
+| 操作 | 命令 |
+| ------ | ------ |
+| 安装 Gateway | `openclaw gateway install` |
+| 启动 Gateway | `openclaw gateway start` |
+| 停止 Gateway | `openclaw gateway stop` |
+| 重启 Gateway | `openclaw gateway restart` |
+| 卸载 Gateway | `openclaw gateway uninstall` |
+| 查看 Gateway 状态 | `openclaw gateway status` |
+
+### 检查运行状态
+
+完成 Onboarding 和配置文件修改后，建议用以下命令确认安装与配置是否正常：
+
+| 命令 | 说明 |
+| ------ | ------ |
+| `openclaw doctor` | 对系统环境和配置文件做全面健康检查，并给出修复建议；**遇到问题时应优先使用**。 |
+| `openclaw gateway status` | 查看 Gateway 运行状态。 |
+
+示例：
+
+```bash
+openclaw doctor
+```
+
+> openclaw status 命令则用于检查 Gateway 服务的实时运行状态，包括它是否在线、连接了哪些聊天会话等。
+
+```bash
+openclaw status
+```
+如果一切正常，它会显示 Gateway 正在运行，并且相关的服务状态良好。
+
