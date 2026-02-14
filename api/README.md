@@ -130,6 +130,10 @@ LobeChat 后端提供两种 API 形式：
 - [usage.*](tRPC/lambda/usage.md) - 使用统计
 - [order.*](tRPC/lambda/order.md) - 订单管理
 
+### 充值与支付
+- [TRON 充值](payment/tron-recharge.md) - TRON 区块链充值（当前系统）
+- [Apple 支付技术方案](payment/apple-pay-technical-plan.md) - Apple Pay/IAP 实现方案
+
 ---
 
 ## tRPC Async 接口（异步任务）

@@ -69,6 +69,11 @@
 - 📝 [RESTful/tokenizer.md](RESTful/tokenizer.md) - 令牌计数
 - 📝 [RESTful/trace.md](RESTful/trace.md) - 追踪上报
 
+#### 充值与支付
+
+- ✅ [payment/tron-recharge.md](payment/tron-recharge.md) - TRON 区块链充值（当前系统）
+- ✅ [payment/apple-pay-technical-plan.md](payment/apple-pay-technical-plan.md) - Apple 支付技术方案
+
 ### ⚠️ 待完善的文档
 
 以下接口文档尚未创建，可参考源代码：
@@ -182,10 +187,10 @@
 
 ## 统计信息
 
-- **总接口数**: 约 80+
-- **已完成详细文档**: 14 个（17.5%）
-- **已创建简要文档**: 23 个（29%）
-- **待补充文档**: 47 个（58.5%）
+- **总接口数**: 约 82+
+- **已完成详细文档**: 16 个（19.5%）
+- **已创建简要文档**: 23 个（28%）
+- **待补充文档**: 47 个（57.5%）
 
 ---
 
