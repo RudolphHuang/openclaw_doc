@@ -25,6 +25,9 @@ LobeChat 后端提供两种 API 形式：
 
 ## RESTful WebAPI 接口
 
+### 认证相关
+- [TronLink 登录](RESTful/auth-tronlink.md) - TronLink 钱包登录接口
+
 ### 聊天相关
 - [POST /webapi/chat/:provider](RESTful/chat.md) - AI 聊天流式响应
 

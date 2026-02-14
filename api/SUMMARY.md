@@ -59,6 +59,7 @@
 
 #### RESTful WebAPI 接口
 
+- ✅ [RESTful/auth-tronlink.md](RESTful/auth-tronlink.md) - TronLink 登录
 - 📝 [RESTful/tts-openai.md](RESTful/tts-openai.md) - OpenAI TTS
 - 📝 [RESTful/stt-openai.md](RESTful/stt-openai.md) - OpenAI STT
 - 📝 [RESTful/tokenizer.md](RESTful/tokenizer.md) - 令牌计数
@@ -178,9 +179,9 @@
 ## 统计信息
 
 - **总接口数**: 约 80+
-- **已完成详细文档**: 9 个（11%）
-- **已创建简要文档**: 19 个（24%）
-- **待补充文档**: 52 个（65%）
+- **已完成详细文档**: 10 个（12.5%）
+- **已创建简要文档**: 23 个（29%）
+- **待补充文档**: 47 个（58.5%）
 
 ---
 
