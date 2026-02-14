@@ -66,9 +66,10 @@ ainft 平台支持多种认证方式，满足不同用户群体和使用场景�
 **支持的提供商**:
 
 #### 常用社交登录
-- Google
+- Google → [文档](./auth-google.md)
 - GitHub
 - Microsoft (Azure AD)
+- ~~Apple~~ (暂不支持，[了解详情](./auth-apple-notice.md))
 
 #### 企业 SSO
 - Auth0

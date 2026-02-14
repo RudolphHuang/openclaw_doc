@@ -26,9 +26,11 @@ LobeChat 后端提供两种 API 形式：
 ## RESTful WebAPI 接口
 
 ### 认证相关
-- [认证方式概览](RESTful/auth-overview.md) - 选择合适的认证方式（推荐先阅读）
+- [认证方式概览](RESTful/auth-overview.md) - 选择合适的认证方式（**推荐先阅读**）
 - [Clerk 认证](RESTful/auth-clerk.md) - 邮箱、手机号、OAuth 登录（含邮箱+密码、魔法链接）
+- [Google OAuth 登录](RESTful/auth-google.md) - Google 账号第三方登录
 - [TronLink 登录](RESTful/auth-tronlink.md) - TronLink 钱包登录接口
+- [Apple 登录说明](RESTful/auth-apple-notice.md) - Apple 登录当前状态和实现指南
 
 ### 聊天相关
 - [POST /webapi/chat/:provider](RESTful/chat.md) - AI 聊天流式响应

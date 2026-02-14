@@ -61,7 +61,9 @@
 
 - ✅ [RESTful/auth-overview.md](RESTful/auth-overview.md) - 认证方式概览
 - ✅ [RESTful/auth-clerk.md](RESTful/auth-clerk.md) - Clerk 认证（邮箱登录）
+- ✅ [RESTful/auth-google.md](RESTful/auth-google.md) - Google OAuth 登录
 - ✅ [RESTful/auth-tronlink.md](RESTful/auth-tronlink.md) - TronLink 登录
+- ✅ [RESTful/auth-apple-notice.md](RESTful/auth-apple-notice.md) - Apple 登录说明
 - 📝 [RESTful/tts-openai.md](RESTful/tts-openai.md) - OpenAI TTS
 - 📝 [RESTful/stt-openai.md](RESTful/stt-openai.md) - OpenAI STT
 - 📝 [RESTful/tokenizer.md](RESTful/tokenizer.md) - 令牌计数
@@ -181,7 +183,7 @@
 ## 统计信息
 
 - **总接口数**: 约 80+
-- **已完成详细文档**: 12 个（15%）
+- **已完成详细文档**: 14 个（17.5%）
 - **已创建简要文档**: 23 个（29%）
 - **待补充文档**: 47 个（58.5%）
 
