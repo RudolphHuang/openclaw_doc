@@ -177,7 +177,9 @@ LobeChat 后端提供两种 API 形式：
 
 ### tRPC 调用方式
 
-tRPC 接口通过 `/trpc` 端点访问，分为：
+tRPC 接口通过 `/trpc` 端点访问。**直接 HTTP 调用（Postman/curl）时的路径、参数与认证方式**见 [tRPC HTTP 调用约定](tRPC/README.md)（base 路径 `/trpc/lambda/`、`batch=1`、`input` 格式、`x-ainft-chat-auth` 等）。  
+
+接口分为：
 
 - **Query（查询）**: 用于读取数据
 - **Mutation（变更）**: 用于写入、更新、删除数据
