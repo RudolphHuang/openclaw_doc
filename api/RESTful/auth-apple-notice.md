@@ -1,5 +1,15 @@
 # Apple 登录说明
 
+
+
+申请 Apple 凭证（需 Apple Developer 账号）
+
+1. [Apple Developer](https://developer.apple.com/account/) → **Certificates, Identifiers & Profiles** → **Identifiers** → 新建 **Services IDs**，得到 **Service ID**（即 `APPLE_ID`，如 `com.example.app`）。
+2. 在该 Service ID 中勾选 **Sign in with Apple**，配置 **Domains and Subdomains**（如 `dev.example.com`）和 **Return URLs**（如 `http://localhost:3010/api/auth/callback/apple`）。
+3. **Keys** → 新建 Key，勾选 **Sign in with Apple**，下载 `.p8` 私钥（只可下载一次）。记下 **Key ID**。**Team ID** 在登录后页面右上角。
+4. 使用 [bal.so/apple-gen-secret](https://bal.so/apple-gen-secret) 或同类工具，用 **Team ID**、**Key ID**、**Service ID** 和 `.p8` 私钥生成 **Client Secret（JWT）**，填入 `.env.local` 的 `APPLE_SECRET`。`APPLE_ID` 填你的 Service ID。
+
+
 ## 当前状态
 
 ❌ **ainft 平台目前不支持 Apple 登录（Sign in with Apple）**
