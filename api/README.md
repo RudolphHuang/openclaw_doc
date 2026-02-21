@@ -36,8 +36,6 @@ LobeChat 后端提供两种 API 形式：
 - [POST /webapi/chat/:provider](RESTful/chat.md) - AI 聊天流式响应
 
 ### 语音相关
-- [POST /webapi/tts/edge](RESTful/tts-edge.md) - Edge TTS 语音合成
-- [POST /webapi/tts/microsoft](RESTful/tts-microsoft.md) - Microsoft TTS 语音合成
 - [POST /webapi/tts/openai](RESTful/tts-openai.md) - OpenAI TTS 语音合成
 - [POST /webapi/stt/openai](RESTful/stt-openai.md) - OpenAI 语音转文字
 
@@ -45,15 +43,6 @@ LobeChat 后端提供两种 API 形式：
 - [POST /webapi/text-to-image/:provider](RESTful/text-to-image.md) - 文本生成图像
 - [POST /webapi/create-image/comfyui](RESTful/create-image-comfyui.md) - ComfyUI 图像生成
 
-### 模型相关
-- [GET /webapi/models/:provider](RESTful/models.md) - 获取模型列表
-- [POST /webapi/models/:provider/pull](RESTful/models-pull.md) - 拉取模型
-
-### 用户与文件
-- [GET /webapi/user/avatar/:id/:image](RESTful/user-avatar.md) - 获取用户头像
-
-### 工具相关
-- [POST /webapi/plugin/gateway](RESTful/plugin-gateway.md) - 插件网关
 
 ### 系统相关
 - [POST /webapi/trace](RESTful/trace.md) - 上报追踪数据
