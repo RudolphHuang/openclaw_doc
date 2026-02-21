@@ -107,7 +107,6 @@ LobeChat 后端提供两种 API 形式：
 
 ### 系统配置
 - [config.*](tRPC/lambda/config.md) - 系统配置
-- [basicConfig.*](tRPC/lambda/basicConfig.md) - 基础配置
 
 ### API Key 管理
 - [apiKey.*](tRPC/lambda/apiKey.md) - API Key 管理
