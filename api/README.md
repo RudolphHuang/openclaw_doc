@@ -2,11 +2,12 @@
 
 本文档提供 LobeChat 后端 API 的详细说明，供前端开发人员使用。
 
-其他文档:
+其他技术文档:
 
 - https://docs.apenft.io/reference/chatcompletion
 - https://lobehub.com/zh/docs/development/start
 
+需求文档链接：https://docs.google.com/document/d/1qV6HXys-Ooxl4yh-uXm5uMovCiVvHopUW5QxtIpzD64/edit?tab=t.0#heading=h.xq8qbhm9tzyd
 ## API 架构概述
 
 LobeChat 后端提供两种 API 形式：
