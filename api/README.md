@@ -6,6 +6,8 @@
 
 - https://docs.apenft.io/reference/chatcompletion
 - https://lobehub.com/zh/docs/development/start
+- https://next-auth.js.org/providers/apple
+- https://next-auth.js.org/providers/google
 
 需求文档链接：https://docs.google.com/document/d/1qV6HXys-Ooxl4yh-uXm5uMovCiVvHopUW5QxtIpzD64/edit?tab=t.0#heading=h.xq8qbhm9tzyd
 ## API 架构概述
