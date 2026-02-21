@@ -87,4 +87,5 @@ curl 'https://chat-dev.ainft.com/trpc/lambda/usage.points?batch=1&input=%7B%220%
 - [file](lambda/file.md) / [upload](lambda/upload.md) - 文件与上传
 - [knowledgeBase](lambda/knowledgeBase.md) - 知识库
 - [usage](lambda/usage.md) - 使用统计、积分（含 points）
+- [config](lambda/config.md) - 全局配置（getGlobalConfig、getDefaultAgentConfig）
 - 其他见 [主目录 README](../README.md)
