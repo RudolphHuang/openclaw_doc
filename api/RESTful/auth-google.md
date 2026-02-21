@@ -2,6 +2,10 @@
 
 使用 Google 账号进行第三方登录，支持所有 Google 账号用户。
 
+申请真实凭证：打开 Google APIs 凭证 (https://console.developers.google.com/apis/credentials) → 创建 OAuth 2.0 客户端 ID（Web 应用）→
+授权重定向 URI                            │
+填写：http://localhost:3010/api/auth/callback/google
+
 ## 特点
 
 - ✅ **无需注册**：使用现有 Google 账号直接登录
