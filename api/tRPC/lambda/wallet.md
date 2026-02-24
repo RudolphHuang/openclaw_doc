@@ -97,21 +97,59 @@ curl 'https://chat-dev.ainft.com/trpc/lambda/wallet.linkWalletAddress?batch=1' \
 ```typescript
 {
   address: string;   // 钱包地址
-  chain: string;     // 区块链类型
+  chain: string;     // 区块链类型，如 "tron"、"bnb"、"eth"
 }
+```
+
+**HTTP 示例**:
+
+```bash
+curl 'https://chat-dev.ainft.com/trpc/lambda/wallet.unlinkWalletAddress?batch=1' \
+  -H 'accept: */*' \
+  -H 'content-type: application/json' \
+  -H 'origin: https://chat-dev.ainft.com' \
+  -H 'referer: https://chat-dev.ainft.com/chat' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data-raw '{
+    "0": {
+      "json": {
+        "address": "TRTUCXKtr6hFsp4vERmzCv3URCXkykM8Pk",
+        "chain": "tron"
+      }
+    }
+  }'
 ```
 
 **返回数据**:
 
 ```typescript
 {
-  success: boolean;
+  success: boolean;   // 是否解绑成功
 }
+```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "success": true
+      }
+    }
+  }
+}
+```
+
+**说明**:
+- 解绑后该钱包地址将不再与当前用户关联
+- 解绑后可以使用该地址绑定到其他账户
 ```
 
 ---
 
-### getLinkedWallets
+### getLinkedWalletAddresses
 
 获取当前用户已绑定的钱包地址列表。
 
@@ -121,17 +159,51 @@ curl 'https://chat-dev.ainft.com/trpc/lambda/wallet.linkWalletAddress?batch=1' \
 
 **输入参数**: 无
 
+**HTTP 示例**:
+
+```bash
+# GET，batch=1，无入参时 input 为 {"0":{"json":null,"meta":{"values":["undefined"],"v":1}}}
+curl 'https://chat-dev.ainft.com/trpc/lambda/wallet.getLinkedWalletAddresses?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D' \
+  -H 'accept: */*' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN'
+```
+
 **返回数据**:
 
 ```typescript
-Array<{
-  address: string;      // 钱包地址
-  chain: string;        // 区块链类型
-  provider: string;     // 钱包提供商
-  createdAt: string;    // 绑定时间
-  updatedAt: string;    // 更新时间
-}>
+{
+  addresses: Array<{
+    address: string;      // 钱包地址
+    chain: string;        // 区块链类型，如 "tron"、"bnb"、"eth"
+    createdAt: string;    // 绑定时间（ISO 格式）
+  }>;
+}
 ```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "addresses": [
+          {
+            "address": "0x40469Ab4316c3A8A864BdAB1273735BDBC78DbD1",
+            "chain": "bnb",
+            "createdAt": "2026-02-24T06:49:07.953Z"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+**说明**:
+- 返回当前用户已绑定的所有钱包地址列表
+- 每个地址包含区块链类型和绑定时间
+- 如果用户未绑定任何钱包，返回空数组
 
 ---
 
@@ -170,9 +242,9 @@ if (result.success) {
 ### 获取已绑定钱包列表
 
 ```typescript
-const wallets = await trpc.wallet.getLinkedWallets.query();
+const result = await trpc.wallet.getLinkedWalletAddresses.query();
 
-wallets.forEach(wallet => {
+result.addresses.forEach(wallet => {
   console.log(`${wallet.chain}: ${wallet.address}`);
 });
 ```
