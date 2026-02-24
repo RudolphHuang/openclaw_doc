@@ -312,7 +312,7 @@ curl --location 'https://chat-dev.ainft.com/trpc/lambda/aiChat.outputJSON?batch=
 
 ## 使用示例
 
-### 发送消息创建新对话
+### 发送消息创建新对话（OpenAI）
 
 ```typescript
 const result = await trpc.aiChat.sendMessageInServer.mutate({
@@ -333,6 +333,28 @@ console.log('用户消息ID:', result.userMessageId);
 console.log('AI回复ID:', result.assistantMessageId);
 console.log('主题ID:', result.topicId);
 console.log('是否新主题:', result.isCreateNewTopic);
+```
+
+### 使用 OpenRouter 发送消息
+
+```typescript
+const result = await trpc.aiChat.sendMessageInServer.mutate({
+  newUserMessage: {
+    content: '123',
+    files: []
+  },
+  newTopic: {
+    topicMessageIds: [],
+    title: '新对话'
+  },
+  newAssistantMessage: {
+    model: 'qwen/qwen3-30b-a3b',  // OpenRouter 模型格式
+    provider: 'openrouter'
+  }
+});
+
+console.log('AI回复ID:', result.assistantMessageId);
+console.log('返回主题数:', result.topics.length);  // 包含历史主题
 ```
 
 ### 生成结构化 JSON 输出
