@@ -39,6 +39,7 @@ LobeChat 后端提供两种 API 形式：
 - [Google OAuth 登录](RESTful/auth-google.md) - Google 账号第三方登录
 - [TronLink 登录](RESTful/auth-tronlink.md) - TronLink 钱包登录接口
 - [Apple 登录说明](RESTful/auth-apple-notice.md) - Apple 登录当前状态和实现指南
+- [登出接口](RESTful/auth-signout.md) - 用户登出
 
 ### 聊天相关
 - [POST /webapi/chat/:provider](RESTful/chat.md) - AI 聊天流式响应
