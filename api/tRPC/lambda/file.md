@@ -201,20 +201,47 @@ Array<{
 
 ```typescript
 {
-  id: string;
+  id: string;  // 文件 ID
 }
+```
+
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/file.removeFile?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{"0":{"json":{"id":"file_CkxhlUCovQ7V"}}}'
 ```
 
 **返回数据**:
 
 ```typescript
-void
+null  // 删除成功返回 null
+```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": null,
+      "meta": {
+        "values": ["undefined"],
+        "v": 1
+      }
+    }
+  }
+}
 ```
 
 **说明**:
 
 - 会从存储（S3）中删除文件
 - 会删除关联的分块和嵌入数据
+- 删除成功返回 `null`
 
 ---
 
