@@ -136,22 +136,52 @@ Array<{
 
 ```typescript
 {
-  name: string;
-  fileType: string;    // MIME 类型
-  size: number;
-  url: string;         // 文件路径
-  hash?: string;       // 文件哈希
-  knowledgeBaseId?: string;
-  metadata?: object;
+  name: string;                    // 文件名
+  fileType: string;                // MIME 类型，如 "image/jpeg"
+  size: number;                    // 文件大小（字节）
+  url: string;                     // 文件路径（相对于存储桶）
+  hash?: string;                   // 文件哈希（如 SHA-256）
+  knowledgeBaseId?: string | null; // 关联的知识库 ID（可选）
+  metadata?: {                     // 文件元数据（可选）
+    date?: string;
+    dirname?: string;
+    filename?: string;
+    path?: string;
+  };
 }
+```
+
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/file.createFile?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{"0":{"json":{"fileType":"image/jpeg","hash":"7913ef768f2e55fdda7d3f55eca7dcad35c8878bdcb2e9b3edc2edbb63a8efe0","metadata":{"date":"492196","dirname":"files/492196","filename":"bdd31faf-2267-477b-b610-ca05ede31bef.jpg","path":"files/492196/bdd31faf-2267-477b-b610-ca05ede31bef.jpg"},"name":"photo_2025-10-10_17-55-12.jpg","size":38544,"url":"files/492196/bdd31faf-2267-477b-b610-ca05ede31bef.jpg","knowledgeBaseId":null},"meta":{"values":{"knowledgeBaseId":["undefined"]},"v":1}}}'
 ```
 
 **返回数据**:
 
 ```typescript
 {
-  id: string;
-  url: string;  // 完整 URL
+  id: string;   // 文件 ID
+  url: string;  // 完整 URL（包含存储桶域名）
+}
+```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "id": "file_6T5L0VjLELig",
+        "url": "https://ainft-chat-dev.s3.ap-southeast-1.amazonaws.com/files/492196/bdd31faf-2267-477b-b610-ca05ede31bef.jpg"
+      }
+    }
+  }
 }
 ```
 
@@ -159,6 +189,8 @@ Array<{
 
 - 会检查文件哈希，避免重复上传
 - 如果哈希已存在，仅创建关联记录
+- 返回的 `url` 是完整的 CDN/存储 URL，可直接访问
+- `knowledgeBaseId` 为 `null` 时表示不关联到任何知识库
 
 ---
 
