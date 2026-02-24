@@ -54,6 +54,8 @@ LobeChat 后端提供两种 API 形式：
 - [POST /webapi/text-to-image/:provider](RESTful/text-to-image.md) - 文本生成图像
 - [POST /webapi/create-image/comfyui](RESTful/create-image-comfyui.md) - ComfyUI 图像生成
 
+## 外部 API 接口
+- [APENFT API](RESTful/price.md) - 加密货币价格
 
 ### 系统相关
 - [POST /webapi/trace](RESTful/trace.md) - 上报追踪数据
@@ -238,6 +240,10 @@ const sessionId = await trpc.session.createSession.mutate({
 - [数据导入导出](tRPC/lambda/importer.md)
 - [RAG 评估](tRPC/lambda/ragEval.md)
 - [使用统计](tRPC/lambda/usage.md)
+
+---
+
+
 
 ---
 
