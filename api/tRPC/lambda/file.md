@@ -386,7 +386,7 @@ void
 
 ```mermaid
 flowchart TD
-    A[开始上传文件] --> B[计算文件哈希]
+    A[开始上传文件] --> B[计算文件哈希<br/>SHA-256]
     B --> C[调用 checkFileHash<br/>检查文件是否已存在]
     C --> D{文件是否存在?}
     D -->|是| E[返回已有文件ID]
@@ -400,11 +400,62 @@ flowchart TD
 
 ### 流程说明
 
-1. **计算文件哈希**：客户端计算文件的 SHA-256 哈希值
+1. **计算文件哈希**：客户端计算文件的 SHA-256 哈希值（见下方代码示例）
 2. **检查文件是否存在**：调用 `file.checkFileHash` 接口，避免重复上传
 3. **获取预签名 URL**：调用 `upload.createS3PreSignedUrl` 获取 S3 直传地址
 4. **上传文件到 S3**：使用预签名 URL 直接上传文件到存储桶
 5. **创建文件记录**：调用 `file.createFile` 在数据库中创建文件记录
+
+### 如何计算文件哈希（SHA-256）
+
+前端使用 `js-sha256` 库计算文件哈希：
+
+```typescript
+import { sha256 } from 'js-sha256';
+
+/**
+ * 计算文件的 SHA-256 哈希值
+ * @param file 浏览器 File 对象
+ * @returns 返回 64 位十六进制字符串
+ */
+async function calculateFileHash(file: File): Promise<string> {
+  // 1. 读取文件为 ArrayBuffer
+  const fileArrayBuffer = await file.arrayBuffer();
+  
+  // 2. 使用 js-sha256 计算哈希
+  const hash = sha256(fileArrayBuffer);
+  
+  // 返回结果示例："7913ef768f2e55fdda7d3f55eca7dcad35c8878bdcb2e9b3edc2edbb63a8efe0"
+  return hash;
+}
+
+// 使用示例
+const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    const hash = await calculateFileHash(file);
+    console.log('文件哈希:', hash);
+    
+    // 用于 checkFileHash 接口
+    const result = await trpc.file.checkFileHash.mutate({ hash });
+    console.log('文件是否存在:', result.isExist);
+  }
+});
+```
+
+**依赖安装**：
+
+```bash
+npm install js-sha256
+# 或
+yarn add js-sha256
+```
+
+**注意事项**：
+- 大文件计算哈希可能需要一定时间，建议添加进度提示
+- 哈希值是 64 位的十六进制字符串（SHA-256 的标准输出）
+- 相同内容的文件会产生相同的哈希值，用于去重判断
 
 ---
 
@@ -431,8 +482,11 @@ const page1 = await trpc.file.getFiles.query({
 ### 上传文件的完整流程
 
 ```typescript
-// 1. 计算文件哈希（如 SHA-256）
-const fileHash = await calculateHash(file);
+import { sha256 } from 'js-sha256';
+
+// 1. 计算文件 SHA-256 哈希
+const fileArrayBuffer = await file.arrayBuffer();
+const fileHash = sha256(fileArrayBuffer);
 
 // 2. 检查文件是否已存在
 const { isExist, fileId } = await trpc.file.checkFileHash.mutate({
