@@ -4,9 +4,9 @@
 
 ## 主要接口
 
-### points
+### summary
 
-获取当前用户积分（余额）等信息。
+获取用户使用统计摘要，包括月度积分消耗图表、本月消耗和积分余额。
 
 **类型**: `query`
 
@@ -18,9 +18,45 @@
 
 ```bash
 # GET，batch=1，无入参时 input 为 {"0":{"json":null,"meta":{"values":["undefined"],"v":1}}}
-curl 'https://chat-dev.ainft.com/trpc/lambda/usage.points?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D%7D' \
+curl 'https://chat-dev.ainft.com/trpc/lambda/usage.summary?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D' \
   -H 'accept: */*' \
   -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN'
+```
+
+**返回数据**:
+
+```typescript
+{
+  monthly_chart: Array<{
+    month: string;      // 月份，格式：YYYY-MM
+    points: number;     // 该月消耗的积分
+  }>;
+  monthly_spent: number;  // 本月消耗的积分
+  points_balance: number; // 当前积分余额
+}
+```
+
+**返回示例**:
+
+```json
+{
+  "monthly_chart": [
+    {"month": "2025-03", "points": 0},
+    {"month": "2025-04", "points": 0},
+    {"month": "2025-05", "points": 0},
+    {"month": "2025-06", "points": 0},
+    {"month": "2025-07", "points": 0},
+    {"month": "2025-08", "points": 0},
+    {"month": "2025-09", "points": 0},
+    {"month": "2025-10", "points": 0},
+    {"month": "2025-11", "points": 0},
+    {"month": "2025-12", "points": 0},
+    {"month": "2026-01", "points": 0},
+    {"month": "2026-02", "points": 268982}
+  ],
+  "monthly_spent": 268982,
+  "points_balance": 3379899
+}
 ```
 
 **说明**: tRPC 调用约定（base 路径、batch、input 格式、认证）见 [tRPC README](../README.md)。
