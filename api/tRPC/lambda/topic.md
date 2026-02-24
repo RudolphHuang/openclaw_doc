@@ -102,12 +102,12 @@ string // 新主题 ID
 
 ```typescript
 {
-  id: string;
+  id: string;     // 主题 ID
   value: {
-    title?: string;
-    favorite?: boolean;
-    sessionId?: string;
-    messages?: string[];
+    title?: string;           // 主题标题
+    favorite?: boolean;       // 是否收藏
+    sessionId?: string;       // 关联的会话 ID
+    messages?: string[];      // 关联的消息 ID 列表
     historySummary?: string;  // 历史摘要
     metadata?: {
       model?: string;
@@ -117,11 +117,74 @@ string // 新主题 ID
 }
 ```
 
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/topic.updateTopic?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{
+    "0": {
+      "json": {
+        "id": "tpc_305qPEiVyLqX",
+        "value": {
+          "title": "修改topic名称"
+        }
+      }
+    }
+  }'
+```
+
 **返回数据**:
 
 ```typescript
-void
+Array<{
+  id: string;
+  title: string;
+  favorite: boolean;
+  sessionId: string | null;
+  groupId: string | null;
+  userId: string;
+  clientId: string | null;
+  historySummary: any | null;
+  metadata: any | null;
+  accessedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}>
 ```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": [
+        {
+          "id": "tpc_305qPEiVyLqX",
+          "title": "修改topic名称",
+          "favorite": false,
+          "sessionId": null,
+          "groupId": null,
+          "userId": "user_xRgvCkpRxJQu",
+          "clientId": null,
+          "historySummary": null,
+          "metadata": null,
+          "accessedAt": "2026-02-24T05:59:30.760Z",
+          "createdAt": "2026-02-24T05:59:30.760Z",
+          "updatedAt": "2026-02-24T06:13:35.511Z"
+        }
+      ]
+    }
+  }
+}
+```
+
+**说明**:
+- 更新成功后返回更新后的主题信息数组
+- `updatedAt` 字段会自动更新为当前时间
 
 ---
 
