@@ -174,18 +174,46 @@ Array<{
 
 ```typescript
 {
-  hash: string;
+  hash: string;  // 文件哈希值（如 SHA-256）
 }
+```
+
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/file.checkFileHash?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{"0":{"json":{"hash":"7913ef768f2e55fdda7d3f55eca7dcad35c8878bdcb2e9b3edc2edbb63a8efe0"}}}'
 ```
 
 **返回数据**:
 
 ```typescript
 {
-  isExist: boolean;
-  fileId?: string;  // 如果存在，返回文件 ID
+  isExist: boolean;      // 文件是否已存在
+  fileId?: string;       // 如果存在，返回文件 ID
 }
 ```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "isExist": false
+      }
+    }
+  }
+}
+```
+
+**说明**:
+- `isExist` 为 `false` 表示文件不存在，可以上传
+- `isExist` 为 `true` 时，`fileId` 字段会返回已存在文件的 ID
 
 ---
 
