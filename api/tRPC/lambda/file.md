@@ -382,6 +382,32 @@ void
 
 ---
 
+## 文件上传流程
+
+```mermaid
+flowchart TD
+    A[开始上传文件] --> B[计算文件哈希]
+    B --> C[调用 checkFileHash<br/>检查文件是否已存在]
+    C --> D{文件是否存在?}
+    D -->|是| E[返回已有文件ID]
+    D -->|否| F[调用 createS3PreSignedUrl<br/>获取S3预签名上传URL]
+    F --> G[使用预签名URL<br/>直接上传文件到S3]
+    G --> H[调用 createFile<br/>创建文件记录]
+    H --> I[返回文件ID和完整URL]
+    E --> J[结束]
+    I --> J
+```
+
+### 流程说明
+
+1. **计算文件哈希**：客户端计算文件的 SHA-256 哈希值
+2. **检查文件是否存在**：调用 `file.checkFileHash` 接口，避免重复上传
+3. **获取预签名 URL**：调用 `upload.createS3PreSignedUrl` 获取 S3 直传地址
+4. **上传文件到 S3**：使用预签名 URL 直接上传文件到存储桶
+5. **创建文件记录**：调用 `file.createFile` 在数据库中创建文件记录
+
+---
+
 ## 使用示例
 
 ### 获取文件列表
@@ -405,10 +431,10 @@ const page1 = await trpc.file.getFiles.query({
 ### 上传文件的完整流程
 
 ```typescript
-// 1. 计算文件哈希
+// 1. 计算文件哈希（如 SHA-256）
 const fileHash = await calculateHash(file);
 
-// 2. 检查是否已存在
+// 2. 检查文件是否已存在
 const { isExist, fileId } = await trpc.file.checkFileHash.mutate({
   hash: fileHash
 });
@@ -418,20 +444,32 @@ if (isExist) {
   return fileId;
 }
 
-// 3. 上传文件到存储（通过 upload 接口）
-const uploadResult = await uploadToStorage(file);
+// 3. 获取 S3 预签名上传 URL
+const { uploadUrl, fileKey } = await trpc.upload.createS3PreSignedUrl.mutate({
+  pathname: `files/${userId}/${generateUUID()}.${fileExt}`
+});
 
-// 4. 创建文件记录
+// 4. 直接上传文件到 S3
+await fetch(uploadUrl, {
+  method: 'PUT',
+  body: file,
+  headers: {
+    'Content-Type': file.type
+  }
+});
+
+// 5. 创建文件记录
 const result = await trpc.file.createFile.mutate({
   name: file.name,
   fileType: file.type,
   size: file.size,
-  url: uploadResult.path,
+  url: fileKey,           // S3 文件路径
   hash: fileHash,
-  knowledgeBaseId: 'kb-id'  // 可选
+  knowledgeBaseId: null   // 可选：关联到知识库
 });
 
 console.log(`文件创建成功，ID: ${result.id}`);
+console.log(`文件 URL: ${result.url}`);
 ```
 
 ### 获取文件详情
