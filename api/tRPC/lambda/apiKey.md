@@ -77,6 +77,73 @@ Array<{
 
 ---
 
+### createApiKey
+
+创建新的 API Key。
+
+**类型**: `mutation`
+
+**权限**: 需要认证
+
+**输入参数**:
+
+```typescript
+{
+  name: string;  // API Key 名称
+}
+```
+
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/apiKey.createApiKey?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{"0":{"json":{"name":"aaa"}}}'
+```
+
+**返回数据**:
+
+```typescript
+{
+  id: number;              // API Key ID
+  name: string;            // API Key 名称
+  key: string;             // 完整的 API Key（仅创建时返回完整密钥）
+  enabled: boolean;        // 是否启用
+  expiresAt: string | null; // 过期时间，null 表示永不过期
+  lastUsedAt: string | null; // 最后使用时间，新创建为 null
+  userId: string;          // 所属用户 ID
+  accessedAt: string;      // 首次访问时间
+  createdAt: string;       // 创建时间
+  updatedAt: string;       // 更新时间
+}
+```
+
+**返回示例**:
+
+```json
+{
+  "id": 327,
+  "name": "aaa",
+  "key": "sk-3fp8amggfkrgc0toymn6hmljg4506nay",
+  "enabled": true,
+  "expiresAt": null,
+  "lastUsedAt": null,
+  "userId": "TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo",
+  "accessedAt": "2026-02-24T03:17:49.407Z",
+  "createdAt": "2026-02-24T03:17:49.407Z",
+  "updatedAt": "2026-02-24:17:49.407Z"
+}
+```
+
+**说明**:
+- **重要**: 创建时返回的 `key` 是完整的 API Key，这是唯一一次能看到完整密钥的机会，请妥善保存
+- 后续通过 `getApiKeys` 获取时，`key` 字段会脱敏显示
+- 新创建的 API Key 默认启用（`enabled: true`）且永不过期（`expiresAt: null`）
+
+---
+
 ### deleteApiKey
 
 删除指定的 API Key。
