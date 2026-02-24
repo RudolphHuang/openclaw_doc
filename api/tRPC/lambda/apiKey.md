@@ -77,4 +77,68 @@ Array<{
 
 ---
 
+### deleteApiKey
+
+删除指定的 API Key。
+
+**类型**: `mutation`
+
+**权限**: 需要认证
+
+**输入参数**:
+
+```typescript
+{
+  id: number;  // API Key ID
+}
+```
+
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/apiKey.deleteApiKey?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{"0":{"json":{"id":258}}}'
+```
+
+**返回数据**:
+
+```typescript
+{
+  command: string;      // SQL 命令类型，如 "DELETE"
+  rowCount: number;     // 影响的行数
+  oid: null;
+  rows: any[];          // 返回的行数据
+  fields: any[];        // 字段信息
+  _types: object;
+  RowCtor: null;
+  rowAsArray: boolean;
+  _prebuiltEmptyResultObject: null;
+}
+```
+
+**返回示例**:
+
+```json
+{
+  "command": "DELETE",
+  "rowCount": 1,
+  "oid": null,
+  "rows": [],
+  "fields": [],
+  "_types": {},
+  "RowCtor": null,
+  "rowAsArray": false,
+  "_prebuiltEmptyResultObject": null
+}
+```
+
+**说明**:
+- `rowCount` 为 1 表示成功删除一条记录
+- 删除后该 API Key 立即失效，无法继续使用
+
+---
+
 详细接口文档参见源码：`src/server/routers/lambda/apiKey.ts`
