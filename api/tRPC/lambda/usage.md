@@ -114,13 +114,88 @@ curl 'https://chat-dev.ainft.com/trpc/lambda/usage.summary?batch=1&input=%7B%220
 
 ---
 
-### getCostBreakdown
+### records
 
-获取费用明细。
+获取使用记录列表（分页）。
 
 **类型**: `query`
 
 **权限**: 需要认证
+
+**输入参数**:
+
+```typescript
+{
+  page?: number;        // 页码，默认 1
+  pageSize?: number;    // 每页条数，默认 10
+  sortBy?: string;      // 排序字段，如 "created_at"
+  sortOrder?: string;   // 排序方向："asc" | "desc"
+}
+```
+
+**HTTP 示例**:
+
+```bash
+# GET，batch=1
+curl 'https://chat-dev.ainft.com/trpc/lambda/usage.records?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22page%22%3A1%2C%22pageSize%22%3A10%2C%22sortBy%22%3A%22created_at%22%2C%22sortOrder%22%3A%22desc%22%7D%7D%7D' \
+  -H 'accept: */*' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN'
+```
+
+**返回数据**:
+
+```typescript
+{
+  data: Array<{
+    id: string;              // 记录 ID
+    model: string;           // 使用的模型
+    input_tokens: number;    // 输入 token 数
+    output_tokens: number;   // 输出 token 数
+    total_tokens: number;    // 总 token 数
+    cost_points: number;     // 消耗积分
+    duration_sec: number;    // 耗时（秒）
+    source_type: string;     // 来源："web" | "api"
+    created_at: string;      // 创建时间（ISO 格式）
+  }>;
+  page: number;              // 当前页码
+  pageSize: number;          // 每页条数
+  total: number;             // 总记录数
+}
+```
+
+**返回示例**:
+
+```json
+{
+  "data": [
+    {
+      "id": "msg_ca5mWyUzibb81a",
+      "model": "gpt-5-nano",
+      "input_tokens": 70,
+      "output_tokens": 507,
+      "total_tokens": 577,
+      "cost_points": 207,
+      "duration_sec": 0.26,
+      "source_type": "web",
+      "created_at": "2026-02-21T03:24:12.074Z"
+    },
+    {
+      "id": "msg_teQPDpNsBGWvM4",
+      "model": "gemini-3-flash-preview",
+      "input_tokens": 14902,
+      "output_tokens": 19,
+      "total_tokens": 14921,
+      "cost_points": 7508,
+      "duration_sec": 0,
+      "source_type": "api",
+      "created_at": "2026-02-12T17:21:29.313Z"
+    }
+  ],
+  "page": 1,
+  "pageSize": 10,
+  "total": 58
+}
+```
 
 ---
 
