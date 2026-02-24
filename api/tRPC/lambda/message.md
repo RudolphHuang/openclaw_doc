@@ -352,17 +352,71 @@ curl --location 'https://chat-dev.ainft.com/trpc/lambda/message.removeMessages?b
 
 ```typescript
 {
-  sessionId?: string | null;
-  topicId?: string | null;
-  groupId?: string | null;
+  sessionId?: string | null;  // 会话 ID（可选）
+  topicId?: string | null;    // 主题 ID（可选）
+  groupId?: string | null;    // 群组 ID（可选）
 }
+```
+
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/message.removeMessagesByAssistant?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{
+    "0": {
+      "json": {
+        "sessionId": null,
+        "topicId": "tpc_2qy0MSgiJRkG"
+      }
+    }
+  }'
 ```
 
 **返回数据**:
 
 ```typescript
-void
+{
+  command: string;      // SQL 命令类型，如 "DELETE"
+  rowCount: number;     // 删除的助手消息行数
+  oid: null;
+  rows: any[];
+  fields: any[];
+  _types: object;
+  RowCtor: null;
+  rowAsArray: boolean;
+  _prebuiltEmptyResultObject: null;
+}
 ```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "command": "DELETE",
+        "rowCount": 4,
+        "oid": null,
+        "rows": [],
+        "fields": [],
+        "_types": {},
+        "RowCtor": null,
+        "rowAsArray": false,
+        "_prebuiltEmptyResultObject": null
+      }
+    }
+  }
+}
+```
+
+**说明**:
+- `rowCount` 表示删除的助手消息数量
+- 只会删除 `role = 'assistant'` 的消息，保留用户消息
+- 可用于清空 AI 回复，重新开始对话
 
 ---
 
