@@ -264,11 +264,34 @@ void
 
 **输入参数**: 无
 
+**HTTP 示例**:
+
+```bash
+# GET，batch=1，无入参时 input 为 {"0":{"json":null,"meta":{"values":["undefined"],"v":1}}}
+curl 'https://chat-dev.ainft.com/trpc/lambda/user.hasClaimedSignupBonus?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D' \
+  -H 'accept: */*' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN'
+```
+
 **返回数据**:
 
 ```typescript
 {
-  hasClaimed: boolean;
+  hasClaimed: boolean;  // true 表示已领取，false 表示未领取
+}
+```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "hasClaimed": true
+      }
+    }
+  }
 }
 ```
 
@@ -286,20 +309,57 @@ void
 
 ```typescript
 {
+  address: string;         // Tron 钱包地址
+  chain: string;           // 区块链类型，如 "tron"
   encryptedToken: string;  // 加密的 token（通过单独接口获取）
-  message: string;         // TronLink 签名的消息
+  message: string;         // TronLink 签名的消息（包含地址、Chain ID、Nonce）
   signature: string;       // TronLink 签名
-  version?: 1 | 2;         // 签名版本，默认 2
+  version?: string;        // 签名版本，默认 "2"
 }
+```
+
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/user.claimSignupBonus?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{
+    "0": {
+      "json": {
+        "address": "TRKZ3iE9E78fR13aEHGAxPMxQd8SKdaHUp",
+        "chain": "tron",
+        "encryptedToken": "U2FsdGVkX19FGneRHB1Zv3kTPGt3/6TQSLksJC8GPDMstUQ9ChoyyqlgG/I02hmyaNtidy3HM+xy8rzEHpz7hg==",
+        "message": "AINFT welcome gift-claim\nAccount:\nTRKZ3iE9E78fR13aEHGAxPMxQd8SKdaHUp\nChain ID: 0x2b6653dc\nNonce: WOKIZP1771904479521",
+        "signature": "0x0edd9bf968596cfdf46950a928f35c9c66ed7132b9f05af90641219c1d5f51bd480b4aca996e9cb436e4d10e33a20b86ebbf70ffcb1fc1c965f820796f369a0d1c",
+        "version": "2"
+      }
+    }
+  }'
 ```
 
 **返回数据**:
 
 ```typescript
 {
-  success: boolean;
-  amount?: number;  // 成功时返回奖励积分数（1,000,000）
-  message?: string; // 失败时返回提示信息
+  success: boolean;   // 是否领取成功
+  amount?: number;    // 成功时返回奖励积分数（如 1,000,000）
+}
+```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "amount": 1000000,
+        "success": true
+      }
+    }
+  }
 }
 ```
 
@@ -311,6 +371,7 @@ void
 - 有 IP 限制：1 小时内单 IP 最多赠送 5 次
 - 总发放数量限制：600,000 次
 - Token 有效期：5 分钟
+- `message` 格式需包含：标题、Account（地址）、Chain ID、Nonce
 
 **错误**:
 
