@@ -84,7 +84,15 @@ LobeChat 后端提供两种 API 形式：
 - [group.*](tRPC/lambda/group.md) - 群组聊天管理、成员管理
 
 ### 线程（Thread）管理
-- [thread.*](tRPC/lambda/thread.md) - 线程管理
+- [thread.*](tRPC/lambda/thread.md) - 线程管理（消息的子话题/分支对话）
+
+> **概念说明：Session、Topic、Thread 的区别**
+> 
+> | 概念 | 层级 | 说明 |
+> |------|------|------|
+> | **Session（会话）** | 顶层 | 与 Agent 的完整对话容器，包含多个 Topic。相当于一个助手实例的对话历史 |
+> | **Topic（主题）** | 中层 | 会话内的独立话题/对话分支，包含多条消息。相当于一次完整的问答对话 |
+> | **Thread（线程）** | 底层 | 消息的子话题，用于在特定消息下展开分支讨论。相当于对某条回复的深入追问 |
 
 ### 文件管理
 - [file.*](tRPC/lambda/file.md) - 文件上传、查询、删除、哈希校验
