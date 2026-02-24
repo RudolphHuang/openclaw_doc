@@ -16,26 +16,138 @@ Agent 是 AI 助手的配置，包括系统提示词、知识库、文件等。
 
 ```typescript
 {
-  sessionId: string;
+  sessionId: string;  // 会话 ID，如 "inbox" 表示收件箱
 }
+```
+
+**HTTP 示例**:
+
+```bash
+# GET，batch=1
+curl 'https://chat-dev.ainft.com/trpc/lambda/agent.getAgentConfig?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22sessionId%22%3A%22inbox%22%7D%7D%7D' \
+  -H 'accept: */*' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN'
 ```
 
 **返回数据**:
 
 ```typescript
 {
-  id: string;
-  sessionId: string;
-  systemRole?: string;
-  model?: string;
-  provider?: string;
-  temperature?: number;
-  topP?: number;
-  maxTokens?: number;
-  plugins?: string[];
-  tts?: object;
-  chatConfig?: object;
-  // ... 其他配置字段
+  id: string;                    // Agent ID
+  slug: string;                  // 唯一标识符
+  title: string | null;          // 标题
+  description: string | null;    // 描述
+  tags: string[];                // 标签列表
+  avatar: string | null;         // 头像 URL
+  backgroundColor: string | null; // 背景色
+  plugins: string[];             // 启用的插件列表
+  clientId: string | null;       // 客户端 ID
+  userId: string;                // 所属用户 ID
+  chatConfig: {                  // 聊天配置
+    searchMode: string;          // 搜索模式："off" | "on"
+    displayMode: string;         // 显示模式："chat" | "docs"
+    historyCount: number;        // 历史消息数量
+    searchFCModel: {             // 搜索模型配置
+      model: string;
+      provider: string;
+    };
+    enableReasoning: boolean;    // 是否启用推理
+    enableStreaming: boolean;    // 是否启用流式输出
+    enableHistoryCount: boolean; // 是否启用历史计数
+    reasoningBudgetToken: number; // 推理预算 token
+    enableAutoCreateTopic: boolean; // 是否自动创建主题
+    enableCompressHistory: boolean; // 是否压缩历史
+    autoCreateTopicThreshold: number; // 自动创建主题阈值
+  };
+  fewShots: any | null;          // Few-shot 示例
+  model: string;                 // AI 模型名称
+  params: {                      // 模型参数
+    top_p: number;
+    temperature: number;
+    presence_penalty: number;
+    frequency_penalty: number;
+  };
+  provider: string;              // 模型提供商
+  systemRole: string;            // 系统角色提示词
+  tts: {                         // 语音配置
+    voice: object;
+    sttLocale: string;
+    ttsService: string;
+    showAllLocaleVoice: boolean;
+  };
+  virtual: boolean;              // 是否为虚拟 Agent
+  openingMessage: string | null; // 开场消息
+  openingQuestions: string[];    // 开场问题列表
+  accessedAt: string;            // 最后访问时间
+  createdAt: string;             // 创建时间
+  updatedAt: string;             // 更新时间
+  files: any[];                  // 绑定的文件列表
+  knowledgeBases: any[];         // 绑定的知识库列表
+}
+```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "id": "agt_5PH1HEivg9aL",
+        "slug": "planned-flies-voice-class",
+        "title": null,
+        "description": null,
+        "tags": [],
+        "avatar": null,
+        "backgroundColor": null,
+        "plugins": [],
+        "clientId": null,
+        "userId": "TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo",
+        "chatConfig": {
+          "searchMode": "off",
+          "displayMode": "chat",
+          "historyCount": 20,
+          "searchFCModel": {
+            "model": "gpt-5-mini",
+            "provider": "openai"
+          },
+          "enableReasoning": false,
+          "enableStreaming": true,
+          "enableHistoryCount": true,
+          "reasoningBudgetToken": 1024,
+          "enableAutoCreateTopic": true,
+          "enableCompressHistory": true,
+          "autoCreateTopicThreshold": 2
+        },
+        "fewShots": null,
+        "model": "qwen/qwen3-30b-a3b",
+        "params": {
+          "top_p": 1,
+          "temperature": 1,
+          "presence_penalty": 0,
+          "frequency_penalty": 0
+        },
+        "provider": "openrouter",
+        "systemRole": "",
+        "tts": {
+          "voice": {
+            "openai": "alloy"
+          },
+          "sttLocale": "auto",
+          "ttsService": "openai",
+          "showAllLocaleVoice": false
+        },
+        "virtual": false,
+        "openingMessage": null,
+        "openingQuestions": [],
+        "accessedAt": "2026-02-05T07:46:20.835Z",
+        "createdAt": "2026-02-05T07:46:20.836Z",
+        "updatedAt": "2026-02-05T07:46:20.836Z",
+        "files": [],
+        "knowledgeBases": []
+      }
+    }
+  }
 }
 ```
 
@@ -43,6 +155,8 @@ Agent 是 AI 助手的配置，包括系统提示词、知识库、文件等。
 
 - 如果会话是 INBOX（收件箱），会自动创建默认配置
 - 如果会话不存在，会抛出错误
+- 返回的 `model` 和 `provider` 表示当前使用的 AI 模型和提供商
+- `chatConfig` 包含聊天行为的详细配置
 
 ---
 
