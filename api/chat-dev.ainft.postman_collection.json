@@ -279,7 +279,7 @@
               },
               {
                 "key": "Cookie",
-                "value": "next-auth.callback-url=http%3A%2F%2Flocalhost%3A3000; next-auth.csrf-token=68fba79088840be0e835941d9c026379b94b92ba09eeedd36be5a2e99345e252%7C6dde72979a2559000e83bcbf58fa7faf86ec534624a76aa8ce63d46d8964a4c6"
+                "value": "{{cookie}}"
               }
             ],
             "body": {
@@ -6333,7 +6333,7 @@
           "name": "aiProvider",
           "item": [
             {
-              "name": "getAIProviders",
+              "name": "getAiProviderRuntimeState",
               "request": {
                 "method": "GET",
                 "header": [
@@ -6345,10 +6345,15 @@
                     "key": "x-ainft-chat-auth",
                     "value": "{{auth}}",
                     "description": "从登录态获取"
+                  },
+                  {
+                    "key": "Cookie",
+                    "value": "{{cookie}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
-                  "raw": "https://chat-dev.ainft.com/trpc/lambda/aiProvider.getAIProviders?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
+                  "raw": "https://chat-dev.ainft.com/trpc/lambda/aiProvider.getAiProviderRuntimeState?batch=1&input={\"0\":{\"json\":{\"isLogin\":null},\"meta\":{\"values\":{\"isLogin\":[\"undefined\"]},\"v\":1}}}",
                   "protocol": "https",
                   "host": [
                     "chat-dev",
@@ -6358,7 +6363,7 @@
                   "path": [
                     "trpc",
                     "lambda",
-                    "aiProvider.getAIProviders"
+                    "aiProvider.getAiProviderRuntimeState"
                   ],
                   "query": [
                     {
@@ -6368,7 +6373,7 @@
                     },
                     {
                       "key": "input",
-                      "value": "%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
+                      "value": "{\"0\":{\"json\":{\"isLogin\":null},\"meta\":{\"values\":{\"isLogin\":[\"undefined\"]},\"v\":1}}}",
                       "description": "URL 编码的 batch input JSON"
                     }
                   ]
@@ -7469,7 +7474,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\"0\":{\"json\":{\"id\":327,\"value\":{\"name\":\"bbb\"}}}}",
+                  "raw": "{\r\n    \"0\": {\r\n        \"json\": {\r\n            \"id\": 327,\r\n            \"value\": {\r\n                \"name\": \"bbb\"\r\n            }\r\n        }\r\n    }\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -7720,7 +7725,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\"0\":{\"json\":{\"address\":\"TRTUCXKtr6hFsp4vERmzCv3URCXkykM8Pk\",\"chain\":\"tron\",\"message\":\"Welcome to AINFT !\\nhttps://chat-dev.ainft.com wants you to sign in with your TRON account:\\nTRTUCXKtr6hFsp4vERmzCv3URCXkykM8Pk\\n\\nChain ID: 0x2b6653dc\\nExpiration Time: 2026-02-25T06:50:30.077Z\\nNonce: TL8XYX1771915825077\",\"provider\":\"tronlink\",\"signature\":\"0xc34fac844aa25af809ec99a7df3528e71eef331f293a0bec15b03622ee67de7a55c3d1bc6b9ab0083f50a5bf9325d79e10f40502212dde05f7d4dcd3a127b3791c\",\"version\":\"2\"}}}",
+                  "raw": "{\r\n    \"0\": {\r\n        \"json\": {\r\n            \"address\": \"TRTUCXKtr6hFsp4vERmzCv3URCXkykM8Pk\",\r\n            \"chain\": \"tron\",\r\n            \"message\": \"Welcome to AINFT !\\nhttps://chat-dev.ainft.com wants you to sign in with your TRON account:\\nTRTUCXKtr6hFsp4vERmzCv3URCXkykM8Pk\\n\\nChain ID: 0x2b6653dc\\nExpiration Time: 2026-02-25T06:50:30.077Z\\nNonce: TL8XYX1771915825077\",\r\n            \"provider\": \"tronlink\",\r\n            \"signature\": \"0xc34fac844aa25af809ec99a7df3528e71eef331f293a0bec15b03622ee67de7a55c3d1bc6b9ab0083f50a5bf9325d79e10f40502212dde05f7d4dcd3a127b3791c\",\r\n            \"version\": \"2\"\r\n        }\r\n    }\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -7819,7 +7824,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\"0\":{\"json\":{\"address\":\"TRTUCXKtr6hFsp4vERmzCv3URCXkykM8Pk\",\"chain\":\"tron\"}}}",
+                  "raw": "{\r\n    \"0\": {\r\n        \"json\": {\r\n            \"address\": \"TRTUCXKtr6hFsp4vERmzCv3URCXkykM8Pk\",\r\n            \"chain\": \"tron\"\r\n        }\r\n    }\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
