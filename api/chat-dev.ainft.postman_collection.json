@@ -3553,20 +3553,48 @@
             {
               "name": "createFile",
               "request": {
-                "method": "GET",
+                "method": "POST",
                 "header": [
                   {
-                    "key": "accept",
-                    "value": "*/*"
+                    "key": "sec-ch-ua-platform",
+                    "value": "\"Windows\""
                   },
                   {
-                    "key": "x-ainft-chat-auth",
-                    "value": "{{auth}}",
-                    "description": "从登录态获取"
+                    "key": "Referer",
+                    "value": "https://chat-dev.ainft.com/chat?session=inbox"
+                  },
+                  {
+                    "key": "X-ainft-chat-auth",
+                    "value": "{{auth}}"
+                  },
+                  {
+                    "key": "sec-ch-ua",
+                    "value": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\""
+                  },
+                  {
+                    "key": "content-type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "sec-ch-ua-mobile",
+                    "value": "?0"
+                  },
+                  {
+                    "key": "User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
                   }
                 ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"0\":{\"json\":{\"fileType\":\"image/jpeg\",\"hash\":\"7913ef768f2e55fdda7d3f55eca7dcad35c8878bdcb2e9b3edc2edbb63a8efe0\",\"metadata\":{\"date\":\"492196\",\"dirname\":\"files/492196\",\"filename\":\"bdd31faf-2267-477b-b610-ca05ede31bef.jpg\",\"path\":\"files/492196/bdd31faf-2267-477b-b610-ca05ede31bef.jpg\"},\"name\":\"photo_2025-10-10_17-55-12.jpg\",\"size\":38544,\"url\":\"files/492196/bdd31faf-2267-477b-b610-ca05ede31bef.jpg\",\"knowledgeBaseId\":null},\"meta\":{\"values\":{\"knowledgeBaseId\":[\"undefined\"]},\"v\":1}}}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
                 "url": {
-                  "raw": "https://chat-dev.ainft.com/trpc/lambda/file.createFile?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22name%22%3A%22doc.pdf%22%2C%22fileType%22%3A%22application%2Fpdf%22%2C%22size%22%3A1024%2C%22url%22%3A%22%3CfileKey%3E%22%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
+                  "raw": "https://chat-dev.ainft.com/trpc/lambda/file.createFile?batch=1",
                   "protocol": "https",
                   "host": [
                     "chat-dev",
@@ -3581,80 +3609,64 @@
                   "query": [
                     {
                       "key": "batch",
-                      "value": "1",
-                      "description": "tRPC batch 模式"
-                    },
-                    {
-                      "key": "input",
-                      "value": "%7B%220%22%3A%7B%22json%22%3A%7B%22name%22%3A%22doc.pdf%22%2C%22fileType%22%3A%22application%2Fpdf%22%2C%22size%22%3A1024%2C%22url%22%3A%22%3CfileKey%3E%22%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
-                      "description": "URL 编码的 batch input JSON"
+                      "value": "1"
                     }
                   ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "checkFileHash",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "accept",
-                    "value": "*/*"
-                  },
-                  {
-                    "key": "x-ainft-chat-auth",
-                    "value": "{{auth}}",
-                    "description": "从登录态获取"
-                  }
-                ],
-                "url": {
-                  "raw": "https://chat-dev.ainft.com/trpc/lambda/file.checkFileHash?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22hash%22%3A%22%22%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
-                  "protocol": "https",
-                  "host": [
-                    "chat-dev",
-                    "ainft",
-                    "com"
-                  ],
-                  "path": [
-                    "trpc",
-                    "lambda",
-                    "file.checkFileHash"
-                  ],
-                  "query": [
-                    {
-                      "key": "batch",
-                      "value": "1",
-                      "description": "tRPC batch 模式"
-                    },
-                    {
-                      "key": "input",
-                      "value": "%7B%220%22%3A%7B%22json%22%3A%7B%22hash%22%3A%22%22%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
-                      "description": "URL 编码的 batch input JSON"
-                    }
-                  ]
-                }
+                },
+                "description": "Generated from cURL: curl 'https://chat-dev.ainft.com/trpc/lambda/file.createFile?batch=1' \\\r\n  -H 'sec-ch-ua-platform: \"Windows\"' \\\r\n  -H 'Referer: https://chat-dev.ainft.com/chat?session=inbox' \\\r\n  -H 'X-ainft-chat-auth: N00DBisQEVOB2EQpTVhHallAORwHFwERQBrg4205BREHHkMWfhgHPSUaMlKm0UN0PiMoAkYNFiwoIwotDQLulVI5ARYMJRAyPgAUDCwQEAL4lU88CgwEIVcf' \\\r\n  -H 'sec-ch-ua: \"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"' \\\r\n  -H 'content-type: application/json' \\\r\n  -H 'sec-ch-ua-mobile: ?0' \\\r\n  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \\\r\n  --data-raw '{\"0\":{\"json\":{\"fileType\":\"image/jpeg\",\"hash\":\"7913ef768f2e55fdda7d3f55eca7dcad35c8878bdcb2e9b3edc2edbb63a8efe0\",\"metadata\":{\"date\":\"492196\",\"dirname\":\"files/492196\",\"filename\":\"bdd31faf-2267-477b-b610-ca05ede31bef.jpg\",\"path\":\"files/492196/bdd31faf-2267-477b-b610-ca05ede31bef.jpg\"},\"name\":\"photo_2025-10-10_17-55-12.jpg\",\"size\":38544,\"url\":\"files/492196/bdd31faf-2267-477b-b610-ca05ede31bef.jpg\",\"knowledgeBaseId\":null},\"meta\":{\"values\":{\"knowledgeBaseId\":[\"undefined\"]},\"v\":1}}}'"
               },
               "response": []
             },
             {
               "name": "removeFile",
               "request": {
-                "method": "GET",
+                "method": "POST",
                 "header": [
                   {
-                    "key": "accept",
-                    "value": "*/*"
+                    "key": "sec-ch-ua-platform",
+                    "value": "\"Windows\""
                   },
                   {
-                    "key": "x-ainft-chat-auth",
-                    "value": "{{auth}}",
-                    "description": "从登录态获取"
+                    "key": "Referer",
+                    "value": "https://chat-dev.ainft.com/chat?session=inbox"
+                  },
+                  {
+                    "key": "X-ainft-chat-auth",
+                    "value": "N00DBisQEVOB2EQpTVhHallAORwHFwERQBrg4205BREHHkMWfhgHPSUaMlKm0UN0PiMoAkYNFiwoIwotDQLulVI5ARYMJRAyPgAUDCwQEAL4lU88CgwEIVcf"
+                  },
+                  {
+                    "key": "sec-ch-ua",
+                    "value": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\""
+                  },
+                  {
+                    "key": "content-type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "sec-ch-ua-mobile",
+                    "value": "?0"
+                  },
+                  {
+                    "key": "User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+                  },
+                  {
+                    "key": "Cookie",
+                    "value": "{{cookie}}",
+                    "type": "text"
                   }
                 ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"0\":{\"json\":{\"id\":\"file_CkxhlUCovQ7V\"}}}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
                 "url": {
-                  "raw": "https://chat-dev.ainft.com/trpc/lambda/file.removeFile?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22id%22%3A%22%3CfileId%3E%22%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
+                  "raw": "https://chat-dev.ainft.com/trpc/lambda/file.removeFile?batch=1",
                   "protocol": "https",
                   "host": [
                     "chat-dev",
@@ -3669,36 +3681,64 @@
                   "query": [
                     {
                       "key": "batch",
-                      "value": "1",
-                      "description": "tRPC batch 模式"
-                    },
-                    {
-                      "key": "input",
-                      "value": "%7B%220%22%3A%7B%22json%22%3A%7B%22id%22%3A%22%3CfileId%3E%22%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
-                      "description": "URL 编码的 batch input JSON"
+                      "value": "1"
                     }
                   ]
-                }
+                },
+                "description": "Generated from cURL: curl 'https://chat-dev.ainft.com/trpc/lambda/file.removeFile?batch=1' \\\r\n  -H 'sec-ch-ua-platform: \"Windows\"' \\\r\n  -H 'Referer: https://chat-dev.ainft.com/chat?session=inbox' \\\r\n  -H 'X-ainft-chat-auth: N00DBisQEVOB2EQpTVhHallAORwHFwERQBrg4205BREHHkMWfhgHPSUaMlKm0UN0PiMoAkYNFiwoIwotDQLulVI5ARYMJRAyPgAUDCwQEAL4lU88CgwEIVcf' \\\r\n  -H 'sec-ch-ua: \"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"' \\\r\n  -H 'content-type: application/json' \\\r\n  -H 'sec-ch-ua-mobile: ?0' \\\r\n  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \\\r\n  --data-raw '{\"0\":{\"json\":{\"id\":\"file_CkxhlUCovQ7V\"}}}'"
               },
               "response": []
             },
             {
-              "name": "removeFiles",
+              "name": "createS3PreSignedUrl",
               "request": {
-                "method": "GET",
+                "method": "POST",
                 "header": [
                   {
-                    "key": "accept",
-                    "value": "*/*"
+                    "key": "sec-ch-ua-platform",
+                    "value": "\"Windows\""
                   },
                   {
-                    "key": "x-ainft-chat-auth",
-                    "value": "{{auth}}",
-                    "description": "从登录态获取"
+                    "key": "Referer",
+                    "value": "https://chat-dev.ainft.com/chat?session=inbox"
+                  },
+                  {
+                    "key": "X-ainft-chat-auth",
+                    "value": "{{auth}}"
+                  },
+                  {
+                    "key": "sec-ch-ua",
+                    "value": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\""
+                  },
+                  {
+                    "key": "content-type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "sec-ch-ua-mobile",
+                    "value": "?0"
+                  },
+                  {
+                    "key": "User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+                  },
+                  {
+                    "key": "Cookie",
+                    "value": "{{cookie}}",
+                    "type": "text"
                   }
                 ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"0\":{\"json\":{\"pathname\":\"files/492196/bdd31faf-2267-477b-b610-ca05ede31bef.jpg\"}}}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
                 "url": {
-                  "raw": "https://chat-dev.ainft.com/trpc/lambda/file.removeFiles?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22ids%22%3A%5B%5D%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
+                  "raw": "https://chat-dev.ainft.com/trpc/lambda/upload.createS3PreSignedUrl?batch=1",
                   "protocol": "https",
                   "host": [
                     "chat-dev",
@@ -3708,41 +3748,64 @@
                   "path": [
                     "trpc",
                     "lambda",
-                    "file.removeFiles"
+                    "upload.createS3PreSignedUrl"
                   ],
                   "query": [
                     {
                       "key": "batch",
-                      "value": "1",
-                      "description": "tRPC batch 模式"
-                    },
-                    {
-                      "key": "input",
-                      "value": "%7B%220%22%3A%7B%22json%22%3A%7B%22ids%22%3A%5B%5D%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
-                      "description": "URL 编码的 batch input JSON"
+                      "value": "1"
                     }
                   ]
-                }
+                },
+                "description": "Generated from cURL: curl 'https://chat-dev.ainft.com/trpc/lambda/upload.createS3PreSignedUrl?batch=1' \\\r\n  -H 'sec-ch-ua-platform: \"Windows\"' \\\r\n  -H 'Referer: https://chat-dev.ainft.com/chat?session=inbox' \\\r\n  -H 'X-ainft-chat-auth: N00DBisQEVOB2EQpTVhHallAORwHFwERQBrg4205BREHHkMWfhgHPSUaMlKm0UN0PiMoAkYNFiwoIwotDQLulVI5ARYMJRAyPgAUDCwQEAL4lU88CgwEIVcf' \\\r\n  -H 'sec-ch-ua: \"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"' \\\r\n  -H 'content-type: application/json' \\\r\n  -H 'sec-ch-ua-mobile: ?0' \\\r\n  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \\\r\n  --data-raw '{\"0\":{\"json\":{\"pathname\":\"files/492196/bdd31faf-2267-477b-b610-ca05ede31bef.jpg\"}}}'"
               },
               "response": []
             },
             {
-              "name": "removeAllFiles",
+              "name": "checkFileHash",
               "request": {
-                "method": "GET",
+                "method": "POST",
                 "header": [
                   {
-                    "key": "accept",
-                    "value": "*/*"
+                    "key": "sec-ch-ua-platform",
+                    "value": "\"Windows\""
                   },
                   {
-                    "key": "x-ainft-chat-auth",
-                    "value": "{{auth}}",
-                    "description": "从登录态获取"
+                    "key": "Referer",
+                    "value": "https://chat-dev.ainft.com/chat?session=inbox"
+                  },
+                  {
+                    "key": "X-ainft-chat-auth",
+                    "value": "N00DBisQEVOB2EQpTVhHallAORwHFwERQBrg4205BREHHkMWfhgHPSUaMlKm0UN0PiMoAkYNFiwoIwotDQLulVI5ARYMJRAyPgAUDCwQEAL4lU88CgwEIVcf"
+                  },
+                  {
+                    "key": "sec-ch-ua",
+                    "value": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\""
+                  },
+                  {
+                    "key": "content-type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "sec-ch-ua-mobile",
+                    "value": "?0"
+                  },
+                  {
+                    "key": "User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
                   }
                 ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"0\":{\"json\":{\"hash\":\"7913ef768f2e55fdda7d3f55eca7dcad35c8878bdcb2e9b3edc2edbb63a8efe0\"}}}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
                 "url": {
-                  "raw": "https://chat-dev.ainft.com/trpc/lambda/file.removeAllFiles?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
+                  "raw": "https://chat-dev.ainft.com/trpc/lambda/file.checkFileHash?batch=1",
                   "protocol": "https",
                   "host": [
                     "chat-dev",
@@ -3752,65 +3815,16 @@
                   "path": [
                     "trpc",
                     "lambda",
-                    "file.removeAllFiles"
+                    "file.checkFileHash"
                   ],
                   "query": [
                     {
                       "key": "batch",
-                      "value": "1",
-                      "description": "tRPC batch 模式"
-                    },
-                    {
-                      "key": "input",
-                      "value": "%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
-                      "description": "URL 编码的 batch input JSON"
+                      "value": "1"
                     }
                   ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "removeFileAsyncTask",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "accept",
-                    "value": "*/*"
-                  },
-                  {
-                    "key": "x-ainft-chat-auth",
-                    "value": "{{auth}}",
-                    "description": "从登录态获取"
-                  }
-                ],
-                "url": {
-                  "raw": "https://chat-dev.ainft.com/trpc/lambda/file.removeFileAsyncTask?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22taskId%22%3A%22%3CtaskId%3E%22%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
-                  "protocol": "https",
-                  "host": [
-                    "chat-dev",
-                    "ainft",
-                    "com"
-                  ],
-                  "path": [
-                    "trpc",
-                    "lambda",
-                    "file.removeFileAsyncTask"
-                  ],
-                  "query": [
-                    {
-                      "key": "batch",
-                      "value": "1",
-                      "description": "tRPC batch 模式"
-                    },
-                    {
-                      "key": "input",
-                      "value": "%7B%220%22%3A%7B%22json%22%3A%7B%22taskId%22%3A%22%3CtaskId%3E%22%7D%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
-                      "description": "URL 编码的 batch input JSON"
-                    }
-                  ]
-                }
+                },
+                "description": "Generated from cURL: curl 'https://chat-dev.ainft.com/trpc/lambda/file.checkFileHash?batch=1' \\\r\n  -H 'sec-ch-ua-platform: \"Windows\"' \\\r\n  -H 'Referer: https://chat-dev.ainft.com/chat?session=inbox' \\\r\n  -H 'X-ainft-chat-auth: N00DBisQEVOB2EQpTVhHallAORwHFwERQBrg4205BREHHkMWfhgHPSUaMlKm0UN0PiMoAkYNFiwoIwotDQLulVI5ARYMJRAyPgAUDCwQEAL4lU88CgwEIVcf' \\\r\n  -H 'sec-ch-ua: \"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"' \\\r\n  -H 'content-type: application/json' \\\r\n  -H 'sec-ch-ua-mobile: ?0' \\\r\n  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \\\r\n  --data-raw '{\"0\":{\"json\":{\"hash\":\"7913ef768f2e55fdda7d3f55eca7dcad35c8878bdcb2e9b3edc2edbb63a8efe0\"}}}'"
               },
               "response": []
             }
@@ -6807,6 +6821,148 @@
                   ]
                 },
                 "description": "Generated from cURL: curl 'https://chat-dev.ainft.com/trpc/lambda/apiKey.createApiKey?batch=1' \\\r\n  -H 'accept: */*' \\\r\n  -H 'accept-language: zh-CN,zh;q=0.9' \\\r\n  -H 'content-type: application/json' \\\r\n  -b 'ph_sTMFPsFhdP1Ssg_posthog=%7B%22distinct_id%22%3A%22wy0xMPGdMDQGVzTYuy6kVW9NAyKEx7Nuj9WI5DpTUTZ%22%2C%22%24sesid%22%3A%5Bnull%2C%22019c7469-e1f1-7e91-81e4-e1a5d3626fbb%22%2C1771479622128%5D%2C%22%24epp%22%3Atrue%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22%24direct%22%2C%22u%22%3A%22https%3A%2F%2Fposthog.dev.ainft.com%2Fproject%2F1%2Factivity%2Fexplore%23q%3D%257B%2522kind%2522%253A%2522DataTableNode%2522%252C%2522full%2522%253Atrue%252C%2522source%2522%253A%257B%2522kind%2522%253A%2522EventsQuery%2522%252C%2522select%2522%253A%255B%2522*%2522%252C%2522event%2522%252C%2522person_display_name%2520--%2520Person%2522%252C%2522coalesce(properties.%2524current_url%252C%2520properties.%2524screen_name)%2520--%2520Url%2520%252F%2520Screen%2522%252C%2522properties.%2524lib%2522%252C%2522timestamp%2522%255D%252C%2522orderBy%2522%253A%255B%2522timestamp%2520DESC%2522%255D%252C%2522after%2522%253A%2522-24h%2522%257D%252C%2522propertiesViaUrl%2522%253Atrue%252C%2522showSavedQueries%2522%253Atrue%252C%2522showPersistentColumnConfigurator%2522%253Atrue%257D%22%7D%7D; __Host-authjs.csrf-token=b12898a3aa61d2f81ca7163a8e5dd2648795dec2b0c9f4a6801a74ce6f6493f2%7C7e1f484f0f62047fe67e472e9a3450cf5f26b9ca2e308869a1c64cd0850b56ef; __Secure-authjs.callback-url=https%3A%2F%2Fchat-dev.ainft.com%2Fkey; ainft_posthog_id=TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo; ph_phc_nsfbMp2AB7bO9dIg5rcwh5iSss7vt5TgXL1gfyk0bmk_posthog=%7B%22%24user_state%22%3A%22identified%22%2C%22%24sesid%22%3A%5B1771901824617%2C%22019c8d93-298e-75db-af65-0bb0759d2f76%22%2C1771901757838%5D%2C%22distinct_id%22%3A%22TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo%22%2C%22%24device_id%22%3A%22019c8d93-12df-70c2-85b8-d3ce6a9707a4%22%2C%22%24last_posthog_reset%22%3A%222026-02-24T02%3A55%3A56.695Z%22%2C%22%24epp%22%3Atrue%2C%22%24user_id%22%3A%22TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo%22%2C%22%24stored_person_properties%22%3A%7B%22platform%22%3A%22web%22%2C%22business%22%3A%22lobe-chat%22%2C%22spm%22%3A%22lobe-chat%22%7D%2C%22%24capture_rate_limit%22%3A%7B%22tokens%22%3A99%2C%22last%22%3A1771901824617%7D%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fkey%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fusage%22%7D%2C%22%24client_session_props%22%3A%7B%22sessionId%22%3A%22019c8d93-298e-75db-af65-0bb0759d2f76%22%2C%22props%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fkey%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fusage%22%7D%7D%2C%22%24initialization_time%22%3A%222026-02-24T02%3A57%3A02.455Z%22%2C%22%24configured_session_timeout_ms%22%3A1800000%2C%22device_type%22%3A%22desktop%22%2C%22platform%22%3A%22web%22%2C%22user_id%22%3A%22TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo%22%7D; __Secure-authjs.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiZmRpajJBUnBic2FHNVVrRzBnNl9TMFRYS2s3LXNXV3lTdmlxV1J6Y2d6WVNzdXdTQk1XZ2Q2YXBFaEt0M2lrZjdrY3BFaUQ1Y1hpaHpaQVRHeDA5N1EifQ..KcRuZnHFU0NyELPQNcwYBw.lVO1KNyI4lHjuDSszR8pZEtsN1_16NvKGnf1__eDnUHodFEXnzjYI4D9nEzfPuefK3dkeuDDKZACZNvfPYnxEk13O1gwbwOWRRnmxwo9F_rVl25gKvE9cj8ueVruim5G4EqMN5-obv2Pi4w96QV2JHsjRlvZyyJLu_b8P4zm7x3NZ45BYk8EBvoBFGUv06zXtZ-T2vNi1VPKlSHPFJQuJ4I0w1nNrb-HPZt1CuXKwcToVT_7l0azmyBXqjFYq-uScCsqAjD4v2g_usQfzqEC4jrdGydkeLJ38tnaPhr5hC22GNbqWAALTs7HPig9Ks9Ny6YCNxB70Wu8z1E29YaGdw.2A2fTiBn_e3hCwDM116Sakybgsx0imv6BxJ_DPWLIRA' \\\r\n  -H 'origin: https://chat-dev.ainft.com' \\\r\n  -H 'priority: u=1, i' \\\r\n  -H 'referer: https://chat-dev.ainft.com/key' \\\r\n  -H 'sec-ch-ua: \"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"' \\\r\n  -H 'sec-ch-ua-mobile: ?0' \\\r\n  -H 'sec-ch-ua-platform: \"Windows\"' \\\r\n  -H 'sec-fetch-dest: empty' \\\r\n  -H 'sec-fetch-mode: cors' \\\r\n  -H 'sec-fetch-site: same-origin' \\\r\n  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \\\r\n  -H 'x-ainft-chat-auth: N00DBisQEVOB2EQpTVhHallAORwHFwERQBrg4205BREHHkMWfhgHPSUaMlKm0UN0PiMoAkYNFiwoIwotDQLulVI5ARYMJRAyPgAUDCwQEAL4lU88CgwEIVcf' \\\r\n  --data-raw '{\"0\":{\"json\":{\"name\":\"aaa\"}}}'"
+              },
+              "response": []
+            },
+            {
+              "name": "updateApiKey",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "key": "accept-language",
+                    "value": "zh-CN,zh;q=0.9"
+                  },
+                  {
+                    "key": "content-type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "origin",
+                    "value": "https://chat-dev.ainft.com"
+                  },
+                  {
+                    "key": "priority",
+                    "value": "u=1, i"
+                  },
+                  {
+                    "key": "referer",
+                    "value": "https://chat-dev.ainft.com/key"
+                  },
+                  {
+                    "key": "sec-ch-ua",
+                    "value": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\""
+                  },
+                  {
+                    "key": "sec-ch-ua-mobile",
+                    "value": "?0"
+                  },
+                  {
+                    "key": "sec-ch-ua-platform",
+                    "value": "\"Windows\""
+                  },
+                  {
+                    "key": "sec-fetch-dest",
+                    "value": "empty"
+                  },
+                  {
+                    "key": "sec-fetch-mode",
+                    "value": "cors"
+                  },
+                  {
+                    "key": "sec-fetch-site",
+                    "value": "same-origin"
+                  },
+                  {
+                    "key": "user-agent",
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+                  },
+                  {
+                    "key": "x-ainft-chat-auth",
+                    "value": "{{auth}}"
+                  },
+                  {
+                    "key": "Cookie",
+                    "value": "{{cookie}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"0\":{\"json\":{\"id\":327,\"value\":{\"name\":\"bbb\"}}}}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://chat-dev.ainft.com/trpc/lambda/apiKey.updateApiKey?batch=1",
+                  "protocol": "https",
+                  "host": [
+                    "chat-dev",
+                    "ainft",
+                    "com"
+                  ],
+                  "path": [
+                    "trpc",
+                    "lambda",
+                    "apiKey.updateApiKey"
+                  ],
+                  "query": [
+                    {
+                      "key": "batch",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": "Generated from cURL: curl 'https://chat-dev.ainft.com/trpc/lambda/apiKey.updateApiKey?batch=1' \\\r\n  -H 'accept: */*' \\\r\n  -H 'accept-language: zh-CN,zh;q=0.9' \\\r\n  -H 'content-type: application/json' \\\r\n  -b 'ph_sTMFPsFhdP1Ssg_posthog=%7B%22distinct_id%22%3A%22wy0xMPGdMDQGVzTYuy6kVW9NAyKEx7Nuj9WI5DpTUTZ%22%2C%22%24sesid%22%3A%5Bnull%2C%22019c7469-e1f1-7e91-81e4-e1a5d3626fbb%22%2C1771479622128%5D%2C%22%24epp%22%3Atrue%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22%24direct%22%2C%22u%22%3A%22https%3A%2F%2Fposthog.dev.ainft.com%2Fproject%2F1%2Factivity%2Fexplore%23q%3D%257B%2522kind%2522%253A%2522DataTableNode%2522%252C%2522full%2522%253Atrue%252C%2522source%2522%253A%257B%2522kind%2522%253A%2522EventsQuery%2522%252C%2522select%2522%253A%255B%2522*%2522%252C%2522event%2522%252C%2522person_display_name%2520--%2520Person%2522%252C%2522coalesce(properties.%2524current_url%252C%2520properties.%2524screen_name)%2520--%2520Url%2520%252F%2520Screen%2522%252C%2522properties.%2524lib%2522%252C%2522timestamp%2522%255D%252C%2522orderBy%2522%253A%255B%2522timestamp%2520DESC%2522%255D%252C%2522after%2522%253A%2522-24h%2522%257D%252C%2522propertiesViaUrl%2522%253Atrue%252C%2522showSavedQueries%2522%253Atrue%252C%2522showPersistentColumnConfigurator%2522%253Atrue%257D%22%7D%7D; __Host-authjs.csrf-token=b12898a3aa61d2f81ca7163a8e5dd2648795dec2b0c9f4a6801a74ce6f6493f2%7C7e1f484f0f62047fe67e472e9a3450cf5f26b9ca2e308869a1c64cd0850b56ef; __Secure-authjs.callback-url=https%3A%2F%2Fchat-dev.ainft.com%2Fkey; ainft_posthog_id=TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo; ph_phc_nsfbMp2AB7bO9dIg5rcwh5iSss7vt5TgXL1gfyk0bmk_posthog=%7B%22%24user_state%22%3A%22identified%22%2C%22%24sesid%22%3A%5B1771901824617%2C%22019c8d93-298e-75db-af65-0bb0759d2f76%22%2C1771901757838%5D%2C%22distinct_id%22%3A%22TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo%22%2C%22%24device_id%22%3A%22019c8d93-12df-70c2-85b8-d3ce6a9707a4%22%2C%22%24last_posthog_reset%22%3A%222026-02-24T02%3A55%3A56.695Z%22%2C%22%24epp%22%3Atrue%2C%22%24user_id%22%3A%22TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo%22%2C%22%24stored_person_properties%22%3A%7B%22platform%22%3A%22web%22%2C%22business%22%3A%22lobe-chat%22%2C%22spm%22%3A%22lobe-chat%22%7D%2C%22%24capture_rate_limit%22%3A%7B%22tokens%22%3A99%2C%22last%22%3A1771901824617%7D%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fkey%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fusage%22%7D%2C%22%24client_session_props%22%3A%7B%22sessionId%22%3A%22019c8d93-298e-75db-af65-0bb0759d2f76%22%2C%22props%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fkey%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fusage%22%7D%7D%2C%22%24initialization_time%22%3A%222026-02-24T02%3A57%3A02.455Z%22%2C%22%24configured_session_timeout_ms%22%3A1800000%2C%22device_type%22%3A%22desktop%22%2C%22platform%22%3A%22web%22%2C%22user_id%22%3A%22TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo%22%7D; __Secure-authjs.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiZmRpajJBUnBic2FHNVVrRzBnNl9TMFRYS2s3LXNXV3lTdmlxV1J6Y2d6WVNzdXdTQk1XZ2Q2YXBFaEt0M2lrZjdrY3BFaUQ1Y1hpaHpaQVRHeDA5N1EifQ..wkhFF930IPRGt-3ky6U53Q.gsoTG8bxDEEqKBwEjCijdf30nLcjE4yxTCxp1wL4d3Fx-9ESyJoVTG3UqaU3dwMppt-BhJw24-cMg4cq706Pi5NkIhYXr4AZXrCOHS9tTFP0mPSp2n6tbDChkekx_0ltrLJQd_09cwaqu-2dlDUPTHeuM-Ez5_ekeO34ex48Ri-MX_Vaq1hRxKyZfcT3tDxOfrg06iE7sXv00sFhskOuBT5rc4r7fL1Fj0hExp7xKp4sekpLe1cPwpncRDCXf9An5pd0rLnCdtBFclQ0fI6HufaJhva3pmb0YoNgAJSIwVg9khYLmh5LkRpxz5uOJ9NUbAtKj4Osqp_N5HydrK0VrA.iHykFPNrELfvp3B7bXsaT44vFeIjm_5DUGPTZupDpIc' \\\r\n  -H 'origin: https://chat-dev.ainft.com' \\\r\n  -H 'priority: u=1, i' \\\r\n  -H 'referer: https://chat-dev.ainft.com/key' \\\r\n  -H 'sec-ch-ua: \"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"' \\\r\n  -H 'sec-ch-ua-mobile: ?0' \\\r\n  -H 'sec-ch-ua-platform: \"Windows\"' \\\r\n  -H 'sec-fetch-dest: empty' \\\r\n  -H 'sec-fetch-mode: cors' \\\r\n  -H 'sec-fetch-site: same-origin' \\\r\n  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \\\r\n  -H 'x-ainft-chat-auth: N00DBisQEVOB2EQpTVhHallAORwHFwERQBrg4205BREHHkMWfhgHPSUaMlKm0UN0PiMoAkYNFiwoIwotDQLulVI5ARYMJRAyPgAUDCwQEAL4lU88CgwEIVcf' \\\r\n  --data-raw '{\"0\":{\"json\":{\"id\":327,\"value\":{\"name\":\"bbb\"}}}}'"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "order",
+          "item": [
+            {
+              "name": "listOrders",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Cookie",
+                    "value": "{{cookie}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "https://chat-dev.ainft.com/trpc/lambda/order.listOrders?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22page%22%3A1%2C%22pageSize%22%3A20%2C%22sortBy%22%3A%22createdAt%22%2C%22order%22%3A%22desc%22%7D%7D%7D",
+                  "protocol": "https",
+                  "host": [
+                    "chat-dev",
+                    "ainft",
+                    "com"
+                  ],
+                  "path": [
+                    "trpc",
+                    "lambda",
+                    "order.listOrders"
+                  ],
+                  "query": [
+                    {
+                      "key": "batch",
+                      "value": "1"
+                    },
+                    {
+                      "key": "input",
+                      "value": "%7B%220%22%3A%7B%22json%22%3A%7B%22page%22%3A1%2C%22pageSize%22%3A20%2C%22sortBy%22%3A%22createdAt%22%2C%22order%22%3A%22desc%22%7D%7D%7D"
+                    }
+                  ]
+                }
               },
               "response": []
             }
