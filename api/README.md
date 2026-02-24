@@ -2,6 +2,16 @@
 
 本文档提供 LobeChat 后端 API 的详细说明，供前端开发人员使用。
 
+> **📮 Postman 集合**
+> 
+> 可以使用 Postman 导入 [`api/chat-dev.ainft.postman_collection.json`](chat-dev.ainft.postman_collection.json) 快速测试接口。
+> 
+> 导入步骤：
+> 1. 打开 Postman
+> 2. File → Import
+> 3. 选择 `api/chat-dev.ainft.postman_collection.json` 文件
+> 4. 配置环境变量（如 `baseUrl`、`authToken`）
+
 其他技术文档:
 
 - https://docs.apenft.io/reference/chatcompletion

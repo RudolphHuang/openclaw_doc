@@ -106,6 +106,90 @@
           "response": []
         },
         {
+          "name": "binance 登录回调",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "*/*"
+              },
+              {
+                "key": "content-type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "origin",
+                "value": "https://chat-dev.ainft.com"
+              },
+              {
+                "key": "referer",
+                "value": "https://chat-dev.ainft.com/chat"
+              },
+              {
+                "key": "x-auth-return-redirect",
+                "value": "{{auth}}"
+              },
+              {
+                "key": "Cookie",
+                "value": "{{cookie}}"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "type": "text",
+                  "key": "chain",
+                  "value": "bnb"
+                },
+                {
+                  "type": "text",
+                  "key": "message",
+                  "value": "Welcome to AINFT !\r\nhttps://chat-dev.ainft.com wants you to sign in with your TRON account:\r\n0x40469ab4316c3a8a864bdab1273735bdbc78dbd1\r\n\r\nChain ID: 0x38\r\nExpiration Time: 2026-02-25T06:48:51.447Z\r\nNonce: 3YHUXD1771915726448"
+                },
+                {
+                  "type": "text",
+                  "key": "signature",
+                  "value": "0x1b978190e7fa657071c20b6bf7121e1e1317999667373d59857cc393049907712fa10b0ebb77b2d9f337b5048b926d42732b069787c52f65b9f117d44a8906351b"
+                },
+                {
+                  "type": "text",
+                  "key": "version",
+                  "value": "2"
+                },
+                {
+                  "type": "text",
+                  "key": "csrfToken",
+                  "value": "YOUR_CSRF_TOKEN"
+                },
+                {
+                  "type": "text",
+                  "key": "callbackUrl",
+                  "value": "https://chat-dev.ainft.com/chat"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://chat-dev.ainft.com/api/auth/callback/binance",
+              "protocol": "https",
+              "host": [
+                "chat-dev",
+                "ainft",
+                "com"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "callback",
+                "binance"
+              ]
+            },
+            "description": "Generated from cURL: curl 'https://chat-dev.ainft.com/api/auth/callback/binance' \\\r\n  -H 'accept: */*' \\\r\n  -H 'content-type: application/x-www-form-urlencoded' \\\r\n  -H 'origin: https://chat-dev.ainft.com' \\\r\n  -H 'referer: https://chat-dev.ainft.com/chat' \\\r\n  -H 'x-auth-return-redirect: 1' \\\r\n  -b '__Host-authjs.csrf-token=YOUR_CSRF_TOKEN; __Secure-authjs.callback-url=YOUR_CALLBACK_URL' \\\r\n  --data-urlencode 'chain=bnb' \\\r\n  --data-urlencode 'message=Welcome to AINFT !\r\nhttps://chat-dev.ainft.com wants you to sign in with your TRON account:\r\n0x40469ab4316c3a8a864bdab1273735bdbc78dbd1\r\n\r\nChain ID: 0x38\r\nExpiration Time: 2026-02-25T06:48:51.447Z\r\nNonce: 3YHUXD1771915726448' \\\r\n  --data-urlencode 'signature=0x1b978190e7fa657071c20b6bf7121e1e1317999667373d59857cc393049907712fa10b0ebb77b2d9f337b5048b926d42732b069787c52f65b9f117d44a8906351b' \\\r\n  --data-urlencode 'version=2' \\\r\n  --data-urlencode 'csrfToken=YOUR_CSRF_TOKEN' \\\r\n  --data-urlencode 'callbackUrl=https://chat-dev.ainft.com/chat'"
+          },
+          "response": []
+        },
+        {
           "name": "3. 获取登录提供商列表",
           "request": {
             "method": "GET",
@@ -755,6 +839,39 @@
               ]
             },
             "description": "语音转文字（OpenAI Whisper），multipart/form-data，需要 JWT。"
+          },
+          "response": []
+        },
+        {
+          "name": "price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api-gateway.apenft.io/api/v1/crypto/price?chain=tron&pair=NFT-USD",
+              "protocol": "https",
+              "host": [
+                "api-gateway",
+                "apenft",
+                "io"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "crypto",
+                "price"
+              ],
+              "query": [
+                {
+                  "key": "chain",
+                  "value": "tron"
+                },
+                {
+                  "key": "pair",
+                  "value": "NFT-USD"
+                }
+              ]
+            }
           },
           "response": []
         }
