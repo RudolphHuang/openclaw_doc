@@ -97,7 +97,7 @@ LobeChat 后端提供两种 API 形式：
 ### AI 模型与提供商
 - [aiModel.*](tRPC/lambda/aiModel.md) - AI 模型管理
 - [aiProvider.*](tRPC/lambda/aiProvider.md) - AI 提供商管理
-- [aiChat.*](tRPC/lambda/aiChat.md) - AI 聊天配置
+- [aiChat.*](tRPC/lambda/aiChat.md) - AI 聊天（服务端发送消息）
 
 ### 图像生成
 - [image.*](tRPC/lambda/image.md) - 图像生成任务
