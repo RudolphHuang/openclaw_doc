@@ -282,15 +282,61 @@ void
 
 ```typescript
 {
-  ids: string[];
+  ids: string[];  // 要删除的消息 ID 列表
 }
+```
+
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/message.removeMessages?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{"0":{"json":{"ids":["msg_y5YEgZf4y5L3iC"]}}}'
 ```
 
 **返回数据**:
 
 ```typescript
-void
+{
+  command: string;      // SQL 命令类型，如 "DELETE"
+  rowCount: number;     // 删除的行数
+  oid: null;
+  rows: any[];
+  fields: any[];
+  _types: object;
+  RowCtor: null;
+  rowAsArray: boolean;
+  _prebuiltEmptyResultObject: null;
+}
 ```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "command": "DELETE",
+        "rowCount": 1,
+        "oid": null,
+        "rows": [],
+        "fields": [],
+        "_types": {},
+        "RowCtor": null,
+        "rowAsArray": false,
+        "_prebuiltEmptyResultObject": null
+      }
+    }
+  }
+}
+```
+
+**说明**:
+- `rowCount` 表示实际删除的消息数量
+- 删除消息会级联删除关联的数据（如插件状态、翻译、TTS 等）
 
 ---
 
