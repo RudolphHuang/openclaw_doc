@@ -137,15 +137,67 @@ void
 
 ```typescript
 {
-  id: string;
+  id: string;  // 主题 ID
 }
+```
+
+**HTTP 示例**:
+
+```bash
+# POST，batch=1
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/topic.removeTopic?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{
+    "0": {
+      "json": {
+        "id": "tpc_2qy0MSgiJRkG"
+      }
+    }
+  }'
 ```
 
 **返回数据**:
 
 ```typescript
-void
+{
+  command: string;      // SQL 命令类型，如 "DELETE"
+  rowCount: number;     // 删除的行数（0 表示主题不存在或已删除）
+  oid: null;
+  rows: any[];
+  fields: any[];
+  _types: object;
+  RowCtor: null;
+  rowAsArray: boolean;
+  _prebuiltEmptyResultObject: null;
+}
 ```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "command": "DELETE",
+        "rowCount": 0,
+        "oid": null,
+        "rows": [],
+        "fields": [],
+        "_types": {},
+        "RowCtor": null,
+        "rowAsArray": false,
+        "_prebuiltEmptyResultObject": null
+      }
+    }
+  }
+}
+```
+
+**说明**:
+- `rowCount` 表示删除的主题数量，0 表示主题不存在或已被删除
+- 删除主题会级联删除该主题下的所有消息
 
 ---
 
@@ -256,16 +308,69 @@ string // 新主题 ID
 
 ```typescript
 {
-  keywords: string;
+  keywords: string;           // 搜索关键词
   sessionId?: string | null;  // 限定会话（可选）
 }
+```
+
+**HTTP 示例**:
+
+```bash
+# GET，batch=1
+curl 'https://chat-dev.ainft.com/trpc/lambda/topic.searchTopics?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22keywords%22%3A%22%E4%BD%A0%E5%A5%BD%22%2C%22sessionId%22%3Anull%7D%7D%7D' \
+  -H 'accept: */*' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN'
 ```
 
 **返回数据**:
 
 ```typescript
-Array<Topic>
+Array<{
+  id: string;
+  title: string;
+  favorite: boolean;
+  sessionId: string | null;
+  groupId: string | null;
+  userId: string;
+  clientId: string | null;
+  historySummary: any | null;
+  metadata: any | null;
+  accessedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}>
 ```
+
+**返回示例**:
+
+```json
+{
+  "result": {
+    "data": {
+      "json": [
+        {
+          "id": "tpc_zxgLJ5d0lMtm",
+          "title": "简单问候",
+          "favorite": false,
+          "sessionId": null,
+          "groupId": null,
+          "userId": "TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo",
+          "clientId": null,
+          "historySummary": null,
+          "metadata": null,
+          "accessedAt": "2026-02-21T03:24:12.062Z",
+          "createdAt": "2026-02-21T03:24:12.062Z",
+          "updatedAt": "2026-02-21T03:24:16.874Z"
+        }
+      ]
+    }
+  }
+}
+```
+
+**说明**:
+- 根据主题标题进行模糊匹配搜索
+- 返回匹配的主题列表，按相关度排序
 
 ---
 
