@@ -38,6 +38,7 @@ LobeChat 后端提供两种 API 形式：
 - [Clerk 认证](RESTful/auth-clerk.md) - 邮箱、手机号、OAuth 登录（含邮箱+密码、魔法链接）
 - [Google OAuth 登录](RESTful/auth-google.md) - Google 账号第三方登录
 - [TronLink 登录](RESTful/auth-tronlink.md) - TronLink 钱包登录接口
+- [Binance 登录](RESTful/auth-binance.md) - Binance 钱包登录接口
 - [Apple 登录说明](RESTful/auth-apple-notice.md) - Apple 登录当前状态和实现指南
 - [获取当前会话](RESTful/auth-session.md) - 获取当前登录用户会话信息
 - [登出接口](RESTful/auth-signout.md) - 用户登出
