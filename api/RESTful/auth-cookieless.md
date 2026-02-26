@@ -80,7 +80,6 @@ Auth.js (NextAuth.js v5) 使用以下 Cookie 进行会话管理：
 ```mermaid
 sequenceDiagram
     participant Client as 安卓客户端
-    participant WebView as WebView/浏览器
     participant TronLink as TronLink App
     participant NextAuth as NextAuth API
     participant Backend as 后端服务
@@ -88,7 +87,7 @@ sequenceDiagram
 
     %% 步骤 1: 获取 CSRF Token
     Client->>NextAuth: GET /api/auth/csrf?noCookie
-    Note right of Client: Header: X-No-Cookie: 1<br/>Query: ?noCookie
+    Note right of Client: 安卓直接调用 API<br/>Header: X-No-Cookie: 1<br/>Query: ?noCookie
     NextAuth-->>Client: 返回 { csrfToken, _cookies }
     Note left of NextAuth: _cookies 包含：<br/>__Host-authjs.csrf-token
     Client->>Client: 提取并存储 csrfToken<br/>到 EncryptedSharedPreferences
@@ -110,7 +109,7 @@ sequenceDiagram
 
     %% 步骤 5: 提交签名到后端
     Client->>NextAuth: POST /api/auth/callback/tronlink?noCookie
-    Note right of Client: Content-Type: application/x-www-form-urlencoded<br/>Header: X-No-Cookie: 1<br/>Body: message, signature, version=2, csrfToken, callbackUrl
+    Note right of Client: 安卓直接调用 API<br/>Content-Type: application/x-www-form-urlencoded<br/>Header: X-No-Cookie: 1<br/>Body: message, signature, version=2, csrfToken, callbackUrl
     NextAuth->>Backend: 验证签名有效性
     Backend->>Backend: 从签名恢复地址
     Backend->>DB: 查询/创建用户账户
@@ -129,7 +128,7 @@ sequenceDiagram
 
     %% 步骤 6: 后续 API 调用
     Client->>Backend: POST /api/trpc/user.getUserState
-    Note right of Client: Header:<br/>X-Auth-Session-Token: {token}<br/>X-Auth-CSRF-Token: {csrf}
+    Note right of Client: 安卓直接调用 API<br/>Header:<br/>X-Auth-Session-Token: {token}<br/>X-Auth-CSRF-Token: {csrf}
     Backend->>Backend: 验证 Session Token
     Backend-->>Client: 返回用户数据
 ```
