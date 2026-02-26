@@ -1,21 +1,21 @@
-# Google V2 登录 API 文档
+# Apple V2 登录 API 文档
 
-适用于移动端/桌面端等无法使用浏览器 OAuth 流程的场景。客户端先通过 Google SDK 获取 access token，然后直接传递给服务端完成登录。
+适用于移动端/桌面端等无法使用浏览器 OAuth 流程的场景。客户端先通过 Apple Sign In SDK 获取 authorization code，然后直接传递给服务端完成登录。
 
 ## 流程概述
 
 ```mermaid
 sequenceDiagram
-    participant Client as 客户端<br/>(iOS/Android)
-    participant Google as Google<br/>服务器
+    participant Client as 客户端<br/>(iOS/macOS)
+    participant Apple as Apple<br/>服务器
     participant Server as 服务端<br/>(NextAuth)
 
-    Client->>Google: 1. Google SDK 登录
-    Google-->>Client: 2. 返回 accessToken
+    Client->>Apple: 1. Apple Sign In SDK
+    Apple-->>Client: 2. 返回 authorizationCode
     
-    Client->>Server: 3. POST /callback/google-v2<br/>(accessToken + csrfToken)
-    Server->>Google: 验证 accessToken
-    Google-->>Server: 返回用户信息
+    Client->>Server: 3. POST /callback/apple-v2<br/>(authorizationCode + csrfToken)
+    Server->>Apple: 验证 authorizationCode
+    Apple-->>Server: 返回 id_token + 用户信息
     Server-->>Client: 4. 返回 sessionToken + redirectUrl
     
     Client->>Server: 5. 后续请求携带 sessionToken
@@ -35,9 +35,9 @@ curl --location 'https://chat-dev.ainft.com/api/auth/csrf?noCookie=1'
 
 ```json
 {
-  "csrfToken": "f6b8b4f40f689a82fcf6dd3a21832ced0777efd55a62baba5462f9eadbe4b414",
+  "csrfToken": "45da5210042a71a301a9b375840c208520e09e563945a98d7179722335a7d674",
   "_cookies": [
-    "__Secure-authjs.csrf-token=f6b8b4f40f689a82fcf6dd3a21832ced0777efd55a62baba5462f9eadbe4b414%7C9c8b39a33536a8029ae763844622989d14d921fd2abc5693e7034dfe4505d149; Path=/; HttpOnly; Secure; SameSite=Lax",
+    "__Secure-authjs.csrf-token=45da5210042a71a301a9b375840c208520e09e563945a98d7179722335a7d674%7C8f2618082f13bcd9eb6873f16ee065dea37e68afd1c66b7418a8206528883870; Path=/; HttpOnly; Secure; SameSite=Lax",
     "__Secure-authjs.callback-url=https%3A%2F%2Fchat-dev.ainft.com; Path=/; HttpOnly; Secure; SameSite=Lax"
   ]
 }
@@ -52,18 +52,17 @@ curl --location 'https://chat-dev.ainft.com/api/auth/csrf?noCookie=1'
 
 ---
 
-## 2. Google V2 登录
+## 2. Apple V2 登录
 
-使用 Google access token 完成登录。
+使用 Apple authorization code 完成登录。
 
 ### 请求
 
 ```bash
-curl --location 'https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=null' \
---header 'X-Auth-CSRF-Token: f6b8b4f40f689a82fcf6dd3a21832ced0777efd55a62baba5462f9eadbe4b414%7C9c8b39a33536a8029ae763844622989d14d921fd2abc5693e7034dfe4505d149' \
+curl --location 'https://chat-dev.ainft.com/api/auth/callback/apple-v2?noCookie=null' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'csrfToken=' \
---data-urlencode 'accessToken='
+--data-urlencode 'csrfToken=45da5210042a71a301a9b375840c208520e09e563945a98d7179722335a7d674' \
+--data-urlencode 'authorizationCode=c8a5f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0'
 ```
 
 ### 请求参数
@@ -78,15 +77,14 @@ curl --location 'https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `X-Auth-CSRF-Token` | string | 是 | 从 CSRF 接口获取的完整 token（包含 `\|hash` 部分） |
 | `Content-Type` | string | 是 | 固定值 `application/x-www-form-urlencoded` |
 
 #### Body (x-www-form-urlencoded)
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `csrfToken` | string | 是 | CSRF token（仅 `\|` 前面的部分） |
-| `accessToken` | string | 是 | 从 Google SDK 获取的 access token |
+| `csrfToken` | string | 是 | CSRF token（从 CSRF 接口获取） |
+| `authorizationCode` | string | 是 | 从 Apple Sign In SDK 获取的 authorization code |
 
 ### 响应
 
@@ -118,7 +116,7 @@ curl --location 'https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie
 }
 ```
 
-#### Google Token 无效
+#### Authorization Code 无效
 
 ```json
 {
@@ -165,59 +163,77 @@ curl --location 'https://chat-dev.ainft.com/trpc/lambda/user.getUserState?batch=
 ### iOS (Swift)
 
 ```swift
-import GoogleSignIn
+import AuthenticationServices
 
-class AuthManager {
+class AuthManager: NSObject, ASAuthorizationControllerDelegate {
     private var sessionToken: String?
     
-    // 1. Google 登录
-    func signInWithGoogle() {
-        GIDSignIn.sharedInstance.signIn(withPresenting: self) { result, error in
-            guard error == nil, let user = result?.user else { return }
-            
-            user.accessToken.do { accessToken in
-                let token = accessToken.tokenString
-                self.loginWithGoogleV2(accessToken: token)
-            }
+    // 1. Apple 登录
+    func signInWithApple() {
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = [.fullName, .email]
+        
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = self
+        controller.presentationContextProvider = self
+        controller.performRequests()
+    }
+    
+    // ASAuthorizationControllerDelegate
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let authCodeData = credential.authorizationCode,
+              let authCode = String(data: authCodeData, encoding: .utf8) else {
+            print("Failed to get authorization code")
+            return
         }
+        
+        // 2. 使用 authorization code 登录
+        loginWithAppleV2(authorizationCode: authCode)
+    }
+    
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+        print("Apple Sign In failed: \(error)")
     }
     
     // 2. 服务端登录
-    private func loginWithGoogleV2(accessToken: String) {
+    private func loginWithAppleV2(authorizationCode: String) {
         // 2.1 获取 CSRF token
-        getCsrfToken { csrfToken, csrfCookie in
+        getCsrfToken { csrfToken in
             // 2.2 调用登录接口
-            let url = URL(string: "https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=null")!
+            let url = URL(string: "https://chat-dev.ainft.com/api/auth/callback/apple-v2?noCookie=null")!
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
-            request.setValue(csrfCookie, forHTTPHeaderField: "X-Auth-CSRF-Token")
             request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
             
-            let body = "csrfToken=\(csrfToken)&accessToken=\(accessToken)"
+            let body = "csrfToken=\(csrfToken)&authorizationCode=\(authorizationCode)"
             request.httpBody = body.data(using: .utf8)
             
             URLSession.shared.dataTask(with: request) { data, response, error in
                 guard let data = data,
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let cookies = json["_cookies"] as? [String] else { return }
+                      let cookies = json["_cookies"] as? [String] else {
+                    print("Login failed")
+                    return
+                }
                 
                 // 提取 session token
                 self.sessionToken = self.extractSessionToken(from: cookies)
+                print("Login success, session token saved")
             }.resume()
         }
     }
     
     // 3. 获取 CSRF token
-    private func getCsrfToken(completion: @escaping (String, String) -> Void) {
+    private func getCsrfToken(completion: @escaping (String) -> Void) {
         let url = URL(string: "https://chat-dev.ainft.com/api/auth/csrf?noCookie=1")!
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data,
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let csrfToken = json["csrfToken"] as? String,
-                  let cookies = json["_cookies"] as? [String] else { return }
-            
-            let csrfCookie = cookies.first { $0.contains("csrf-token") } ?? ""
-            completion(csrfToken, csrfCookie)
+                  let csrfToken = json["csrfToken"] as? String else {
+                return
+            }
+            completion(csrfToken)
         }.resume()
     }
     
@@ -233,7 +249,10 @@ class AuthManager {
     
     // 5. 调用 API
     func fetchUserState() {
-        guard let sessionToken = sessionToken else { return }
+        guard let sessionToken = sessionToken else {
+            print("No session token")
+            return
+        }
         
         let url = URL(string: "https://chat-dev.ainft.com/trpc/lambda/user.getUserState?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%7D%7D")!
         var request = URLRequest(url: url)
@@ -242,7 +261,18 @@ class AuthManager {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             // 处理响应
+            if let data = data {
+                print("Response: \(String(data: data, encoding: .utf8) ?? "")")
+            }
         }.resume()
+    }
+}
+
+// ASAuthorizationControllerPresentationContextProviding
+extension AuthManager: ASAuthorizationControllerPresentationContextProviding {
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        // 返回当前 window
+        return UIApplication.shared.windows.first { $0.isKeyWindow }!
     }
 }
 ```
@@ -255,45 +285,45 @@ class AuthManager(private val context: Context) {
     private val client = OkHttpClient()
     private val gson = Gson()
     
-    // 1. Google 登录
-    fun signInWithGoogle(activity: Activity) {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("YOUR_WEB_CLIENT_ID")
-            .requestEmail()
-            .build()
+    // 1. Apple 登录 (使用 Chrome Custom Tabs 或 WebView)
+    fun signInWithApple(activity: Activity) {
+        // Android 需要使用 Web 端的 Apple Sign In
+        // 或者使用第三方库如 'com.willowtreeapps:signinwithapplebutton'
+        val appleAuthUrl = buildAppleAuthUrl()
         
-        val googleSignInClient = GoogleSignIn.getClient(activity, gso)
-        activity.startActivityForResult(googleSignInClient.signInIntent, RC_SIGN_IN)
+        val intent = CustomTabsIntent.Builder().build()
+        intent.launchUrl(activity, Uri.parse(appleAuthUrl))
     }
     
-    // 处理登录结果
-    fun handleSignInResult(data: Intent?) {
-        val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            val accessToken = account?.serverAuthCode // 或使用 account.idToken
-            accessToken?.let { loginWithGoogleV2(it) }
-        } catch (e: ApiException) {
-            Log.e("Auth", "Google sign in failed", e)
-        }
+    // 构建 Apple OAuth URL
+    private fun buildAppleAuthUrl(): String {
+        val clientId = "your.service.id"
+        val redirectUri = "https://chat-dev.ainft.com/api/auth/callback/apple"
+        val state = UUID.randomUUID().toString()
+        
+        return "https://appleid.apple.com/auth/authorize" +
+               "?client_id=$clientId" +
+               "&redirect_uri=$redirectUri" +
+               "&response_type=code" +
+               "&scope=name%20email" +
+               "&state=$state"
     }
     
     // 2. 服务端登录
-    private fun loginWithGoogleV2(accessToken: String) {
+    fun loginWithAppleV2(authorizationCode: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // 2.1 获取 CSRF token
-                val (csrfToken, csrfCookie) = getCsrfToken()
+                val csrfToken = getCsrfToken()
                 
                 // 2.2 调用登录接口
-                val url = "https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=null"
-                val body = "csrfToken=$csrfToken&accessToken=$accessToken"
+                val url = "https://chat-dev.ainft.com/api/auth/callback/apple-v2?noCookie=null"
+                val body = "csrfToken=$csrfToken&authorizationCode=$authorizationCode"
                     .toRequestBody("application/x-www-form-urlencoded".toMediaType())
                 
                 val request = Request.Builder()
                     .url(url)
                     .post(body)
-                    .header("X-Auth-CSRF-Token", csrfCookie)
                     .build()
                 
                 val response = client.newCall(request).execute()
@@ -303,6 +333,9 @@ class AuthManager(private val context: Context) {
                 val cookies = json.getAsJsonArray("_cookies")
                 sessionToken = extractSessionToken(cookies)
                 
+                withContext(Dispatchers.Main) {
+                    Log.i("Auth", "Login success")
+                }
             } catch (e: Exception) {
                 Log.e("Auth", "Login failed", e)
             }
@@ -310,7 +343,7 @@ class AuthManager(private val context: Context) {
     }
     
     // 3. 获取 CSRF token
-    private suspend fun getCsrfToken(): Pair<String, String> = suspendCancellableCoroutine { continuation ->
+    private suspend fun getCsrfToken(): String = suspendCancellableCoroutine { continuation ->
         val url = "https://chat-dev.ainft.com/api/auth/csrf?noCookie=1"
         val request = Request.Builder().url(url).build()
         
@@ -322,9 +355,7 @@ class AuthManager(private val context: Context) {
             override fun onResponse(call: Call, response: Response) {
                 val json = gson.fromJson(response.body?.string(), JsonObject::class.java)
                 val csrfToken = json.get("csrfToken").asString
-                val cookies = json.getAsJsonArray("_cookies")
-                val csrfCookie = cookies.firstOrNull { it.asString.contains("csrf-token") }?.asString ?: ""
-                continuation.resume(csrfToken to csrfCookie)
+                continuation.resume(csrfToken)
             }
         })
     }
@@ -358,19 +389,32 @@ class AuthManager(private val context: Context) {
             }
         }
     }
-    
-    companion object {
-        const val RC_SIGN_IN = 9001
-    }
 }
+```
+
+---
+
+## 环境变量配置
+
+服务端需要配置以下环境变量：
+
+```bash
+# Apple V2 Sign In (Server-side validation)
+AUTH_APPLE_V2_ID=com.example.app          # Apple Services ID
+AUTH_APPLE_V2_TEAM_ID=YOUR_TEAM_ID        # Apple Team ID (10字符)
+AUTH_APPLE_V2_KEY_ID=YOUR_KEY_ID          # Private Key ID (10字符)
+AUTH_APPLE_V2_PRIVATE_KEY=-----BEGIN EC PRIVATE KEY-----
+YOUR_PRIVATE_KEY_CONTENT
+-----END EC PRIVATE KEY-----
 ```
 
 ---
 
 ## 注意事项
 
-1. **Access Token 有效期** - Google access token 通常有效期为 1 小时，需要在过期前刷新
+1. **Authorization Code 一次性使用** - Apple 的 authorization code 只能使用一次，用过后会失效
 2. **CSRF Token 一次性使用** - 每个 CSRF token 只能使用一次，登录失败后需要重新获取
 3. **Session Token 存储** - 需要安全存储（iOS Keychain / Android Keystore）
 4. **HTTPS 必需** - 生产环境必须使用 HTTPS 传输 token
-5. **Cookie 前缀差异** - 开发环境使用 `authjs.*`，生产环境可能使用 `__Secure-authjs.*` 或 `__Host-authjs.*`
+5. **Android 限制** - Android 原生不支持 Apple Sign In，需要使用 Web 流程或第三方库
+6. **Private Key 格式** - 需要从 Apple Developer 下载 `.p8` 文件，内容格式为 PEM 格式

@@ -1,264 +1,73 @@
-# LobeChat API 接口文档
+# API 文档目录
 
-本文档提供 LobeChat 后端 API 的详细说明，供前端开发人员使用。
+本文档包含 AINFT Chat 的所有 API 接口文档。
 
-> **📮 Postman 集合**
-> 
-> 可以使用 Postman 导入 [`api/chat-dev.ainft.postman_collection.json`](chat-dev.ainft.postman_collection.json) 快速测试接口。
-> 
-> 导入步骤：
-> 1. 打开 Postman
-> 2. File → Import
-> 3. 选择 `api/chat-dev.ainft.postman_collection.json` 文件
-> 4. 配置环境变量（如 `baseUrl`、`authToken`）
-
-其他技术文档:
-
-- https://docs.apenft.io/reference/chatcompletion
-- https://lobehub.com/zh/docs/development/start
-- https://next-auth.js.org/providers/apple
-- https://next-auth.js.org/providers/google
-
-需求文档链接：https://docs.google.com/document/d/1qV6HXys-Ooxl4yh-uXm5uMovCiVvHopUW5QxtIpzD64/edit?tab=t.0#heading=h.xq8qbhm9tzyd
-## API 架构概述
-
-LobeChat 后端提供两种 API 形式：
-
-### 1. RESTful WebAPI (`src/app/(backend)/webapi/`)
-
-处理需要特殊处理的端点，如流式响应、TTS、文件服务等。
-
-### 2. tRPC Routers (`src/server/routers/`)
-
-类型安全的主要业务路由，按运行时分组：
-
-- **lambda/** — 主业务路由（agent、session、message、topic、file、knowledge、settings 等）
-- **async/** — 耗时异步操作（文件处理、图像生成、RAG 评估）
-- **tools/** — 工具调用（search、MCP、market）
-- **mobile/** — 移动端专用
-- **edge/** — Edge Runtime 路由
-- **desktop/** — 桌面端专用
-
----
-
-## RESTful WebAPI 接口
+## RESTful API
 
 ### 认证相关
-- [认证方式概览](RESTful/auth-overview.md) - 选择合适的认证方式（**推荐先阅读**）
-- [Clerk 认证](RESTful/auth-clerk.md) - 邮箱、手机号、OAuth 登录（含邮箱+密码、魔法链接）
-- [Google OAuth 登录](RESTful/auth-google.md) - Google 账号第三方登录
-- [TronLink 登录](RESTful/auth-tronlink.md) - TronLink 钱包登录接口
-- [Binance 登录](RESTful/auth-binance.md) - Binance 钱包登录接口
-- [Apple 登录说明](RESTful/auth-apple-notice.md) - Apple 登录当前状态和实现指南
-- [无 Cookie 认证](RESTful/auth-cookieless.md) - 安卓/WebView 等受限环境下的认证方案
-- [tRPC 无 Cookie 认证](RESTful/auth-trpc.md) - 修改代码支持安卓调用 tRPC 接口
-- [获取当前会话](RESTful/auth-session.md) - 获取当前登录用户会话信息
-- [登出接口](RESTful/auth-signout.md) - 用户登出
 
-### 聊天相关
-- [POST /webapi/chat/:provider](RESTful/chat.md) - AI 聊天流式响应
+| 文档 | 说明 | 适用场景 |
+|------|------|----------|
+| [auth-google-v2.md](./RESTful/auth-google-v2.md) | Google V2 登录 | 移动端/桌面端直接通过 Google access token 登录 |
+| [auth-apple-v2.md](./RESTful/auth-apple-v2.md) | Apple V2 登录 | 移动端/桌面端直接通过 Apple authorization code 登录 |
+| [auth-trpc.md](./RESTful/auth-trpc.md) | tRPC 无 Cookie 认证 | 安卓等无法使用 Cookie 的客户端调用 tRPC 接口 |
 
-### 语音相关
-- [POST /webapi/tts/openai](RESTful/tts-openai.md) - OpenAI TTS 语音合成
-- [POST /webapi/stt/openai](RESTful/stt-openai.md) - OpenAI 语音转文字
+## 文档说明
 
-### 图像生成
-- [POST /webapi/text-to-image/:provider](RESTful/text-to-image.md) - 文本生成图像
-- [POST /webapi/create-image/comfyui](RESTful/create-image-comfyui.md) - ComfyUI 图像生成
+### 无 Cookie 认证模式
 
-## 外部 API 接口
-- [APENFT API](RESTful/price.md) - 加密货币价格
+所有认证文档都支持 `noCookie` 模式，适用于：
+- 移动端应用（iOS/Android）
+- 桌面端应用
+- 无法使用浏览器 Cookie 的嵌入式环境
 
-### 系统相关
-- [POST /webapi/trace](RESTful/trace.md) - 上报追踪数据
-- [POST /webapi/proxy](RESTful/proxy.md) - 代理请求
-- [POST /webapi/tokenizer](RESTful/tokenizer.md) - 令牌计数
-- [POST /webapi/revalidate](RESTful/revalidate.md) - 重新验证缓存
+### 通用流程
 
----
+```mermaid
+sequenceDiagram
+    participant Client as 客户端
+    participant Auth as 认证服务
+    participant API as API 服务
 
-## tRPC Lambda 接口（主业务）
-
-### 用户管理
-- [user.*](tRPC/lambda/user.md) - 用户信息管理、设置、偏好、SSO、积分奖励
-
-### 会话管理
-- [session.*](tRPC/lambda/session.md) - 会话的创建、查询、更新、删除、克隆、搜索
-- [sessionGroup.*](tRPC/lambda/sessionGroup.md) - 会话分组管理
-
-### 消息管理
-- [message.*](tRPC/lambda/message.md) - 消息的CRUD、翻译、TTS、插件状态、元数据
-
-### 主题（Topic）管理
-- [topic.*](tRPC/lambda/topic.md) - 话题的创建、查询、更新、删除、克隆、搜索
-
-### Agent 管理
-- [agent.*](tRPC/lambda/agent.md) - Agent 配置、知识库绑定、文件绑定
-
-### 群组（Group）管理
-- [group.*](tRPC/lambda/group.md) - 群组聊天管理、成员管理
-
-### 线程（Thread）管理
-- [thread.*](tRPC/lambda/thread.md) - 线程管理（消息的子话题/分支对话）
-
-> **概念说明：Session、Topic、Thread 的区别**
-> 
-> | 概念 | 层级 | 说明 |
-> |------|------|------|
-> | **Session（会话）** | 顶层 | 与 Agent 的完整对话容器，包含多个 Topic。相当于一个助手实例的对话历史 |
-> | **Topic（主题）** | 中层 | 会话内的独立话题/对话分支，包含多条消息。相当于一次完整的问答对话 |
-> | **Thread（线程）** | 底层 | 消息的子话题，用于在特定消息下展开分支讨论。相当于对某条回复的深入追问 |
-
-### 文件管理
-- [file.*](tRPC/lambda/file.md) - 文件上传、查询、删除、哈希校验
-- [upload.*](tRPC/lambda/upload.md) - 文件上传相关
-
-### 知识库管理
-- [knowledgeBase.*](tRPC/lambda/knowledgeBase.md) - 知识库CRUD、文件管理
-- [chunk.*](tRPC/lambda/chunk.md) - 文本块管理、向量检索
-- [document.*](tRPC/lambda/document.md) - 文档管理
-
-### AI 模型与提供商
-- [aiModel.*](tRPC/lambda/aiModel.md) - AI 模型管理
-- [aiProvider.*](tRPC/lambda/aiProvider.md) - AI 提供商管理
-- [aiChat.*](tRPC/lambda/aiChat.md) - AI 聊天（服务端发送消息）
-
-### 图像生成
-- [image.*](tRPC/lambda/image.md) - 图像生成任务
-- [generation.*](tRPC/lambda/generation.md) - 生成任务管理
-- [generationBatch.*](tRPC/lambda/generationBatch.md) - 批量生成任务
-- [generationTopic.*](tRPC/lambda/generationTopic.md) - 生成任务主题
-- [comfyui.*](tRPC/lambda/comfyui.md) - ComfyUI 工作流管理
-
-### 插件与市场
-- [plugin.*](tRPC/lambda/plugin.md) - 插件管理
-- [market.*](tRPC/lambda/market.md) - 市场（Agent、插件）
-
-### 数据导入导出
-- [importer.*](tRPC/lambda/importer.md) - 数据导入
-- [exporter.*](tRPC/lambda/exporter.md) - 数据导出
-
-### 系统配置
-- [config.*](tRPC/lambda/config.md) - 系统配置
-
-### API Key 管理
-- [apiKey.*](tRPC/lambda/apiKey.md) - API Key 管理
-
-### RAG 评估
-- [ragEval.*](tRPC/lambda/ragEval.md) - RAG 效果评估
-
-### 使用统计与订单
-- [usage.*](tRPC/lambda/usage.md) - 使用统计
-- [order.*](tRPC/lambda/order.md) - 订单管理
-
-### 充值与支付
-- [TRON 充值](payment/tron-recharge.md) - TRON 区块链充值（当前系统）
-- [Apple 支付技术方案](payment/apple-pay-technical-plan.md) - Apple Pay/IAP 实现方案
-
-### 钱包管理
-- [wallet.*](tRPC/lambda/wallet.md) - 钱包地址绑定与管理（TRON、BSC、ETH）
-
----
-
-## tRPC Async 接口（异步任务）
-
-- [async.file.*](tRPC/async/file.md) - 文件分块、向量嵌入
-- [async.image.*](tRPC/async/image.md) - 图像异步生成
-- [async.ragEval.*](tRPC/async/ragEval.md) - RAG 异步评估
-
----
-
-## tRPC Tools 接口（工具调用）
-
-- [tools.search.*](tRPC/tools/search.md) - 搜索工具
-- [tools.mcp.*](tRPC/tools/mcp.md) - MCP (Model Context Protocol) 工具
-
----
-
-## tRPC Mobile 接口（移动端）
-
-移动端使用 Lambda 路由的子集，详见：
-
-- [mobile.*](tRPC/mobile/index.md) - 移动端接口列表
-
----
-
-## tRPC Edge 接口
-
-- [edge.appStatus.*](tRPC/edge/appStatus.md) - 应用状态检查
-- [edge.upload.*](tRPC/edge/upload.md) - Edge 上传
-
----
-
-## tRPC Desktop 接口（桌面端）
-
-- [desktop.pgTable.*](tRPC/desktop/pgTable.md) - PGLite 表管理
-- [desktop.mcp.*](tRPC/desktop/mcp.md) - 桌面端 MCP
-
----
-
-## 通用说明
-
-### tRPC 调用方式
-
-tRPC 接口通过 `/trpc` 端点访问。**直接 HTTP 调用（Postman/curl）时的路径、参数与认证方式**见 [tRPC HTTP 调用约定](tRPC/README.md)（base 路径 `/trpc/lambda/`、`batch=1`、`input` 格式、`x-ainft-chat-auth` 等）。  
-
-接口分为：
-
-- **Query（查询）**: 用于读取数据
-- **Mutation（变更）**: 用于写入、更新、删除数据
-
-前端通过 tRPC 客户端调用：
-
-```typescript
-// 查询示例
-const sessions = await trpc.session.getSessions.query({ current: 1, pageSize: 20 });
-
-// 变更示例
-const sessionId = await trpc.session.createSession.mutate({
-  session: { title: 'New Chat' },
-  config: {},
-  type: 'agent'
-});
+    Client->>Auth: 1. 获取 CSRF Token
+    Auth-->>Client: 返回 csrfToken
+    
+    Client->>Auth: 2. 第三方登录<br/>(Google/Apple/...)
+    Auth-->>Client: 返回 sessionToken
+    
+    Client->>API: 3. 调用 API<br/>(携带 sessionToken)
+    API-->>Client: 返回数据
 ```
 
-### 认证
+### 快速开始
 
-- **authedProcedure**: 需要用户认证（JWT）
-- **publicProcedure**: 公开访问
-- **asyncAuthedProcedure**: 异步任务需要认证
+1. **获取 CSRF Token**
+   ```bash
+   curl 'https://chat-dev.ainft.com/api/auth/csrf?noCookie=1'
+   ```
 
-### 类型安全
+2. **登录**（以 Google V2 为例）
+   ```bash
+   curl -X POST 'https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=1' \
+     -H 'Content-Type: application/x-www-form-urlencoded' \
+     -d 'csrfToken=YOUR_CSRF_TOKEN' \
+     -d 'accessToken=YOUR_GOOGLE_ACCESS_TOKEN'
+   ```
 
-所有 tRPC 接口都是类型安全的，TypeScript 会自动推导输入和输出类型。
+3. **调用 API**
+   ```bash
+   curl 'https://chat-dev.ainft.com/trpc/lambda/user.getUserState?batch=1&input=...' \
+     -H 'X-No-Cookie: 1' \
+     -H 'X-Auth-Session-Token: YOUR_SESSION_TOKEN'
+   ```
 
----
+## 环境信息
 
-## 快速导航
+- **开发环境**: `https://chat-dev.ainft.com`
+- **生产环境**: `https://chat.ainft.com`
 
-### 核心功能
-- [用户管理](tRPC/lambda/user.md)
-- [会话管理](tRPC/lambda/session.md)
-- [消息管理](tRPC/lambda/message.md)
-- [Agent 管理](tRPC/lambda/agent.md)
+## 相关项目
 
-### 高级功能
-- [知识库管理](tRPC/lambda/knowledgeBase.md)
-- [文件管理](tRPC/lambda/file.md)
-- [图像生成](tRPC/lambda/generation.md)
-- [插件管理](tRPC/lambda/plugin.md)
-
-### 开发者工具
-- [数据导入导出](tRPC/lambda/importer.md)
-- [RAG 评估](tRPC/lambda/ragEval.md)
-- [使用统计](tRPC/lambda/usage.md)
-
----
-
-
-
----
-
-## 更新日志
-
-- 2026-02-14: 初始版本创建
+- [AINFT Chat 主项目](https://github.com/your-org/ainft-chat)
+- [NextAuth 文档](https://authjs.dev/)
+- [tRPC 文档](https://trpc.io/)
