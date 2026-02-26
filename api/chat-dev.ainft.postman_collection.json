@@ -40,6 +40,46 @@
           "response": []
         },
         {
+          "name": "1. 获取 CSRF noCookie",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Auth-CSRF-Token",
+                "value": "8307448fb8d8278acb52608b4ec767a9822d88c4726e888830dd87c8f9e59493%7C8f2618082f13bcd9eb6873f16ee065dea37e68afd1c66b7418a8206528883870",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{host}}/api/auth/csrf?noCookie",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "csrf"
+              ],
+              "query": [
+                {
+                  "key": "noCookie",
+                  "value": null
+                }
+              ]
+            },
+            "description": "获取 CSRF Token，用于防止跨站请求伪造。"
+          },
+          "response": []
+        },
+        {
           "name": "2. TronLink 登录回调",
           "request": {
             "method": "POST",
@@ -93,6 +133,72 @@
                 "auth",
                 "callback",
                 "tronlink"
+              ]
+            },
+            "description": "提交 TronLink 签名进行认证。"
+          },
+          "response": []
+        },
+        {
+          "name": "2. TronLink 登录回调 noCookie",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-Auth-CSRF-Token",
+                "value": "1"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "message",
+                  "value": "",
+                  "description": "SIWE 格式的签名消息（URL 编码）"
+                },
+                {
+                  "key": "signature",
+                  "value": "",
+                  "description": "TronLink 签名（十六进制，带 0x 前缀）"
+                },
+                {
+                  "key": "version",
+                  "value": "2",
+                  "description": "签名版本（1 或 2）"
+                },
+                {
+                  "key": "csrfToken",
+                  "value": "",
+                  "description": "从 /api/auth/csrf 获取的 Token"
+                },
+                {
+                  "key": "callbackUrl",
+                  "value": "/chat?session=inbox",
+                  "description": "登录成功后的回调 URL"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{host}}/api/auth/callback/tronlink?noCookie",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "callback",
+                "tronlink"
+              ],
+              "query": [
+                {
+                  "key": "noCookie",
+                  "value": null
+                }
               ]
             },
             "description": "提交 TronLink 签名进行认证。"
@@ -160,7 +266,7 @@
                 {
                   "type": "text",
                   "key": "callbackUrl",
-                  "value": "{{host}}chat"
+                  "value": "{{host}}/chat"
                 }
               ]
             },
@@ -231,6 +337,37 @@
           "response": []
         },
         {
+          "name": "4. 获取当前会话 noCookie",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              }
+            ],
+            "url": {
+              "raw": "{{host}}/api/auth/session?noCookie",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "session"
+              ],
+              "query": [
+                {
+                  "key": "noCookie",
+                  "value": null
+                }
+              ]
+            },
+            "description": "获取当前用户会话。需携带 Cookie（登录态）。见 auth-google.md"
+          },
+          "response": []
+        },
+        {
           "name": "5.Google登录请求",
           "request": {
             "method": "POST",
@@ -267,13 +404,13 @@
               "urlencoded": [
                 {
                   "key": "csrfToken",
-                  "value": "8511adad1b4b5214f0fccb8ffac0706c27bf9914f3a6bd152f91ed2b65c4a0fc",
+                  "value": "329ce326c49a04aad68be95188bd5cdd42578bdf01eeff598edead8fb3a7a4f6",
                   "type": "text",
                   "uuid": "e0e34bb5-f50c-4107-8b85-b52d5b6174d0"
                 },
                 {
                   "key": "callbackUrl",
-                  "value": "{{host}}api/auth/callback/google",
+                  "value": "{{host}}/api/auth/callback/google",
                   "type": "text",
                   "uuid": "8c75f980-aea0-47d3-a070-1083839e3b06"
                 },
@@ -302,6 +439,78 @@
           "response": []
         },
         {
+          "name": "5.Google登录请求 noCookie",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "*/*"
+              },
+              {
+                "key": "content-type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "origin",
+                "value": "https://chat-dev.ainft.com"
+              },
+              {
+                "key": "referer",
+                "value": "{{host}}/chat"
+              },
+              {
+                "key": "X-Auth-CSRF-Token",
+                "value": "8307448fb8d8278acb52608b4ec767a9822d88c4726e888830dd87c8f9e59493%7C8f2618082f13bcd9eb6873f16ee065dea37e68afd1c66b7418a8206528883870",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfToken",
+                  "value": "8307448fb8d8278acb52608b4ec767a9822d88c4726e888830dd87c8f9e59493",
+                  "type": "text",
+                  "uuid": "e0e34bb5-f50c-4107-8b85-b52d5b6174d0"
+                },
+                {
+                  "key": "callbackUrl",
+                  "value": "{{host}}/api/auth/callback/google",
+                  "type": "text",
+                  "uuid": "8c75f980-aea0-47d3-a070-1083839e3b06"
+                },
+                {
+                  "key": "json",
+                  "value": "true",
+                  "type": "text",
+                  "uuid": "154a191f-a832-451f-9df6-a51cbbc72f07"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{host}}/api/auth/signin/google?noCookie",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signin",
+                "google"
+              ],
+              "query": [
+                {
+                  "key": "noCookie",
+                  "value": null
+                }
+              ]
+            },
+            "description": "Generated from cURL: curl '{{host}}api/auth/callback/binance' \\\r\n  -H 'accept: */*' \\\r\n  -H 'content-type: application/x-www-form-urlencoded' \\\r\n  -H 'origin: https://chat-dev.ainft.com' \\\r\n  -H 'referer: {{host}}chat' \\\r\n  -H 'x-auth-return-redirect: 1' \\\r\n  -b '__Host-authjs.csrf-token=YOUR_CSRF_TOKEN; __Secure-authjs.callback-url=YOUR_CALLBACK_URL' \\\r\n  --data-urlencode 'chain=bnb' \\\r\n  --data-urlencode 'message=Welcome to AINFT !\r\nhttps://chat-dev.ainft.com wants you to sign in with your TRON account:\r\n0x40469ab4316c3a8a864bdab1273735bdbc78dbd1\r\n\r\nChain ID: 0x38\r\nExpiration Time: 2026-02-25T06:48:51.447Z\r\nNonce: 3YHUXD1771915726448' \\\r\n  --data-urlencode 'signature=0x1b978190e7fa657071c20b6bf7121e1e1317999667373d59857cc393049907712fa10b0ebb77b2d9f337b5048b926d42732b069787c52f65b9f117d44a8906351b' \\\r\n  --data-urlencode 'version=2' \\\r\n  --data-urlencode 'csrfToken=YOUR_CSRF_TOKEN' \\\r\n  --data-urlencode 'callbackUrl={{host}}chat'"
+          },
+          "response": []
+        },
+        {
           "name": "6. Google 登录回调",
           "request": {
             "method": "GET",
@@ -313,6 +522,64 @@
               {
                 "key": "X-Auth-Return-Redirect",
                 "value": "1"
+              }
+            ],
+            "url": {
+              "raw": "{{host}}/api/auth/callback/google?code=4%2F0AfrIepBz1Cwf2O_z49Xq33_1fx_t8xO-YkLPK1LkfPiJWv8gMT0Sb2KIWJDJHS1BlUODAA&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid&authuser=0&prompt=consent",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "callback",
+                "google"
+              ],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "4%2F0AfrIepBz1Cwf2O_z49Xq33_1fx_t8xO-YkLPK1LkfPiJWv8gMT0Sb2KIWJDJHS1BlUODAA"
+                },
+                {
+                  "key": "scope",
+                  "value": "email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid"
+                },
+                {
+                  "key": "authuser",
+                  "value": "0"
+                },
+                {
+                  "key": "prompt",
+                  "value": "consent"
+                }
+              ]
+            },
+            "description": "提交 TronLink 签名进行认证。"
+          },
+          "response": []
+        },
+        {
+          "name": "6. Google 登录回调 noCookie",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "X-Auth-Return-Redirect",
+                "value": "1"
+              },
+              {
+                "key": "X-Auth-PKCE-Code-Verifier",
+                "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiaklxcGhjTEtlR2pNWjZaTTNqVGpCd2U2OTBoeDBvR0FPY3FjX2NDM1pFTXNhX1MtZ3NXMi0tUE5fbkY0MFhMR0dMTV90SmxIbkRONzVzRFVTX3JnUHcifQ..fe2aa6fYB3-XmrJzJ5AMJg.sB5G2YQH4LTmzN4-QgwlRytoW-zjkbV00-K1rNuUunCAkmyNAClYq1bvL-D_2pvx6jps-zuem3HlCShWGGj02Gvj-BHx4CkEymtSuJwta7RE18oe32LM6aEllJarEUFiwuHK0G3aBAns8oVb1OLeIVUZa6fXLagJL-4nyZy3F7a5rz9ldyaBc2UEyvAePVaT.Kw4ESkzEAIFMTZTusnm9cvaBfLZgsStGCAmTHZW4G1w",
+                "type": "text"
+              },
+              {
+                "key": "X-No-Cookie",
+                "value": "1",
+                "type": "text"
               }
             ],
             "url": {
@@ -517,6 +784,117 @@
             "description": "Generated from cURL: curl '{{host}}api/auth/session' \\\r\n  -H 'accept: */*' \\\r\n  -H 'accept-language: zh-CN,zh;q=0.9' \\\r\n  -H 'content-type: application/json' \\\r\n  -b 'ph_sTMFPsFhdP1Ssg_posthog=%7B%22distinct_id%22%3A%22wy0xMPGdMDQGVzTYuy6kVW9NAyKEx7Nuj9WI5DpTUTZ%22%2C%22%24sesid%22%3A%5Bnull%2C%22019c7469-e1f1-7e91-81e4-e1a5d3626fbb%22%2C1771479622128%5D%2C%22%24epp%22%3Atrue%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22%24direct%22%2C%22u%22%3A%22https%3A%2F%2Fposthog.dev.ainft.com%2Fproject%2F1%2Factivity%2Fexplore%23q%3D%257B%2522kind%2522%253A%2522DataTableNode%2522%252C%2522full%2522%253Atrue%252C%2522source%2522%253A%257B%2522kind%2522%253A%2522EventsQuery%2522%252C%2522select%2522%253A%255B%2522*%2522%252C%2522event%2522%252C%2522person_display_name%2520--%2520Person%2522%252C%2522coalesce(properties.%2524current_url%252C%2520properties.%2524screen_name)%2520--%2520Url%2520%252F%2520Screen%2522%252C%2522properties.%2524lib%2522%252C%2522timestamp%2522%255D%252C%2522orderBy%2522%253A%255B%2522timestamp%2520DESC%2522%255D%252C%2522after%2522%253A%2522-24h%2522%257D%252C%2522propertiesViaUrl%2522%253Atrue%252C%2522showSavedQueries%2522%253Atrue%252C%2522showPersistentColumnConfigurator%2522%253Atrue%257D%22%7D%7D; __Host-authjs.csrf-token=90968bdb95cde87c69b69e2054063abf5c79332b393a3a8c451bb35e4c1ac088%7C7a9b2b1bac6b3d113f1a17fa4296de01fefeb5944f2b87d579a86ee040bbe26f; __Secure-authjs.callback-url=https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox; ainft_posthog_id=user_xRgvCkpRxJQu; ph_phc_nsfbMp2AB7bO9dIg5rcwh5iSss7vt5TgXL1gfyk0bmk_posthog=%7B%22%24user_state%22%3A%22identified%22%2C%22%24sesid%22%3A%5B1771911632065%2C%22019c8e29-d3d7-74b5-8e3f-2ea09f3eb352%22%2C1771911631829%5D%2C%22distinct_id%22%3A%22user_xRgvCkpRxJQu%22%2C%22%24device_id%22%3A%22019c8d93-12df-70c2-85b8-d3ce6a9707a4%22%2C%22%24last_posthog_reset%22%3A%222026-02-24T03%3A47%3A27.673Z%22%2C%22%24initialization_time%22%3A%222026-02-24T05%3A40%3A29.215Z%22%2C%22%24configured_session_timeout_ms%22%3A1800000%2C%22device_type%22%3A%22desktop%22%2C%22platform%22%3A%22web%22%2C%22%24capture_rate_limit%22%3A%7B%22tokens%22%3A99%2C%22last%22%3A1771911632065%7D%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%22%7D%2C%22%24client_session_props%22%3A%7B%22sessionId%22%3A%22019c8e29-d3d7-74b5-8e3f-2ea09f3eb352%22%2C%22props%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%26topic%3Dtpc_2qy0MSgiJRkG%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%26topic%3Dtpc_2qy0MSgiJRkG%22%7D%7D%2C%22%24epp%22%3Atrue%2C%22%24user_id%22%3A%22user_xRgvCkpRxJQu%22%2C%22%24stored_person_properties%22%3A%7B%22platform%22%3A%22web%22%2C%22business%22%3A%22lobe-chat%22%2C%22spm%22%3A%22lobe-chat%22%7D%2C%22user_id%22%3A%22user_xRgvCkpRxJQu%22%7D; __Secure-authjs.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiZmRpajJBUnBic2FHNVVrRzBnNl9TMFRYS2s3LXNXV3lTdmlxV1J6Y2d6WVNzdXdTQk1XZ2Q2YXBFaEt0M2lrZjdrY3BFaUQ1Y1hpaHpaQVRHeDA5N1EifQ..OR7qsQ1kpZ1LwMBdINmmLg.g_5k11edL9VT1seI75CZ89tMu8G2pulS-MOKGuT4fFn906MR5p4u9z2vjuXIWuWh1M-bssO3Kh-dzt9cmhVDeHFhUnMxGZ86id6oeMsu0T4BhO5YLoh8xRz0EI2KXpP_UqXzesd1qD9Qz2vo8r8fX4Dnlv8fCEc8S4NWs_9qqAE-OroPPJQjolY0wLGYp3VRIBGwjbAu_VFQ0Xqv6cj7VAh2JGxi7zqbzS-zNbzkRTlTPwfuqMKp3c31OmRCicSg78uJqZ1jTHdQbjTmeCYIyoGhJTh63llCzr03jNm8R8E.BPTyjtasW0MS9gskm2aMevREWGSeiwfNKILtnpUtCVc' \\\r\n  -H 'priority: u=1, i' \\\r\n  -H 'referer: {{host}}chat?session=inbox' \\\r\n  -H 'sec-ch-ua: \"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"' \\\r\n  -H 'sec-ch-ua-mobile: ?0' \\\r\n  -H 'sec-ch-ua-platform: \"Windows\"' \\\r\n  -H 'sec-fetch-dest: empty' \\\r\n  -H 'sec-fetch-mode: cors' \\\r\n  -H 'sec-fetch-site: same-origin' \\\r\n  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36'"
           },
           "response": []
+        },
+        {
+          "name": "GoogleLogin 使用SDK,NoCookie",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Auth-CSRF-Token",
+                "value": "f6b8b4f40f689a82fcf6dd3a21832ced0777efd55a62baba5462f9eadbe4b414%7C9c8b39a33536a8029ae763844622989d14d921fd2abc5693e7034dfe4505d149",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "{{cookie}}",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfToken",
+                  "value": "f6b8b4f40f689a82fcf6dd3a21832ced0777efd55a62baba5462f9eadbe4b414",
+                  "type": "text",
+                  "uuid": "48debff2-05aa-455f-9112-d61d05032a33"
+                },
+                {
+                  "key": "accessToken",
+                  "value": "{{google-access-token}}",
+                  "type": "text",
+                  "uuid": "cc52d7c0-e656-42b5-9e55-61ac258dbd3d"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{host}}/api/auth/callback/google-v2?noCookie",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "callback",
+                "google-v2"
+              ],
+              "query": [
+                {
+                  "key": "noCookie",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AppleLogin 使用SDK,NoCookie",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Auth-CSRF-Token",
+                "value": "501f68591fb20394100f3d732a8638d749304783087fc4e8e56dded8541e3944%7Cbe70b8facc0bac1d971c68938b54c6fbb949e030040e2d1f2ec97241936e7a2a",
+                "type": "text",
+                "disabled": true
+              },
+              {
+                "key": "Cookie",
+                "value": "{{cookie}}",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfToken",
+                  "value": "45da5210042a71a301a9b375840c208520e09e563945a98d7179722335a7d674",
+                  "type": "text",
+                  "uuid": "fc19710c-cf27-424c-a2d0-3782deed8838"
+                },
+                {
+                  "key": "authorizationCode",
+                  "value": "{{apple-auth-code}}",
+                  "type": "text",
+                  "uuid": "735f0017-d007-46da-aaec-2f263f3cc3a4"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{host}}/api/auth/callback/apple-v2?noCookie",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "callback",
+                "apple-v2"
+              ],
+              "query": [
+                {
+                  "key": "noCookie",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -622,7 +1000,7 @@
           "response": []
         },
         {
-          "name": "Chat (openai) 基于登录",
+          "name": "Chat (openai) 基于登录 noCookie",
           "request": {
             "method": "POST",
             "header": [
@@ -681,16 +1059,6 @@
               {
                 "key": "x-ainft-chat-auth",
                 "value": "{{auth}}"
-              },
-              {
-                "key": "x-ainft-trace",
-                "value": "eyJzZXNzaW9uSWQiOiJpbmJveCIsInRvcGljSWQiOiJ0cGNfenhnTEo1ZDBsTXRtIiwidHJhY2VOYW1lIjoiQ29udmVyc2F0aW9uIiwiZW5hYmxlZCI6ZmFsc2V9",
-                "disabled": true
-              },
-              {
-                "key": "Cookie",
-                "value": "__Host-authjs.csrf-token=829b6c119e277cb0a35652d099e8fc5af36276b775a8ea9f5777b99e7a75bc35%7C50a16b53f60356dac86b79b23993cce6c62ddfd7402b21c05bec83c933402a1a; ph_sTMFPsFhdP1Ssg_posthog=%7B%22distinct_id%22%3A%22wy0xMPGdMDQGVzTYuy6kVW9NAyKEx7Nuj9WI5DpTUTZ%22%2C%22%24sesid%22%3A%5Bnull%2C%22019c7469-e1f1-7e91-81e4-e1a5d3626fbb%22%2C1771479622128%5D%2C%22%24epp%22%3Atrue%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22%24direct%22%2C%22u%22%3A%22https%3A%2F%2Fposthog.dev.ainft.com%2Fproject%2F1%2Factivity%2Fexplore%23q%3D%257B%2522kind%2522%253A%2522DataTableNode%2522%252C%2522full%2522%253Atrue%252C%2522source%2522%253A%257B%2522kind%2522%253A%2522EventsQuery%2522%252C%2522select%2522%253A%255B%2522*%2522%252C%2522event%2522%252C%2522person_display_name%2520--%2520Person%2522%252C%2522coalesce(properties.%2524current_url%252C%2520properties.%2524screen_name)%2520--%2520Url%2520%252F%2520Screen%2522%252C%2522properties.%2524lib%2522%252C%2522timestamp%2522%255D%252C%2522orderBy%2522%253A%255B%2522timestamp%2520DESC%2522%255D%252C%2522after%2522%253A%2522-24h%2522%257D%252C%2522propertiesViaUrl%2522%253Atrue%252C%2522showSavedQueries%2522%253Atrue%252C%2522showPersistentColumnConfigurator%2522%253Atrue%257D%22%7D%7D; __Secure-authjs.callback-url=https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox; __Secure-authjs.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiZmRpajJBUnBic2FHNVVrRzBnNl9TMFRYS2s3LXNXV3lTdmlxV1J6Y2d6WVNzdXdTQk1XZ2Q2YXBFaEt0M2lrZjdrY3BFaUQ1Y1hpaHpaQVRHeDA5N1EifQ..D2U-nf1BsIFuZoMF3x33kg.5GqUTGBpf7EqETn718T90ChfG017JEuda8LjanNYhjDhkRA-C9RPUe-Y49CcqqbRCbRkmohmcMvCve7nQolMk5G4ySgTg-OTOGM7Uky_Em02ERFJ6neWc5RQUTe3_Hb1qSzgYtxOueoIByY1jt4Lrd5e5kDFC8fAzpNCP8kYJeFFbu1Vp-dulpU0938qZcalKA13GBmf9bXsoAx0GsYULUsLuYueM-3m_Jkl0rhwS-xeBonq4-4iL4cWzxqeZcuYHUlxC14OeXlPSkrceM5GG6oJPwi_0FTtW9V7z6Oljj6RGVO5SrM0U5zWiKAD6TIztd__qVgbXdkp4uG3Jo4HMg.PUXoWVHK6i5mD8Bzg15-_MfyAFuHzvSzt9RONZmm20o; ainft_posthog_id=TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo; ph_phc_nsfbMp2AB7bO9dIg5rcwh5iSss7vt5TgXL1gfyk0bmk_posthog=%7B%22%24user_state%22%3A%22identified%22%2C%22%24sesid%22%3A%5B1771644239276%2C%22019c7e39-9de3-7cc9-b6de-4f851ba85be4%22%2C1771644231138%5D%2C%22distinct_id%22%3A%22TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo%22%2C%22%24device_id%22%3A%22019c56af-ee34-7b37-9c08-7ecf94f6b4aa%22%2C%22%24last_posthog_reset%22%3A%222026-02-21T03%3A23%3A49.053Z%22%2C%22%24initialization_time%22%3A%222026-02-21T03%3A23%3A50.179Z%22%2C%22%24configured_session_timeout_ms%22%3A1800000%2C%22device_type%22%3A%22desktop%22%2C%22platform%22%3A%22web%22%2C%22%24capture_rate_limit%22%3A%7B%22tokens%22%3A99%2C%22last%22%3A1771644239276%7D%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%22%7D%2C%22%24client_session_props%22%3A%7B%22sessionId%22%3A%22019c7e39-9de3-7cc9-b6de-4f851ba85be4%22%2C%22props%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%22%7D%7D%2C%22%24epp%22%3Atrue%2C%22%24user_id%22%3A%22TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo%22%2C%22%24stored_person_properties%22%3A%7B%22platform%22%3A%22web%22%2C%22business%22%3A%22lobe-chat%22%2C%22spm%22%3A%22lobe-chat%22%7D%2C%22user_id%22%3A%22TMujsbV6t2weXmoPrdfc8QAMJ3oZCJFBXo%22%7D",
-                "disabled": true
               }
             ],
             "body": {
@@ -791,7 +1159,7 @@
           "response": []
         },
         {
-          "name": "price",
+          "name": "price noCookie",
           "request": {
             "method": "GET",
             "header": [],
@@ -841,11 +1209,6 @@
                     "value": "*/*"
                   },
                   {
-                    "key": "x-ainft-chat-auth",
-                    "value": "{{auth}}",
-                    "description": "从登录态获取"
-                  },
-                  {
                     "key": "Cookie",
                     "value": "{{cookie}}",
                     "type": "text"
@@ -866,6 +1229,61 @@
                       "key": "batch",
                       "value": "1",
                       "description": "tRPC batch 模式"
+                    },
+                    {
+                      "key": "input",
+                      "value": "%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
+                      "description": "URL 编码的 batch input JSON"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "getUserState noCookie",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "accept",
+                    "value": "*/*"
+                  },
+                  {
+                    "key": "x-ainft-chat-auth",
+                    "value": "{{auth}}",
+                    "description": "从登录态获取",
+                    "disabled": true
+                  },
+                  {
+                    "key": "x-auth-session-token",
+                    "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiZmRpajJBUnBic2FHNVVrRzBnNl9TMFRYS2s3LXNXV3lTdmlxV1J6Y2d6WVNzdXdTQk1XZ2Q2YXBFaEt0M2lrZjdrY3BFaUQ1Y1hpaHpaQVRHeDA5N1EifQ..8GDkoWyQ1w1g-D1KgWa9WQ.TOmjfZg096TmcRYQ_CLoHV7sbiER4JX2B2T60AN2ph5_DgciFqaFwXZZKtLR4F_7SlPMxlZJD_Uljf2t98gYVNnHNEr3VRflK6q-E7ZxxTNf9QGuZqOKZKwj4_485xUn71qf7RrDvdyCVsjPQID6iUcXOGgmX4JIvxgrvW3worPAS9pBVv92hywn_8myNG6RVuX84lXJoyqiuhoOmg91i602SdzLNZqeN6wC6k7xPbTA5eXAgnmD6Pz5YRHnFormIQ_JFCFox1TQ_fiFL_x10jeeiSVn-rAGtyJsNnvyh3EwWDVa4ILS-Ubchi4sa4zU82rlEAjIB6yk78mVpLVLcQ.T193Ym4FNQwpatCMi2EOA9JxgoOF05zwjuSwV2ehc2w",
+                    "type": "text"
+                  },
+                  {
+                    "key": "X-Auth-CSRF-Token",
+                    "value": "8e37b3a6a6ac0984efa7a1f635e0824c9aa277da827f0fd5ac573881867a8e0a%7C38c6cb39a8a6534f01fef63e2de834df9efdda5e19386ffa742b1f412935f413",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{host}}/trpc/lambda/user.getUserState?noCookie=1&batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "trpc",
+                    "lambda",
+                    "user.getUserState"
+                  ],
+                  "query": [
+                    {
+                      "key": "noCookie",
+                      "value": "1"
+                    },
+                    {
+                      "key": "batch",
+                      "value": "1"
                     },
                     {
                       "key": "input",
@@ -7482,44 +7900,41 @@
       ]
     },
     {
-      "name": "http://localhost:3000/api/auth/callback/credentials",
+      "name": "google oauth check",
       "request": {
-        "method": "POST",
+        "method": "GET",
         "header": [
           {
-            "key": "Content-Type",
-            "value": "application/json"
+            "key": "Authorization",
+            "value": "Bearer {{google-access-token}}",
+            "type": "text"
           },
           {
-            "key": "Accept",
-            "value": "application/json",
+            "key": "",
+            "value": "",
             "type": "text"
           }
         ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \"username\": \"admin\",\r\n    \"password\": \"123456\",\r\n    \"callbackUrl\": \"http://localhost:3000\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
         "url": {
-          "raw": "http://localhost:3002/api/auth/callback/credentials",
-          "protocol": "http",
+          "raw": "https://www.googleapis.com/oauth2/v1/userinfo?alt=json",
+          "protocol": "https",
           "host": [
-            "localhost"
+            "www",
+            "googleapis",
+            "com"
           ],
-          "port": "3002",
           "path": [
-            "api",
-            "auth",
-            "callback",
-            "credentials"
+            "oauth2",
+            "v1",
+            "userinfo"
+          ],
+          "query": [
+            {
+              "key": "alt",
+              "value": "json"
+            }
           ]
-        },
-        "description": "Generated from cURL:   curl -X POST 'http://localhost:3000/api/auth/callback/credentials' \\\r\n    -H 'Content-Type: application/json' \\\r\n    -d '{\"username\":\"admin\",\"password\":\"123456\",\"callbackUrl\":\"http://localhost:3000\"}'\r\n"
+        }
       },
       "response": []
     }
