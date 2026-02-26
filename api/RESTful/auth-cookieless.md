@@ -142,7 +142,16 @@ if (!ctx.userId) {
 
 ## 客户端实现方案
 
-### 方案一：手动管理 Session Token（推荐）
+### 方案选择指南
+
+| 方案 | 适用场景 | 复杂度 | 推荐度 |
+|------|----------|--------|--------|
+| **方案一：手动 Cookie 头部** | 服务端支持 Cookie 头部解析 | 中 | ⭐⭐⭐ |
+| **方案二：独立 Header 字段** | 安卓无法使用 Cookie，服务端支持 Header 认证 | 中 | ⭐⭐⭐⭐⭐ |
+| **方案三：LobeChat 自定义 Header** | 使用 LobeChat 特定认证方式 | 低 | ⭐⭐⭐ |
+| **方案四：WebView Cookie 管理** | 可以使用 WebView 且能启用 Cookie | 低 | ⭐⭐⭐⭐ |
+
+### 方案一：手动管理 Session Token（Cookie 头部方式）
 
 #### 步骤 1：获取 Session（登录后）
 
@@ -220,7 +229,226 @@ if (session.user) {
 }
 ```
 
-### 方案二：使用自定义 Header 认证
+### 方案二：使用独立 Header 字段发送认证信息（安卓推荐）
+
+当安卓客户端无法正常使用 Cookie 时，可以通过独立的 Header 字段发送认证信息。服务端支持通过特定 Header 获取原本存储在 Cookie 中的认证数据。
+
+#### Header 字段映射表
+
+| 原始 Cookie | 对应 Header 字段 | 说明 | 使用场景 |
+|------------|-----------------|------|----------|
+| `__Host-authjs.session-token` / `__Secure-authjs.session-token` | `X-Auth-Session-Token` | 会话令牌 | 所有需要认证的请求 |
+| `__Host-authjs.csrf-token` / `__Secure-authjs.csrf-token` | `X-Auth-CSRF-Token` | CSRF 防护令牌 | POST/PUT/DELETE 等写操作 |
+| `__Secure-authjs.callback-url` | `X-Auth-Callback-Url` | 登录回调地址 | OAuth 登录流程 |
+| `__Secure-authjs.pkce.code_verifier` | `X-Auth-PKCE-Code-Verifier` | PKCE 验证码 | OAuth PKCE 流程 |
+| `__Secure-authjs.state` | `X-Auth-State` | OAuth 状态参数 | OAuth 登录流程 |
+
+#### 使用示例
+
+**1. 普通 API 请求（只需要 Session Token）**
+
+```javascript
+const response = await fetch('/api/trpc/session.getSessions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Auth-Session-Token': sessionToken,  // 从存储中读取的 session token
+  },
+  body: JSON.stringify({
+    json: { current: 1, pageSize: 20 }
+  }),
+});
+```
+
+**2. 写操作请求（需要 Session Token + CSRF Token）**
+
+```javascript
+const response = await fetch('/api/trpc/session.createSession', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Auth-Session-Token': sessionToken,  // 会话令牌
+    'X-Auth-CSRF-Token': csrfToken,        // CSRF 防护令牌
+  },
+  body: JSON.stringify({
+    json: {
+      session: { title: 'New Chat' },
+      config: {},
+      type: 'agent'
+    }
+  }),
+});
+```
+
+**3. OAuth 登录流程（需要额外参数）**
+
+```javascript
+// 步骤 1：获取 OAuth 授权 URL
+const response = await fetch('/api/auth/signin/google?noCookie', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'X-Auth-CSRF-Token': csrfToken,
+    'X-Auth-Callback-Url': 'https://your-app.com/callback',  // 自定义回调地址
+  },
+  body: new URLSearchParams({
+    csrfToken: csrfToken,
+    callbackUrl: '/',
+    json: 'true',
+  }),
+});
+
+// 步骤 2：处理 OAuth 回调（携带 PKCE 和 state）
+const callbackResponse = await fetch('/api/auth/callback/google?noCookie', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'X-Auth-Session-Token': sessionToken,
+    'X-Auth-CSRF-Token': csrfToken,
+    'X-Auth-PKCE-Code-Verifier': pkceCodeVerifier,  // PKCE 验证码
+    'X-Auth-State': oauthState,                      // OAuth 状态
+  },
+  body: new URLSearchParams({
+    code: authorizationCode,  // 从 OAuth 提供商获取的授权码
+    state: oauthState,
+  }),
+});
+```
+
+#### 完整封装示例
+
+```typescript
+class AuthHeaderManager {
+  private sessionToken: string | null = null;
+  private csrfToken: string | null = null;
+  private callbackUrl: string | null = null;
+  private pkceCodeVerifier: string | null = null;
+  private oauthState: string | null = null;
+
+  // 从登录响应中提取并存储所有 token
+  extractFromResponse(data: { _cookies?: string[] }): void {
+    if (!data._cookies) return;
+
+    for (const cookie of data._cookies) {
+      // Session Token
+      const sessionMatch = cookie.match(/(?:__Host-|__Secure-)?authjs\.session-token=([^;]+)/);
+      if (sessionMatch) this.sessionToken = decodeURIComponent(sessionMatch[1]);
+
+      // CSRF Token
+      const csrfMatch = cookie.match(/(?:__Host-|__Secure-)?authjs\.csrf-token=([^;]+)/);
+      if (csrfMatch) this.csrfToken = decodeURIComponent(csrfMatch[1]);
+
+      // Callback URL
+      const callbackMatch = cookie.match(/__Secure-authjs\.callback-url=([^;]+)/);
+      if (callbackMatch) this.callbackUrl = decodeURIComponent(callbackMatch[1]);
+
+      // PKCE Code Verifier
+      const pkceMatch = cookie.match(/__Secure-authjs\.pkce\.code_verifier=([^;]+)/);
+      if (pkceMatch) this.pkceCodeVerifier = decodeURIComponent(pkceMatch[1]);
+
+      // OAuth State
+      const stateMatch = cookie.match(/__Secure-authjs\.state=([^;]+)/);
+      if (stateMatch) this.oauthState = decodeURIComponent(stateMatch[1]);
+    }
+
+    // 持久化存储
+    this.saveToStorage();
+  }
+
+  // 构建请求头部
+  buildHeaders(options: {
+    requireSession?: boolean;
+    requireCsrf?: boolean;
+    requireCallback?: boolean;
+    requirePkce?: boolean;
+    requireState?: boolean;
+  } = {}): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (options.requireSession && this.sessionToken) {
+      headers['X-Auth-Session-Token'] = this.sessionToken;
+    }
+
+    if (options.requireCsrf && this.csrfToken) {
+      headers['X-Auth-CSRF-Token'] = this.csrfToken;
+    }
+
+    if (options.requireCallback && this.callbackUrl) {
+      headers['X-Auth-Callback-Url'] = this.callbackUrl;
+    }
+
+    if (options.requirePkce && this.pkceCodeVerifier) {
+      headers['X-Auth-PKCE-Code-Verifier'] = this.pkceCodeVerifier;
+    }
+
+    if (options.requireState && this.oauthState) {
+      headers['X-Auth-State'] = this.oauthState;
+    }
+
+    return headers;
+  }
+
+  // 普通查询请求
+  async get(url: string): Promise<Response> {
+    return fetch(url, {
+      method: 'GET',
+      headers: this.buildHeaders({ requireSession: true }),
+    });
+  }
+
+  // 写操作请求
+  async post(url: string, body: any): Promise<Response> {
+    return fetch(url, {
+      method: 'POST',
+      headers: this.buildHeaders({ requireSession: true, requireCsrf: true }),
+      body: JSON.stringify(body),
+    });
+  }
+
+  // 从存储加载
+  loadFromStorage(): void {
+    this.sessionToken = localStorage.getItem('auth_session_token');
+    this.csrfToken = localStorage.getItem('auth_csrf_token');
+    this.callbackUrl = localStorage.getItem('auth_callback_url');
+    this.pkceCodeVerifier = localStorage.getItem('auth_pkce_verifier');
+    this.oauthState = localStorage.getItem('auth_oauth_state');
+  }
+
+  // 保存到存储
+  saveToStorage(): void {
+    if (this.sessionToken) localStorage.setItem('auth_session_token', this.sessionToken);
+    if (this.csrfToken) localStorage.setItem('auth_csrf_token', this.csrfToken);
+    if (this.callbackUrl) localStorage.setItem('auth_callback_url', this.callbackUrl);
+    if (this.pkceCodeVerifier) localStorage.setItem('auth_pkce_verifier', this.pkceCodeVerifier);
+    if (this.oauthState) localStorage.setItem('auth_oauth_state', this.oauthState);
+  }
+
+  // 清除所有 token
+  clear(): void {
+    this.sessionToken = null;
+    this.csrfToken = null;
+    this.callbackUrl = null;
+    this.pkceCodeVerifier = null;
+    this.oauthState = null;
+    localStorage.removeItem('auth_session_token');
+    localStorage.removeItem('auth_csrf_token');
+    localStorage.removeItem('auth_callback_url');
+    localStorage.removeItem('auth_pkce_verifier');
+    localStorage.removeItem('auth_oauth_state');
+  }
+}
+```
+
+#### 注意事项
+
+1. **Header 大小写**：Header 字段名不区分大小写，但建议使用文档中的驼峰命名（`X-Auth-Session-Token`）
+2. **Token 编码**：从 Cookie 字符串提取的 Token 值可能需要 URL 解码（`decodeURIComponent`）
+3. **安全性**：避免在日志中打印这些 Header 值，防止敏感信息泄露
+4. **HTTPS**：生产环境必须使用 HTTPS，防止 Token 被中间人窃取
+
+### 方案三：使用 LobeChat 自定义 Header 认证
 
 如果服务端配置了 `LOBE_CHAT_AUTH_HEADER` 支持，可以使用：
 
@@ -236,7 +464,7 @@ const response = await fetch('/api/trpc/xxx', {
 });
 ```
 
-### 方案三：Android WebView Cookie 管理
+### 方案四：Android WebView Cookie 管理
 
 如果可能，建议启用 WebView 的 Cookie 支持：
 
