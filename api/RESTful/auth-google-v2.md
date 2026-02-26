@@ -374,3 +374,6 @@ class AuthManager(private val context: Context) {
 3. **Session Token 存储** - 需要安全存储（iOS Keychain / Android Keystore）
 4. **HTTPS 必需** - 生产环境必须使用 HTTPS 传输 token
 5. **Cookie 前缀差异** - 开发环境使用 `authjs.*`，生产环境可能使用 `__Secure-authjs.*` 或 `__Host-authjs.*`
+
+在 https://developers.google.com/oauthplayground/?iss=https%3A%2F%2Faccounts.google.com&code=4%2F0AfrIepC07yNzBekTwDvgVMpK0grpVQ20zswMkVn3AxzRaDJ8_qkyBZXQ-1AXDUsYPqN4Nw&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid&authuser=0&hd=tron.network&prompt=consent
+中可以生成 accessToken
