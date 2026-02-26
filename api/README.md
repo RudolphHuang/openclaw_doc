@@ -50,6 +50,7 @@ LobeChat 后端提供两种 API 形式：
 - [TronLink 登录](RESTful/auth-tronlink.md) - TronLink 钱包登录接口
 - [Binance 登录](RESTful/auth-binance.md) - Binance 钱包登录接口
 - [Apple 登录说明](RESTful/auth-apple-notice.md) - Apple 登录当前状态和实现指南
+- [无 Cookie 认证](RESTful/auth-cookieless.md) - 安卓/WebView 等受限环境下的认证方案
 - [获取当前会话](RESTful/auth-session.md) - 获取当前登录用户会话信息
 - [登出接口](RESTful/auth-signout.md) - 用户登出
 
