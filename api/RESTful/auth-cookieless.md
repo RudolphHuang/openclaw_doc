@@ -71,6 +71,170 @@ Auth.js (NextAuth.js v5) 使用以下 Cookie 进行会话管理：
 | `authjs.pkce.code_verifier` | `__Secure-` | **PKCE 验证码**，OAuth 2.0 安全流程使用 | 短暂（分钟级） | ❌ 否（OAuth 登录时需要） |
 | `authjs.state` | `__Secure-` | **OAuth 状态参数**，防止 OAuth 登录时的 CSRF 攻击 | 短暂 | ❌ 否（OAuth 登录时需要） |
 
+#### 前后端交互流程
+
+##### 1. 凭证登录流程（Credentials Sign In）
+
+```mermaid
+sequenceDiagram
+    participant Client as 安卓客户端
+    participant NextAuth as NextAuth API
+    participant Backend as 后端服务
+    participant DB as 数据库
+
+    %% 步骤 1: 获取 CSRF Token
+    Client->>NextAuth: GET /api/auth/csrf
+    Note right of Client: 无 Cookie 模式：<br/>Header: X-No-Cookie: 1<br/>或 Query: ?noCookie
+    NextAuth-->>Client: 返回 { csrfToken }
+    Note left of NextAuth: 设置 Cookie:<br/>__Host-authjs.csrf-token<br/>(无 Cookie 模式在 _cookies 中返回)
+    Client->>Client: 提取并存储 csrfToken
+
+    %% 步骤 2: 执行登录
+    Client->>NextAuth: POST /api/auth/callback/credentials
+    Note right of Client: Body: email, password, csrfToken<br/>Header: X-No-Cookie: 1
+    NextAuth->>Backend: 验证用户凭证
+    Backend->>DB: 查询用户信息
+    DB-->>Backend: 返回用户数据
+    Backend-->>NextAuth: 验证结果
+    
+    alt 验证成功
+        NextAuth-->>Client: 返回 { user, expires, _cookies }
+        Note left of NextAuth: _cookies 包含：<br/>1. __Host-authjs.session-token<br/>2. __Host-authjs.csrf-token (更新)<br/>3. 其他相关 Cookie
+        Client->>Client: 提取 session-token<br/>安全存储到本地
+    else 验证失败
+        NextAuth-->>Client: 返回错误信息
+    end
+
+    %% 步骤 3: 后续 API 调用
+    Client->>Backend: POST /api/trpc/xxx
+    Note right of Client: Header:<br/>X-Auth-Session-Token: {token}<br/>X-Auth-CSRF-Token: {csrf}
+    Backend->>Backend: 验证 Session Token
+    Backend-->>Client: 返回业务数据
+```
+
+##### 2. OAuth 登录流程（以 Google 为例）
+
+```mermaid
+sequenceDiagram
+    participant Client as 安卓客户端
+    participant NextAuth as NextAuth API
+    participant OAuth as OAuth 提供商<br/>(Google/Apple/...)
+    participant Backend as 后端服务
+
+    %% 步骤 1: 获取 CSRF Token
+    Client->>NextAuth: GET /api/auth/csrf?noCookie
+    NextAuth-->>Client: 返回 { csrfToken, _cookies }
+    Client->>Client: 存储 csrfToken
+
+    %% 步骤 2: 请求 OAuth 授权
+    Client->>NextAuth: POST /api/auth/signin/google?noCookie
+    Note right of Client: Header:<br/>X-Auth-CSRF-Token: {csrf}<br/>X-Auth-Callback-Url: /dashboard
+    NextAuth->>NextAuth: 生成 PKCE code_challenge<br/>生成 state 参数
+    NextAuth-->>Client: 返回 { url: OAuth授权URL, _cookies }
+    Note left of NextAuth: _cookies 包含：<br/>__Secure-authjs.pkce.code_verifier<br/>__Secure-authjs.state<br/>__Secure-authjs.callback-url
+    Client->>Client: 提取并存储：<br/>pkce.code_verifier<br/>state<br/>callback-url
+
+    %% 步骤 3: 用户授权
+    Client->>OAuth: 打开授权页面
+    OAuth->>OAuth: 用户登录并授权
+    OAuth-->>Client: 重定向到 callback URL<br/>携带 code 和 state
+
+    %% 步骤 4: OAuth 回调
+    Client->>NextAuth: POST /api/auth/callback/google?noCookie
+    Note right of Client: Header:<br/>X-Auth-Session-Token: {existing?}<br/>X-Auth-CSRF-Token: {csrf}<br/>X-Auth-PKCE-Code-Verifier: {verifier}<br/>X-Auth-State: {state}<br/>Body: code, state
+    NextAuth->>NextAuth: 验证 state 防止 CSRF
+    NextAuth->>OAuth: 用 code + code_verifier 换取 access_token
+    OAuth-->>NextAuth: 返回 access_token + 用户信息
+    NextAuth->>Backend: 创建/更新用户账户
+    NextAuth-->>Client: 返回 { user, expires, _cookies }
+    Note left of NextAuth: _cookies 包含新的<br/>__Host-authjs.session-token
+    Client->>Client: 提取并存储 session-token
+```
+
+##### 3. Session 验证流程
+
+```mermaid
+sequenceDiagram
+    participant Client as 安卓客户端
+    participant NextAuth as NextAuth API
+    participant Backend as 后端服务
+
+    %% 方式 1: 通过 NextAuth 获取 Session
+    Client->>NextAuth: GET /api/auth/session?noCookie
+    Note right of Client: Header:<br/>X-No-Cookie: 1<br/>Cookie: session-token=xxx<br/>或 X-Auth-Session-Token: xxx
+    NextAuth->>NextAuth: 解密 session-token
+    NextAuth-->>Client: 返回 { user, expires }
+
+    %% 方式 2: 直接访问业务 API
+    Client->>Backend: POST /api/trpc/user.getUserInfo
+    Note right of Client: Header:<br/>X-Auth-Session-Token: {token}<br/>X-Auth-CSRF-Token: {csrf}
+    Backend->>Backend: 从 Header 提取 token
+    Backend->>Backend: 验证 token 有效性
+    alt Token 有效
+        Backend-->>Client: 返回用户数据
+    else Token 无效/过期
+        Backend-->>Client: 401 Unauthorized
+        Client->>Client: 触发重新登录
+    end
+```
+
+##### 4. 登出流程
+
+```mermaid
+sequenceDiagram
+    participant Client as 安卓客户端
+    participant NextAuth as NextAuth API
+
+    Client->>NextAuth: POST /api/auth/signout?noCookie
+    Note right of Client: Header:<br/>X-Auth-Session-Token: {token}<br/>X-Auth-CSRF-Token: {csrf}<br/>Body: csrfToken, callbackUrl
+    NextAuth->>NextAuth: 使 session-token 失效
+    NextAuth-->>Client: 返回 { url: callbackUrl, _cookies }
+    Note left of NextAuth: _cookies 中的 session-token<br/>已过期/被清除
+    Client->>Client: 清除本地存储的所有 token
+    Client->>Client: 重定向到登录页
+```
+
+##### 5. Cookie 在无 Cookie 模式下的映射关系
+
+```mermaid
+graph LR
+    subgraph "正常 Cookie 模式"
+        C1[__Host-authjs.session-token]
+        C2[__Host-authjs.csrf-token]
+        C3[__Secure-authjs.callback-url]
+        C4[__Secure-authjs.pkce.code_verifier]
+        C5[__Secure-authjs.state]
+    end
+
+    subgraph "无 Cookie 模式 - _cookies 数组"
+        R1["_cookies[0]: session-token=xxx"]
+        R2["_cookies[1]: csrf-token=xxx"]
+        R3["_cookies[2]: callback-url=xxx"]
+        R4["_cookies[3]: pkce.code_verifier=xxx"]
+        R5["_cookies[4]: state=xxx"]
+    end
+
+    subgraph "无 Cookie 模式 - Header 发送"
+        H1["Header: X-Auth-Session-Token"]
+        H2["Header: X-Auth-CSRF-Token"]
+        H3["Header: X-Auth-Callback-Url"]
+        H4["Header: X-Auth-PKCE-Code-Verifier"]
+        H5["Header: X-Auth-State"]
+    end
+
+    C1 -.->|提取| R1
+    C2 -.->|提取| R2
+    C3 -.->|提取| R3
+    C4 -.->|提取| R4
+    C5 -.->|提取| R5
+
+    R1 -.->|映射| H1
+    R2 -.->|映射| H2
+    R3 -.->|映射| H3
+    R4 -.->|映射| H4
+    R5 -.->|映射| H5
+```
+
 #### Cookie 前缀说明
 
 - **`__Host-`**：更强的安全前缀，要求 Cookie 必须满足：
