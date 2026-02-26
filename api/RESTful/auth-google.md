@@ -33,8 +33,8 @@
 在 Google Cloud Console 中添加授权重定向 URI：
 
 ```
-生产环境：
-https://your-domain.com/api/auth/callback/google
+测试环境：
+https://chat-dev.ainft.com/api/auth/signin/google
 
 开发环境：
 http://localhost:3000/api/auth/callback/google
@@ -548,7 +548,7 @@ OAuth 流程中的 state 参数由 NextAuth 自动生成和验证。
 在 Google Cloud Console 中只添加必要的回调 URL：
 
 ```
-✅ https://yourdomain.com/api/auth/callback/google
+✅ https://chat-dev.ainft.com/api/auth/callback/google
 ✅ http://localhost:3000/api/auth/callback/google (开发环境)
 ❌ https://*.yourdomain.com/... (避免使用通配符)
 ```
