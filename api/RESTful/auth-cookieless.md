@@ -73,44 +73,98 @@ Auth.js (NextAuth.js v5) 使用以下 Cookie 进行会话管理：
 
 #### 前后端交互流程
 
-##### 1. 凭证登录流程（Credentials Sign In）
+##### 1. TronLink 登录流程（Web3 钱包签名认证）
+
+参考 [auth-tronlink.md](auth-tronlink.md) 的实现，以下是安卓无 Cookie 模式下的完整流程：
 
 ```mermaid
 sequenceDiagram
     participant Client as 安卓客户端
+    participant WebView as WebView/浏览器
+    participant TronLink as TronLink App
     participant NextAuth as NextAuth API
     participant Backend as 后端服务
     participant DB as 数据库
 
     %% 步骤 1: 获取 CSRF Token
-    Client->>NextAuth: GET /api/auth/csrf
-    Note right of Client: 无 Cookie 模式：<br/>Header: X-No-Cookie: 1<br/>或 Query: ?noCookie
-    NextAuth-->>Client: 返回 { csrfToken }
-    Note left of NextAuth: 设置 Cookie:<br/>__Host-authjs.csrf-token<br/>(无 Cookie 模式在 _cookies 中返回)
-    Client->>Client: 提取并存储 csrfToken
+    Client->>NextAuth: GET /api/auth/csrf?noCookie
+    Note right of Client: Header: X-No-Cookie: 1<br/>Query: ?noCookie
+    NextAuth-->>Client: 返回 { csrfToken, _cookies }
+    Note left of NextAuth: _cookies 包含：<br/>__Host-authjs.csrf-token
+    Client->>Client: 提取并存储 csrfToken<br/>到 EncryptedSharedPreferences
 
-    %% 步骤 2: 执行登录
-    Client->>NextAuth: POST /api/auth/callback/credentials
-    Note right of Client: Body: email, password, csrfToken<br/>Header: X-No-Cookie: 1
-    NextAuth->>Backend: 验证用户凭证
-    Backend->>DB: 查询用户信息
+    %% 步骤 2: 连接 TronLink 钱包
+    Client->>TronLink: 调用 tron_requestAccounts
+    Note right of Client: 通过 Deep Link 或<br/>WalletConnect 连接钱包
+    TronLink-->>Client: 返回钱包地址 (base58)
+
+    %% 步骤 3: 生成 SIWE 签名消息
+    Client->>Client: 生成签名消息
+    Note right of Client: SIWE 格式：<br/>Domain: chat-dev.ainft.com<br/>Address: TXxx...<br/>Chain ID: 0x94a9059e<br/>Expiration Time: 2026-02-...<br/>Nonce: DR6DA3...
+
+    %% 步骤 4: 请求用户签名
+    Client->>TronLink: 请求签名消息
+    Note right of Client: tronWeb.trx.sign(toHex(message))
+    TronLink->>TronLink: 用户确认签名
+    TronLink-->>Client: 返回签名 (0x...)
+
+    %% 步骤 5: 提交签名到后端
+    Client->>NextAuth: POST /api/auth/callback/tronlink?noCookie
+    Note right of Client: Content-Type: application/x-www-form-urlencoded<br/>Header: X-No-Cookie: 1<br/>Body: message, signature, version=2, csrfToken, callbackUrl
+    NextAuth->>Backend: 验证签名有效性
+    Backend->>Backend: 从签名恢复地址
+    Backend->>DB: 查询/创建用户账户
     DB-->>Backend: 返回用户数据
     Backend-->>NextAuth: 验证结果
     
     alt 验证成功
-        NextAuth-->>Client: 返回 { user, expires, _cookies }
+        NextAuth-->>Client: 返回 { url, _cookies }
         Note left of NextAuth: _cookies 包含：<br/>1. __Host-authjs.session-token<br/>2. __Host-authjs.csrf-token (更新)<br/>3. 其他相关 Cookie
         Client->>Client: 提取 session-token<br/>安全存储到本地
+        Client->>Client: 跳转到 url (如 /chat)
     else 验证失败
-        NextAuth-->>Client: 返回错误信息
+        NextAuth-->>Client: 返回 { error, url }
+        Client->>Client: 显示错误信息
     end
 
-    %% 步骤 3: 后续 API 调用
-    Client->>Backend: POST /api/trpc/xxx
+    %% 步骤 6: 后续 API 调用
+    Client->>Backend: POST /api/trpc/user.getUserState
     Note right of Client: Header:<br/>X-Auth-Session-Token: {token}<br/>X-Auth-CSRF-Token: {csrf}
     Backend->>Backend: 验证 Session Token
-    Backend-->>Client: 返回业务数据
+    Backend-->>Client: 返回用户数据
 ```
+
+**TronLink 登录流程说明：**
+
+```
+1. 获取 CSRF Token
+   ↓
+2. 连接 TronLink 钱包 (tron_requestAccounts)
+   ↓
+3. 生成 SIWE 签名消息
+   ↓
+4. 用户使用 TronLink App 签名
+   ↓
+5. 提交签名到后端验证
+   ↓
+6. 后端验证签名并创建会话
+   ↓
+7. 返回认证结果和 _cookies
+   ↓
+8. 提取 session-token 存储到本地
+   ↓
+9. 后续 API 使用 Header 发送 Token
+```
+
+**关键 Cookie 在无 Cookie 模式下的处理：**
+
+| 步骤 | 正常 Cookie 模式 | 无 Cookie 模式（安卓） |
+|------|-----------------|----------------------|
+| 获取 CSRF | 自动通过 Cookie 发送 | 从 `_cookies` 提取，存储到本地 |
+| 登录请求 | Cookie 自动携带 | Header: `X-No-Cookie: 1` |
+| 登录响应 | `Set-Cookie` 头部 | 从 `_cookies` 数组提取 |
+| Session 存储 | 浏览器 Cookie 存储 | `EncryptedSharedPreferences` |
+| 后续请求 | 自动携带 Cookie | Header: `X-Auth-Session-Token` |
 
 ##### 2. OAuth 登录流程（以 Google 为例）
 
