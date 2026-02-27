@@ -155,7 +155,7 @@ LobeChat 后端提供两种 API 形式：
 
 ### 充值与支付
 - [TRON 充值](payment/tron-recharge.md) - TRON 区块链充值（当前系统）
-- [Apple 支付技术方案](payment/apple-pay-technical-plan.md) - Apple Pay/IAP 实现方案
+- [Apple 支付技术方案](payment/apple-pay-iap.md) - Apple IAP 实现方案
 
 ### 钱包管理
 - [wallet.*](tRPC/lambda/wallet.md) - 钱包地址绑定与管理（TRON、BSC、ETH）
