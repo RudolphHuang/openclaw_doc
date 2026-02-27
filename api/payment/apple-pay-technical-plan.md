@@ -1164,3 +1164,89 @@ struct RechargeView: View {
 
 ---
 
+## 方案对比：方案 A vs 方案 B
+
+### 核心维度对比
+
+| 对比维度 | 方案 A：Apple Pay（Stripe） | 方案 B：App Store IAP |
+|---------|--------------------------|----------------------|
+| **适用商品类型** | 实体商品、服务、虚拟积分（Web/H5） | 数字商品、虚拟积分（原生 App 强制） |
+| **Apple 抽成** | ❌ 无（Stripe 收 2.9% + $0.30） | ✅ 15%~30%（小开发者 15%，大开发者 30%） |
+| **App Store 政策合规** | ⚠️ 仅适用于非数字商品场景 | ✅ 原生 App 内数字商品唯一合法方式 |
+| **集成复杂度** | ⭐⭐⭐ 中等（Stripe SDK + Webhook） | ⭐⭐⭐⭐ 较高（StoreKit 2 + 收据验证） |
+| **用户体验** | Face ID / Touch ID 快速支付 | Face ID / Touch ID 快速支付 |
+| **支付平台依赖** | Stripe / Adyen / PayPal（可切换） | 仅 Apple App Store（强依赖） |
+| **退款处理** | 通过 Stripe Dashboard / API 发起 | 由 Apple 客服处理，开发者无法主动退款 |
+| **支持货币** | 135+ 种货币（Stripe 支持） | 受 App Store 定价等级限制 |
+| **沙盒测试** | Stripe 测试模式，独立可控 | Apple Sandbox 环境，依赖 Apple 账号 |
+| **审核风险** | ⚠️ Web 支付绕过 IAP 存在被拒风险 | ✅ 符合 App Store 规范，无审核风险 |
+| **后端验证复杂度** | Stripe Webhook 签名验证（简单） | Apple 收据验证 + 防重放（较复杂） |
+| **价格灵活性** | 完全自由定价 | 受 App Store 定价等级约束（固定梯度）|
+| **上架限制** | 无（与 App Store 审核无关） | 需在 App Store Connect 配置商品 |
+
+---
+
+### 费用对比
+
+```mermaid
+graph LR
+    subgraph SchemeA["方案 A（Apple Pay + Stripe）"]
+        A1["用户支付 $10"]
+        A2["Stripe 手续费: $0.59<br/>（2.9% + $0.30）"]
+        A3["开发者实收: $9.41"]
+    end
+
+    subgraph SchemeB["方案 B（App Store IAP）"]
+        B1["用户支付 $9.99"]
+        B2["Apple 抽成: $1.50~$3.00<br/>（15%~30%）"]
+        B3["开发者实收: $6.99~$8.49"]
+    end
+
+    A1 --> A2 --> A3
+    B1 --> B2 --> B3
+
+    style SchemeA fill:#e8f5e9
+    style SchemeB fill:#fce4ec
+```
+
+> **结论**：以 $10 订单为例，方案 A 开发者实收约 **$9.41**，方案 B 实收约 **$7.00~$8.49**，方案 A 收益显著高于方案 B。
+
+---
+
+### 合规性说明
+
+```mermaid
+flowchart TD
+    Q1{"商品类型是什么？"}
+    Q1 -->|"数字商品/虚拟积分<br/>在原生 iOS App 内销售"| Must["⚠️ 必须使用 IAP（方案 B）<br/>App Store 政策强制要求"]
+    Q1 -->|"实体商品 / 线下服务"| CanA["✅ 可以使用 Apple Pay（方案 A）"]
+    Q1 -->|"数字商品但通过 Web/H5 购买"| MayA["⚠️ 可以使用 Apple Pay（方案 A）<br/>但需避免在 App 内引导到外部购买"]
+
+    style Must fill:#ffcdd2
+    style CanA fill:#c8e6c9
+    style MayA fill:#fff9c4
+```
+
+---
+
+### 适用场景推荐
+
+| 场景 | 推荐方案 | 原因 |
+|-----|---------|------|
+| 原生 iOS App 内购买积分/会员 | **方案 B（IAP）** | App Store 政策强制要求 |
+| Web 端 / H5 充值页面 | **方案 A（Apple Pay）** | 费率低，体验好，无 Apple 限制 |
+| macOS App（非沙盒） | **方案 A（Apple Pay）** | 灵活定价，费率更优 |
+| 需要灵活定价和促销活动 | **方案 A（Apple Pay）** | IAP 定价受等级限制，不支持随意打折 |
+| 强调合规、无审核风险 | **方案 B（IAP）** | 完全符合 Apple 政策 |
+| 企业内部 App / TestFlight 测试 | **方案 A（Apple Pay）** | IAP 沙盒环境配置繁琐 |
+
+---
+
+### 总结建议
+
+> **如果产品以原生 iOS App 为主要销售渠道**，且销售的是数字商品（积分、会员等），则**必须使用方案 B（IAP）**，否则有被 App Store 下架的风险。
+>
+> **如果产品有 Web 端或 H5 充值入口**，强烈推荐**方案 A（Apple Pay + Stripe）**，手续费更低、定价更灵活、退款更方便。
+>
+> **最佳实践**：两套方案并行实现——原生 App 内走 IAP（合规），Web 端走 Apple Pay（降低成本），让用户自行选择充值路径。
+
