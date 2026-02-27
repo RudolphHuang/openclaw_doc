@@ -64,19 +64,114 @@ Apple 提供两种主要的支付方式：
 
 #### 1. 架构设计
 
-```
-[前端 Web/App]
-      ↓
-[Apple Pay SDK]
-      ↓
-[Stripe/Adyen 等支付网关]
-      ↓
-[ainft 后端 Webhook]
-      ↓
-[充值积分到用户账户]
+```mermaid
+flowchart TB
+    subgraph Frontend["前端层"]
+        Web["Web 应用"]
+        App["iOS/macOS App"]
+    end
+
+    subgraph SDK["SDK 层"]
+        ApplePaySDK["Apple Pay SDK"]
+        StoreKit["StoreKit 2"]
+    end
+
+    subgraph Gateway["支付网关"]
+        Stripe["Stripe"]
+        Adyen["Adyen"]
+        PayPal["PayPal"]
+        AppStore["App Store Connect"]
+    end
+
+    subgraph Backend["后端层"]
+        API["tRPC API"]
+        Webhook["Webhook 处理器"]
+        IAPVerify["IAP 验证服务"]
+    end
+
+    subgraph Data["数据层"]
+        DB[("PostgreSQL")]
+        Cache[("Redis")]
+    end
+
+    subgraph External["外部服务"]
+        AppleServer["Apple 服务器"]
+    end
+
+    Web --> ApplePaySDK
+    App --> ApplePaySDK
+    App --> StoreKit
+    
+    ApplePaySDK --> Stripe
+    ApplePaySDK --> Adyen
+    ApplePaySDK --> PayPal
+    StoreKit --> AppStore
+    
+    Stripe --> Webhook
+    Adyen --> Webhook
+    PayPal --> Webhook
+    AppStore --> IAPVerify
+    
+    Webhook --> API
+    IAPVerify --> API
+    IAPVerify --> AppleServer
+    
+    API --> DB
+    Webhook --> DB
+    API --> Cache
+    
+    style Frontend fill:#e1f5fe
+    style Gateway fill:#fff3e0
+    style Backend fill:#e8f5e9
+    style Data fill:#fce4ec
+    style External fill:#f3e5f5
 ```
 
+**架构说明**:
+- **前端层**: Web 应用和 iOS/macOS App 提供用户交互界面
+- **SDK 层**: Apple Pay SDK 处理支付请求，StoreKit 2 处理应用内购买
+- **支付网关**: 支持多种支付渠道（Stripe、Adyen、PayPal）和 App Store Connect
+- **后端层**: tRPC API 处理业务逻辑，Webhook 接收支付通知，IAP 验证服务验证收据
+- **数据层**: PostgreSQL 存储订单和交易数据，Redis 提供缓存支持
+- **外部服务**: Apple 服务器用于验证 IAP 收据
+
 #### 2. 技术选型
+
+##### 技术选型对比
+
+```mermaid
+graph LR
+    subgraph Criteria["评估维度"]
+        Complexity["集成复杂度"]
+        Fee["手续费"]
+        Global["全球覆盖"]
+        Doc["文档完善度"]
+    end
+
+    subgraph Options["支付网关选项"]
+        StripeOpt["Stripe ⭐推荐"]
+        AdyenOpt["Adyen"]
+        PayPalOpt["PayPal"]
+    end
+
+    Complexity -->|⭐⭐⭐ 中等| StripeOpt
+    Complexity -->|⭐⭐⭐⭐ 较高| AdyenOpt
+    Complexity -->|⭐⭐ 简单| PayPalOpt
+
+    Fee -->|2.9% + $0.30| StripeOpt
+    Fee -->|联系销售| AdyenOpt
+    Fee -->|2.9% + $0.30| PayPalOpt
+
+    Global -->|✅ 优秀| StripeOpt
+    Global -->|✅ 企业级| AdyenOpt
+    Global -->|✅ 广泛| PayPalOpt
+
+    Doc -->|✅ 丰富| StripeOpt
+    Doc -->|✅ 专业| AdyenOpt
+    Doc -->|✅ 友好| PayPalOpt
+
+    style StripeOpt fill:#c8e6c9
+```
 
 ##### 选项 1: Stripe Payment（推荐）
 
@@ -220,6 +315,51 @@ export const applePayOrders = pgTable('t_apple_pay_orders', {
 - `charge.refunded`
 
 #### 5. 后端实现
+
+##### 支付服务流程
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 用户
+    participant Frontend as 前端
+    participant TRPC as tRPC API
+    participant StripeSvc as StripePaymentService
+    participant StripeAPI as Stripe API
+    participant DB as PostgreSQL
+    participant PointsSvc as PointsService
+
+    User->>Frontend: 选择充值套餐
+    Frontend->>TRPC: payment.createApplePayOrder
+    TRPC->>StripeSvc: createApplePayIntent()
+    StripeSvc->>StripeAPI: paymentIntents.create
+    StripeAPI-->>StripeSvc: PaymentIntent + client_secret
+    StripeSvc->>DB: INSERT t_apple_pay_orders
+    StripeSvc-->>TRPC: {orderId, clientSecret, amount, points}
+    TRPC-->>Frontend: 返回订单信息
+
+    Frontend->>StripeAPI: confirmCardPayment (Apple Pay)
+    StripeAPI-->>Frontend: paymentIntent 结果
+
+    alt 支付成功
+        StripeAPI->>TRPC: Webhook: payment_intent.succeeded
+        TRPC->>StripeSvc: handlePaymentSuccess()
+        StripeSvc->>DB: UPDATE status='succeeded'
+        StripeSvc->>PointsSvc: creditPoints()
+        PointsSvc->>DB: INSERT 积分流水
+        TRPC-->>StripeAPI: 200 OK
+    else 支付失败
+        StripeAPI->>TRPC: Webhook: payment_intent.payment_failed
+        TRPC->>DB: UPDATE status='failed'
+        TRPC-->>StripeAPI: 200 OK
+    end
+
+    Frontend->>TRPC: payment.confirmApplePayOrder
+    TRPC->>DB: 查询订单状态
+    TRPC->>PointsSvc: getUserBalance()
+    TRPC-->>Frontend: {success, points, balance}
+    Frontend-->>User: 显示充值成功
+```
 
 ##### 支付服务
 
