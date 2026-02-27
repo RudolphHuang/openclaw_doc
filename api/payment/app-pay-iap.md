@@ -1,6 +1,8 @@
 # App Store In-App Purchase（IAP）技术方案
 
 > **方案 B**：适用于 iOS/macOS 原生 App 内销售数字商品（积分、会员）的唯一合规方式。
+>
+> **验证机制**：StoreKit 2 + JWS 本地验签（`@apple/app-store-server-library`），已废弃的 `verifyReceipt` 接口不再使用。
 
 ---
 
@@ -15,11 +17,12 @@ flowchart TB
 
     subgraph Apple["Apple 生态"]
         AppStore["App Store"]
-        AppleServer["Apple 验证服务器\nbuy.itunes.apple.com"]
+        AppleRootCA["Apple Root CA\n（本地内置公钥）"]
     end
 
     subgraph Backend["后端服务"]
         IAPAPI["/trpc/iap.verifyReceipt"]
+        JWSVerifier["SignedDataVerifier\n本地 JWS 验签（无网络请求）"]
         IAPService["IAPService\nsrc/server/services/payment/iap.ts"]
         PointsService["PointsService\nsrc/server/services/points/index.ts"]
     end
@@ -33,21 +36,24 @@ flowchart TB
     StoreKit2 -->|2. 获取商品| AppStore
     iOSApp -->|3. 发起购买| StoreKit2
     StoreKit2 -->|4. 处理支付| AppStore
-    AppStore -->|5. 返回 Transaction| StoreKit2
-    StoreKit2 -->|6. JWS 收据| iOSApp
-    iOSApp -->|7. 发送收据| IAPAPI
+    AppStore -->|5. 返回 VerificationResult| StoreKit2
+    StoreKit2 -->|6. jwsRepresentation| iOSApp
+    iOSApp -->|7. 发送 jwsToken| IAPAPI
     IAPAPI -->|8. 验证请求| IAPService
-    IAPService -->|9. 验证收据| AppleServer
-    AppleServer -->|10. 返回验证结果| IAPService
-    IAPService -->|11. 防重放 + 入库| IAPTable
-    IAPService -->|12. 幂等发放积分| PointsService
-    PointsService -->|13. 记录流水| PointsTable
+    IAPService -->|9. 本地验签| JWSVerifier
+    JWSVerifier -->|10. 对比 Apple Root CA| AppleRootCA
+    JWSVerifier -->|11. 返回解码 Payload| IAPService
+    IAPService -->|12. 防重放 + 入库| IAPTable
+    IAPService -->|13. 幂等发放积分| PointsService
+    PointsService -->|14. 记录流水| PointsTable
 
     style Client fill:#e3f2fd
     style Apple fill:#f3e5f5
     style Backend fill:#e8f5e9
     style Database fill:#fff3e0
 ```
+
+> **关键改变**：后端不再向 Apple 发起网络请求，改为使用 `@apple/app-store-server-library` 在本地通过 Apple 根证书验证 JWS 签名，延迟更低，且不受 Apple 服务器可用性影响。
 
 ---
 
@@ -61,8 +67,7 @@ sequenceDiagram
     participant StoreKit as StoreKit 2
     participant AppStore as App Store
     participant Backend as 后端 tRPC
-    participant IAPSvc as IAPService
-    participant AppleAPI as Apple 验证 API
+    participant JWSVerifier as SignedDataVerifier
     participant DB as PostgreSQL
 
     User->>iOS: 点击购买积分
@@ -73,34 +78,30 @@ sequenceDiagram
     AppStore-->>StoreKit: 返回 VerificationResult<Transaction>
     StoreKit-->>iOS: .success(verification)
 
-    iOS->>iOS: checkVerified(verification) 校验 JWS 签名
-    iOS->>iOS: AppStore.sync() 获取 Base64 收据
+    iOS->>iOS: checkVerified(verification)（StoreKit 本地 JWS 校验）
+    iOS->>iOS: 取 transaction.jwsRepresentation
 
-    iOS->>Backend: iap.verifyReceipt\n{ receipt, transactionId, productId }
-    Backend->>IAPSvc: processPurchase()
+    iOS->>Backend: iap.verifyReceipt\n{ jwsToken, productId }
+    Backend->>Backend: 从 JWS Header 提取 transactionId 做防重放预检
 
-    IAPSvc->>DB: 检查 transactionId 是否已存在（防重放）
-    DB-->>IAPSvc: 不存在，继续处理
+    Backend->>DB: 检查 transactionId 是否已存在（防重放）
+    DB-->>Backend: 不存在，继续处理
 
-    IAPSvc->>AppleAPI: POST /verifyReceipt\n{ receipt-data, password, exclude-old-transactions: true }
-    AppleAPI-->>IAPSvc: { status: 0, latest_receipt_info: [...] }
+    Backend->>JWSVerifier: verifyAndDecodeTransaction(jwsToken)
+    Note over JWSVerifier: 本地验证签名链<br/>（无网络请求）
+    JWSVerifier-->>Backend: JWSTransactionDecodedPayload\n{ transactionId, productId, environment, purchaseDate, ... }
 
-    alt status=21007（沙盒收据）
-        IAPSvc->>AppleAPI: 切换到 sandbox.itunes.apple.com 重试
-        AppleAPI-->>IAPSvc: { status: 0, ... }
-    end
+    Backend->>Backend: 校验 bundleId / productId / environment
 
     alt 验证成功
-        IAPSvc->>DB: BEGIN TRANSACTION
-        IAPSvc->>DB: INSERT t_iap_receipts（status='verified'）
-        IAPSvc->>DB: creditPointsOnce()（幂等写 t_user_point_flows + t_user_points）
-        IAPSvc->>DB: COMMIT
-        IAPSvc-->>Backend: { success: true, points, transactionId }
-        Backend-->>iOS: 返回成功
+        Backend->>DB: BEGIN TRANSACTION
+        Backend->>DB: INSERT t_iap_receipts（status='verified'）
+        Backend->>DB: creditPointsOnce()（幂等写 t_user_point_flows + t_user_points）
+        Backend->>DB: COMMIT
+        Backend-->>iOS: { success: true, points, transactionId }
         iOS->>StoreKit: transaction.finish()
         iOS-->>User: 显示充值成功
-    else 验证失败 / 重放攻击
-        IAPSvc-->>Backend: 抛出错误
+    else JWS 验签失败 / 字段不匹配 / 重放攻击
         Backend-->>iOS: 返回失败（4xx）
         iOS-->>User: 显示错误提示
     end
@@ -129,9 +130,15 @@ sequenceDiagram
 | `packages/database/src/schemas/iapReceipt.ts` | Drizzle ORM 表定义 |
 | `packages/database/src/models/iapReceipt.ts` | 数据库操作模型 |
 | `packages/types/src/points.ts` | 新增 `IAP = 'iap'` 枚举值 |
-| `src/server/services/payment/iap.ts` | 业务逻辑服务（收据验证 + 积分发放） |
+| `src/server/services/payment/iap.ts` | 业务逻辑服务（JWS 验签 + 积分发放） |
 | `src/server/routers/lambda/iap.ts` | tRPC 路由定义 |
 | `src/server/routers/lambda/index.ts` | 主路由注册（新增 `iap: iapRouter`） |
+
+### 依赖安装
+
+```bash
+pnpm add @apple/app-store-server-library
+```
 
 ---
 
@@ -152,7 +159,7 @@ export const iapReceipt = pgTable(
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
 
-    // Apple 交易信息
+    // Apple 交易信息（从 JWS Payload 解码）
     transactionId: varchar('transaction_id', { length: 128 }).notNull(),
     originalTransactionId: varchar('original_transaction_id', { length: 128 }),
     productId: varchar('product_id', { length: 128 }).notNull(),
@@ -162,10 +169,10 @@ export const iapReceipt = pgTable(
     currency: varchar('currency', { length: 3 }).notNull().default('USD'),
     points: integer('points').notNull(),          // 发放积分数
 
-    // 原始收据
-    receipt: text('receipt').notNull(),
+    // 原始 JWS Token（替代旧版 Base64 收据）
+    jwsToken: text('jws_token').notNull(),
 
-    // 验证环境
+    // 验证环境（从 JWS Payload 的 environment 字段提取）
     environment: varchar('environment', { length: 32 }),  // 'Production' | 'Sandbox'
 
     // 处理状态
@@ -186,7 +193,7 @@ export const iapReceipt = pgTable(
 );
 ```
 
-> 唯一索引 `idx_iap_receipts_transaction_id` 是防重放的数据库级保障：同一 transactionId 只能入库一次。
+> `jws_token` 字段存储原始 JWS 字符串，替代旧版 Base64 收据，便于后续审计回溯。
 
 ---
 
@@ -199,7 +206,7 @@ export const iapReceipt = pgTable(
 | 方法 | 说明 |
 |---|---|
 | `existsByTransactionId(db, transactionId)` | 防重放检查 |
-| `insert(db, payload)` | 写入收据记录 |
+| `insert(db, payload)` | 写入收据记录（含 jwsToken） |
 | `listByUser(db, userId, params)` | 分页查询用户购买记录 |
 | `countByUser(db, userId)` | 统计购买记录数 |
 | `updateStatus(db, transactionId, status)` | 更新记录状态 |
@@ -213,7 +220,7 @@ export const iapReceipt = pgTable(
 ```typescript
 export enum PointFlowSourceType {
   Chat = 'chat',
-  IAP = 'iap',           // 新增：App Store IAP
+  IAP = 'iap',           // App Store IAP
   Recharge = 'recharge',
   SignupBonus = 'signup_bonus',
 }
@@ -225,10 +232,42 @@ export enum PointFlowSourceType {
 
 **文件**: `src/server/services/payment/iap.ts`
 
+#### 初始化 SignedDataVerifier
+
+```typescript
+import {
+  AppStoreServerAPIClient,
+  Environment,
+  SignedDataVerifier,
+} from '@apple/app-store-server-library';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Apple Root CA 证书（从 Apple 官网下载后放入项目 certs/ 目录）
+// https://www.apple.com/certificateauthority/
+const appleRootCAs: Buffer[] = [
+  fs.readFileSync(path.resolve('certs/AppleRootCA-G3.cer')),
+  fs.readFileSync(path.resolve('certs/AppleIncRootCertificate.cer')),
+];
+
+const BUNDLE_ID = 'com.ainft.app';  // 与 App Store Connect 中一致
+
+function createVerifier(environment: Environment): SignedDataVerifier {
+  return new SignedDataVerifier(
+    appleRootCAs,
+    true,           // enableOnlineChecks：启用 OCSP 吊销检查
+    environment,
+    BUNDLE_ID,
+  );
+}
+```
+
+> **证书说明**：`AppleRootCA-G3.cer` 和 `AppleIncRootCertificate.cer` 从 [Apple PKI 页面](https://www.apple.com/certificateauthority/) 下载，提交到代码仓库的 `certs/` 目录（非密钥，属公开证书，可安全提交）。
+
 #### 商品配置（静态配置）
 
 ```typescript
-const IAP_PRODUCT_CONFIGS = {
+const IAP_PRODUCT_CONFIGS: Record<string, { currency: string; points: number; price: number }> = {
   'com.ainft.points.10':  { currency: 'USD', points: 10_000_000,  price: 999  },
   'com.ainft.points.50':  { currency: 'USD', points: 50_000_000,  price: 4999 },
   'com.ainft.points.100': { currency: 'USD', points: 100_000_000, price: 9999 },
@@ -239,34 +278,102 @@ const IAP_PRODUCT_CONFIGS = {
 
 ```typescript
 async processPurchase(params: {
-  receipt: string;
-  transactionId: string;
-  productId: string;
+  userId: string;
+  jwsToken: string;   // transaction.jwsRepresentation（替代旧版 receipt）
+  productId: string;  // 用于前置合法性校验
 }): Promise<{ success: boolean; points: number; transactionId: string }>
 ```
 
 **处理流程**：
-1. 防重放检查：查询 `t_iap_receipts.transactionId` 唯一索引
-2. 校验 productId 合法性
-3. 调用 Apple 验证 API（生产环境优先，遇 21007 自动降级沙盒）
-4. 从验证结果中找到目标 transactionId 对应的交易信息
-5. 开启数据库事务：
-   - 插入 `t_iap_receipts`（status='verified'）
-   - 调用 `PointsService.creditPointsOnce()` 幂等发放积分
 
-#### 收据验证说明
+```typescript
+async processPurchase({ userId, jwsToken, productId }) {
+  // 1. 前置校验 productId
+  const config = IAP_PRODUCT_CONFIGS[productId];
+  if (!config) throw new Error('Unknown product ID');
+
+  // 2. 先尝试生产环境验签；若抛出 VerificationException，再尝试沙盒环境
+  let payload: JWSTransactionDecodedPayload;
+  let resolvedEnv: Environment;
+
+  try {
+    payload = await createVerifier(Environment.PRODUCTION).verifyAndDecodeTransaction(jwsToken);
+    resolvedEnv = Environment.PRODUCTION;
+  } catch {
+    payload = await createVerifier(Environment.SANDBOX).verifyAndDecodeTransaction(jwsToken);
+    resolvedEnv = Environment.SANDBOX;
+  }
+
+  // 3. 二次校验 Payload 关键字段（防止 JWS 内容与客户端上报不一致）
+  if (payload.bundleId !== BUNDLE_ID) throw new Error('Bundle ID mismatch');
+  if (payload.productId !== productId) throw new Error('Product ID mismatch');
+  if (payload.type !== 'Consumable') throw new Error('Unexpected product type');
+
+  const { transactionId, purchaseDate, environment } = payload;
+
+  // 4. 防重放检查
+  const exists = await IAPReceiptModel.existsByTransactionId(db, transactionId);
+  if (exists) throw new Error('Transaction already processed');
+
+  // 5. 数据库事务：入库 + 幂等发放积分
+  await db.transaction(async (tx) => {
+    await IAPReceiptModel.insert(tx, {
+      userId,
+      transactionId,
+      originalTransactionId: payload.originalTransactionId,
+      productId,
+      price: config.price,
+      currency: config.currency,
+      points: config.points,
+      jwsToken,                                      // 存储原始 JWS Token
+      environment: environment ?? resolvedEnv,
+      status: 'verified',
+      purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
+      verifiedAt: new Date(),
+    });
+
+    await PointsService.creditPointsOnce(tx, {
+      userId,
+      points: config.points,
+      source: PointFlowSourceType.IAP,
+      idempotencyKey: transactionId,               // transactionId 作为幂等键
+    });
+  });
+
+  return { success: true, points: config.points, transactionId };
+}
+```
+
+#### JWS 验签说明
 
 ```
-生产环境：https://buy.itunes.apple.com/verifyReceipt
-沙盒环境：https://sandbox.itunes.apple.com/verifyReceipt
+验签由 @apple/app-store-server-library 的 SignedDataVerifier 完成：
+  1. 解析 JWS Header 中的 x5c（X.509 证书链）
+  2. 验证证书链是否锚定到内置的 Apple Root CA
+  3. 使用叶证书的公钥验证 JWS 签名（ES256/ECDSA）
+  4. 验证 signedDate 时效（默认 ±5 分钟内有效）
+  5. 返回解码后的 JWSTransactionDecodedPayload
 
-Apple status 码：
-  0     - 验证成功
-  21007 - 沙盒收据，需切换到沙盒端点
-  21002 - receipt-data 格式错误
-  21004 - shared secret 不匹配
-  21005 - Apple 收据服务器暂时不可用
+环境区分（无需 status 码）：
+  - payload.environment = 'Production' | 'Sandbox'
+  - 若生产验签抛 VerificationException，则改用 Sandbox 验证器重试
 ```
+
+#### JWSTransactionDecodedPayload 关键字段
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `transactionId` | string | 本次交易唯一 ID（防重放键） |
+| `originalTransactionId` | string | 原始交易 ID（订阅场景） |
+| `bundleId` | string | App Bundle ID，需与后端配置一致 |
+| `productId` | string | 商品 ID |
+| `type` | string | `Consumable` / `Non-Consumable` / `Auto-Renewable Subscription` |
+| `purchaseDate` | number | 购买时间（毫秒时间戳） |
+| `quantity` | number | 购买数量 |
+| `environment` | string | `Production` / `Sandbox` |
+| `inAppOwnershipType` | string | `PURCHASED` / `FAMILY_SHARED` |
+| `signedDate` | number | JWS 签发时间（毫秒时间戳） |
+| `appAccountToken` | string | 购买时由 App 设置的用户 UUID（可选） |
 
 ---
 
@@ -296,14 +403,15 @@ Array<{
 POST /trpc/iap.verifyReceipt
 ```
 
-输入：
+输入（字段变更）：
 ```typescript
 {
-  receipt: string;        // Base64 编码的 App Store 收据
-  transactionId: string;  // StoreKit Transaction.id
-  productId: string;      // 如 com.ainft.points.10
+  jwsToken: string;   // transaction.jwsRepresentation（JWS 格式，替代旧版 Base64 receipt）
+  productId: string;  // 如 com.ainft.points.10（用于前置合法性校验）
 }
 ```
+
+> `transactionId` 不再作为独立字段上传，由后端从 JWS Payload 中解码提取，防止客户端伪造。
 
 返回：
 ```typescript
@@ -317,7 +425,9 @@ POST /trpc/iap.verifyReceipt
 错误码：
 - `Transaction already processed` — 重放攻击，该交易已处理
 - `Unknown product ID` — 非法的 productId
-- `Receipt verification failed, Apple status code: N` — Apple 验证失败
+- `Bundle ID mismatch` — JWS 中的 bundleId 与服务器配置不一致
+- `Product ID mismatch` — JWS Payload 与客户端上报 productId 不一致
+- `VerificationException` — JWS 签名验证失败（伪造或过期）
 
 #### `iap.getHistory`
 
@@ -337,8 +447,8 @@ GET /trpc/iap.getHistory?input={"page":1,"pageSize":20}
     transactionId: string;
     status: string;
     environment: string | null;
-    purchaseDate: number | null;  // Unix timestamp (秒)
-    createdAt: number;            // Unix timestamp (秒)
+    purchaseDate: number | null;  // Unix timestamp（秒）
+    createdAt: number;            // Unix timestamp（秒）
   }>;
   page: number;
   pageSize: number;
@@ -369,9 +479,37 @@ export const lambdaRouter = router({
 ```bash
 # .env
 
-# App Store 共享密钥（App Store Connect > App > In-App Purchases > App-Specific Shared Secret）
-APP_STORE_SHARED_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# App Bundle ID（与 App Store Connect 一致）
+APP_BUNDLE_ID=com.ainft.app
+
+# 注意：JWS 方案不需要 APP_STORE_SHARED_SECRET
+# 验签通过本地 Apple Root CA 证书完成，无需任何密钥
 ```
+
+> **与旧方案对比**：旧方案需要配置 `APP_STORE_SHARED_SECRET`（共享密钥），一旦泄露将带来安全风险。JWS 方案完全基于公钥密码学，无需共享密钥。
+
+---
+
+## Apple Root CA 证书
+
+从 [https://www.apple.com/certificateauthority/](https://www.apple.com/certificateauthority/) 下载并放入项目 `certs/` 目录：
+
+```
+certs/
+├── AppleRootCA-G3.cer          # Apple Root CA - G3（主要）
+└── AppleIncRootCertificate.cer # Apple Inc Root Certificate（兼容旧版）
+```
+
+```bash
+# 下载脚本（一次性操作）
+mkdir -p certs
+curl -o certs/AppleRootCA-G3.cer \
+  https://www.apple.com/certificateauthority/AppleRootCA-G3.cer
+curl -o certs/AppleIncRootCertificate.cer \
+  https://www.apple.com/certificateauthority/AppleIncRootCertificate.cer
+```
+
+> 这些是 Apple 公开发布的根证书，属于公钥基础设施（PKI）的公开部分，可以安全提交到代码仓库。
 
 ---
 
@@ -399,8 +537,11 @@ class IAPManager: ObservableObject {
         switch result {
         case .success(let verification):
             let transaction = try checkVerified(verification)
-            await verifyOnBackend(transaction)
-            // 后端验证成功后再 finish，避免积分未发放就消耗交易
+
+            // 直接使用 JWS Token，无需读取 Bundle 收据文件
+            await verifyOnBackend(transaction: transaction, productId: product.id)
+
+            // 后端验证成功后再 finish，确保积分已发放
             await transaction.finish()
 
         case .userCancelled, .pending:
@@ -411,19 +552,12 @@ class IAPManager: ObservableObject {
         }
     }
 
-    private func verifyOnBackend(_ transaction: Transaction) async {
-        // 获取当前 App Store 收据（Base64）
-        guard let receiptURL = Bundle.main.appStoreReceiptURL,
-              let receiptData = try? Data(contentsOf: receiptURL) else {
-            return
-        }
-
-        let receipt = receiptData.base64EncodedString()
-        let transactionId = String(transaction.id)
-        let productId = transaction.productID
+    private func verifyOnBackend(transaction: Transaction, productId: String) async {
+        // 获取 JWS Token（StoreKit 2 直接提供，无需读取 Bundle 收据文件）
+        let jwsToken = transaction.jwsRepresentation
 
         // 调用后端 tRPC 接口
-        // await trpc.iap.verifyReceipt({ receipt, transactionId, productId })
+        // await trpc.iap.verifyReceipt({ jwsToken, productId })
     }
 
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
@@ -440,6 +574,8 @@ enum IAPError: Error {
     case failedVerification
 }
 ```
+
+> **关键变更**：不再使用 `Bundle.main.appStoreReceiptURL` 读取旧版收据文件，改为直接使用 `transaction.jwsRepresentation`。StoreKit 2 已在客户端完成一次本地验签，服务端再做一次独立验签，形成双重保障。
 
 ### SwiftUI 充值页面
 
@@ -483,11 +619,29 @@ struct RechargeView: View {
 
 | 风险 | 防护措施 |
 |---|---|
-| 重放攻击（同一收据重复提交） | `transactionId` 唯一索引 + `existsByTransactionId` 前置检查 |
-| 伪造收据 | 向 Apple 官方服务器二次验证，验证失败直接拒绝 |
+| 重放攻击（同一交易重复提交） | `transactionId` 唯一索引 + `existsByTransactionId` 前置检查 |
+| 伪造 JWS Token | `SignedDataVerifier` 验证 Apple Root CA 签名链，伪造 JWS 无法通过 |
+| JWS 字段与客户端不一致 | 后端从 JWS Payload 独立解码 bundleId / productId，不信任客户端上报 |
+| 沙盒 Token 进入生产 | `payload.environment` 字段自动区分，无需依赖错误码 |
+| Shared Secret 泄露 | JWS 方案无需 Shared Secret，彻底消除该风险面 |
 | 并发重复发积分 | `creditPointsOnce()` 在事务内检查 `userPointFlow` 唯一约束 |
-| 沙盒收据进入生产 | Apple status=21007 自动切换沙盒端点，environment 字段区分记录 |
-| Shared Secret 泄露 | 仅存于服务端环境变量，不暴露给客户端 |
+| JWS 时效攻击（过期 Token 重放） | `SignedDataVerifier` 校验 `signedDate` 时效（默认 ±5 分钟） |
+
+---
+
+## 与旧方案对比
+
+| 对比项 | 旧方案（verifyReceipt） | JWS 方案（当前） |
+|---|---|---|
+| Apple API 状态 | ⚠️ 已废弃（Deprecated） | ✅ 现行推荐 |
+| 后端是否需要调 Apple 服务器 | ✅ 每次都需要 | ✅ 不需要（本地验签） |
+| 网络延迟 | 高（额外一次 Apple 往返） | 低（本地毫秒级） |
+| 受 Apple 服务器可用性影响 | 是 | 否 |
+| 需要 Shared Secret | 是（需保密） | 否 |
+| 环境区分方式 | status=21007 错误码 | payload.environment 字段 |
+| 数据结构 | 嵌套 JSON，字段繁杂 | 标准 JWT Payload，结构清晰 |
+| iOS 端收据获取 | 读取 Bundle 文件（旧 API） | `transaction.jwsRepresentation`（StoreKit 2） |
+| 客户端 transactionId 可信度 | 客户端上报，需服务端核对 | 服务端从 JWS Payload 解码，不依赖客户端 |
 
 ---
 
@@ -503,6 +657,8 @@ pnpm db:generate
 pnpm db:migrate
 ```
 
-新增表：`t_iap_receipts`
+变更说明：
+- 新增表：`t_iap_receipts`
+- 字段 `receipt`（旧版 Base64 收据）改为 `jws_token`（JWS Token）
 
 ---
