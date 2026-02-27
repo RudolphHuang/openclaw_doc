@@ -844,16 +844,26 @@
         },
         {
           "name": "session noCookie",
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {
+              "connection": true,
+              "accept-encoding": true,
+              "accept": true,
+              "user-agent": true
+            }
+          },
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "accept",
-                "value": "*/*"
+                "value": "*/*",
+                "disabled": true
               },
               {
                 "key": "accept-language",
-                "value": "zh-CN,zh;q=0.9"
+                "value": "zh-CN,zh;q=0.9",
+                "disabled": true
               },
               {
                 "key": "content-type",
@@ -861,39 +871,48 @@
               },
               {
                 "key": "priority",
-                "value": "u=1, i"
+                "value": "u=1, i",
+                "disabled": true
               },
               {
                 "key": "referer",
-                "value": "{{host}}chat?session=inbox"
+                "value": "{{host}}chat?session=inbox",
+                "disabled": true
               },
               {
                 "key": "sec-ch-ua",
-                "value": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\""
+                "value": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"",
+                "disabled": true
               },
               {
                 "key": "sec-ch-ua-mobile",
-                "value": "?0"
+                "value": "?0",
+                "disabled": true
               },
               {
                 "key": "sec-ch-ua-platform",
-                "value": "\"Windows\""
+                "value": "\"Windows\"",
+                "disabled": true
               },
               {
                 "key": "sec-fetch-dest",
-                "value": "empty"
+                "value": "empty",
+                "disabled": true
               },
               {
                 "key": "sec-fetch-mode",
-                "value": "cors"
+                "value": "cors",
+                "disabled": true
               },
               {
                 "key": "sec-fetch-site",
-                "value": "same-origin"
+                "value": "same-origin",
+                "disabled": true
               },
               {
                 "key": "user-agent",
-                "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+                "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+                "disabled": true
               },
               {
                 "key": "X-Auth-CSRF-Token",
@@ -907,7 +926,7 @@
               }
             ],
             "url": {
-              "raw": "{{host}}/api/auth/session?noCookie",
+              "raw": "{{host}}/api/auth/session?noCookie=1",
               "host": [
                 "{{host}}"
               ],
@@ -919,7 +938,7 @@
               "query": [
                 {
                   "key": "noCookie",
-                  "value": null
+                  "value": "1"
                 }
               ]
             },
@@ -968,6 +987,18 @@
                 "packages": {},
                 "requests": {}
               }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.remove(\"Cookie\"); // 移除 Cookie 头（推荐）\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
           ],
           "request": {
@@ -979,10 +1010,9 @@
                 "type": "text"
               },
               {
-                "key": "Cookie",
-                "value": "{{cookie}}",
-                "type": "text",
-                "disabled": true
+                "key": "X-No-Cookie",
+                "value": "1",
+                "type": "text"
               }
             ],
             "body": {
@@ -1003,7 +1033,7 @@
               ]
             },
             "url": {
-              "raw": "{{host}}/api/auth/callback/google-v2?noCookie",
+              "raw": "{{host}}/api/auth/callback/google-v2",
               "host": [
                 "{{host}}"
               ],
@@ -1012,12 +1042,6 @@
                 "auth",
                 "callback",
                 "google-v2"
-              ],
-              "query": [
-                {
-                  "key": "noCookie",
-                  "value": null
-                }
               ]
             }
           },
@@ -1246,7 +1270,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\"model\":\"gpt-5-nano\",\"stream\":true,\"frequency_penalty\":0,\"presence_penalty\":0,\"temperature\":1,\"top_p\":1,\"assistantMessageId\":\"msg_ca5mWyUzibb81a\",\"topicId\":\"tpc_zxgLJ5d0lMtm\",\"messages\":[{\"content\":\"你好\",\"role\":\"user\"}]}",
+              "raw": "{\r\n    \"model\": \"gpt-5-nano\",\r\n    \"stream\": true,\r\n    \"frequency_penalty\": 0,\r\n    \"presence_penalty\": 0,\r\n    \"temperature\": 1,\r\n    \"top_p\": 1,\r\n    \"assistantMessageId\": \"msg_ca5mWyUzibb81a\",\r\n    \"topicId\": \"tpc_zxgLJ5d0lMtm\",\r\n    \"messages\": [\r\n        {\r\n            \"content\": \"你好\",\r\n            \"role\": \"user\"\r\n        }\r\n    ]\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1425,6 +1449,20 @@
             },
             {
               "name": "getUserState noCookie",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "exec": [
+                      "pm.request.headers.remove(\"Cookie\"); // 移除 Cookie 头（推荐）\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
               "request": {
                 "method": "GET",
                 "header": [
@@ -1433,18 +1471,18 @@
                     "value": "*/*"
                   },
                   {
-                    "key": "X-Auth-Session-Token",
-                    "value": "{{auth-full}}",
+                    "key": "X-No-Cookie",
+                    "value": "1",
                     "type": "text"
                   },
                   {
-                    "key": "X-Auth-CSRF-Token",
-                    "value": "{{csrf-full}}",
+                    "key": "X-Auth-Session-Token",
+                    "value": "{{auth-full}}",
                     "type": "text"
                   }
                 ],
                 "url": {
-                  "raw": "{{host}}/trpc/lambda/user.getUserState?noCookie=1&batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
+                  "raw": "{{host}}/trpc/lambda/user.getUserState?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D",
                   "host": [
                     "{{host}}"
                   ],
@@ -1455,12 +1493,9 @@
                   ],
                   "query": [
                     {
-                      "key": "noCookie",
-                      "value": "1"
-                    },
-                    {
                       "key": "batch",
-                      "value": "1"
+                      "value": "1",
+                      "description": "tRPC batch 模式"
                     },
                     {
                       "key": "input",

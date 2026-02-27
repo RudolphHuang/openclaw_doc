@@ -53,7 +53,7 @@ LobeChat 后端提供两种 API 形式：
 - [Apple 登录说明](RESTful/auth-apple-notice.md) - Apple 登录当前状态和实现指南
 - [Apple SDK OAuth 登录说明](RESTful/auth-apple-v2.md) - Apple 登录当前状态和实现指南
 - [无 Cookie 认证](RESTful/auth-cookieless.md) - 安卓/WebView 等受限环境下的认证方案
-- [tRPC 无 Cookie 认证](RESTful/auth-trpc.md) - 修改代码支持安卓调用 tRPC 接口
+- [tRPC 无 Cookie 认证](RESTful/auth-trpc-cookieless.md) - 修改代码支持安卓调用 tRPC 接口
 - [获取当前会话](RESTful/auth-session.md) - 获取当前登录用户会话信息
 - [登出接口](RESTful/auth-signout.md) - 用户登出
 
