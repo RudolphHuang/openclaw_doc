@@ -21,15 +21,13 @@ flowchart TB
     end
 
     subgraph Backend["后端服务"]
-        IAPAPI["/trpc/iap.verifyReceipt"]
+        IAPAPI["/trpc/lambda/iap.verifyReceipt"]
         JWSVerifier["SignedDataVerifier\n本地 JWS 验签（无网络请求）"]
         IAPService["IAPService\nsrc/server/services/payment/iap.ts"]
-        PointsService["PointsService\nsrc/server/services/points/index.ts"]
     end
 
     subgraph Database["数据库"]
-        IAPTable["t_iap_receipts\npackages/database/src/schemas/iapReceipt.ts"]
-        PointsTable["t_user_point_flows\nt_user_points"]
+        RechargeTable["t_recharge_records\npackages/database/src/models/recharge.ts"]
     end
 
     iOSApp -->|1. 请求商品| StoreKit2
@@ -43,9 +41,7 @@ flowchart TB
     IAPService -->|9. 本地验签| JWSVerifier
     JWSVerifier -->|10. 对比 Apple Root CA| AppleRootCA
     JWSVerifier -->|11. 返回解码 Payload| IAPService
-    IAPService -->|12. 防重放 + 入库| IAPTable
-    IAPService -->|13. 幂等发放积分| PointsService
-    PointsService -->|14. 记录流水| PointsTable
+    IAPService -->|12. 防重放 + 写入充值记录| RechargeTable
 
     style Client fill:#e3f2fd
     style Apple fill:#f3e5f5
@@ -79,24 +75,20 @@ sequenceDiagram
     iOS->>iOS: checkVerified(verification)（StoreKit 本地 JWS 校验）
     iOS->>iOS: 取 transaction.jwsRepresentation
 
-    iOS->>Backend: iap.verifyReceipt\n{ jwsToken, productId }
-    Backend->>Backend: 从 JWS Header 提取 transactionId 做防重放预检
+    iOS->>Backend: lambda/iap.verifyReceipt\n{ jwsToken, productId }
 
-    Backend->>DB: 检查 transactionId 是否已存在（防重放）
+    Backend->>DB: existsByTxHash(transactionId)（防重放）
     DB-->>Backend: 不存在，继续处理
 
     Backend->>JWSVerifier: verifyAndDecodeTransaction(jwsToken)
     Note over JWSVerifier: 本地验证签名链<br/>（无网络请求）
     JWSVerifier-->>Backend: JWSTransactionDecodedPayload\n{ transactionId, productId, environment, purchaseDate, ... }
 
-    Backend->>Backend: 校验 bundleId / productId / environment
+    Backend->>Backend: 校验 productId / type
 
     alt 验证成功
-        Backend->>DB: BEGIN TRANSACTION
-        Backend->>DB: INSERT t_iap_receipts（status='verified'）
-        Backend->>DB: creditPointsOnce()（幂等写 t_user_point_flows + t_user_points）
-        Backend->>DB: COMMIT
-        Backend-->>iOS: { success: true, points, transactionId }
+        Backend->>DB: INSERT t_recharge_records\n{ chain:'apple-iap', txHash:transactionId, tokenName:'usd', ... }
+        Backend-->>iOS: { success: true, transactionId }
         iOS->>StoreKit: transaction.finish()
         iOS-->>User: 显示充值成功
     else JWS 验签失败 / 字段不匹配 / 重放攻击
@@ -125,10 +117,8 @@ sequenceDiagram
 
 | 文件 | 说明 |
 |---|---|
-| `packages/database/src/schemas/iapReceipt.ts` | Drizzle ORM 表定义 |
-| `packages/database/src/models/iapReceipt.ts` | 数据库操作模型 |
-| `packages/types/src/points.ts` | 新增 `IAP = 'iap'` 枚举值 |
-| `src/server/services/payment/iap.ts` | 业务逻辑服务（JWS 验签 + 积分发放） |
+| `packages/database/src/models/recharge.ts` | RechargeModel（复用，写入 `t_recharge_records`） |
+| `src/server/services/payment/iap.ts` | 业务逻辑服务（JWS 验签 + 充值记录写入） |
 | `src/server/routers/lambda/iap.ts` | tRPC 路由定义 |
 | `src/server/routers/lambda/index.ts` | 主路由注册（新增 `iap: iapRouter`） |
 
@@ -140,93 +130,31 @@ pnpm add @apple/app-store-server-library
 
 ---
 
-### 1. 数据库 Schema
+### 1. RechargeModel 字段映射
 
-**文件**: `packages/database/src/schemas/iapReceipt.ts`
+IAP 充值复用现有 `t_recharge_records` 表，字段映射如下：
 
-```typescript
-import { index, integer, pgTable, text, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
-import { createdAt, updatedAt } from './_helpers';
-import { users } from './user';
+| `t_recharge_records` 字段 | IAP 写入值 | 说明 |
+|---|---|---|
+| `chain` | `'apple-iap'` | 固定值，区分链路来源 |
+| `txHash` | `payload.transactionId` | Apple 交易 ID，用于防重放唯一检查 |
+| `tokenName` | `'usd'` | 固定值 |
+| `amount` | 价格（美分） | 如 $9.99 → `999` |
+| `usdAmount` | 价格（美分） | 同 amount |
+| `userId` | 当前登录用户 ID | 从会话获取 |
+| `userAddress` | `userId` | IAP 无钱包地址，用 userId 占位 |
+| `receiverAddress` | `'apple-app-store'` | 固定占位符 |
+| `blockNumber` | `0` | IAP 无区块概念，填 0 |
+| `confirmedAt` | `new Date(payload.purchaseDate)` | 购买时间即确认时间 |
+| `createdAt` | `new Date()` | 写入时间 |
 
-export const iapReceipt = pgTable(
-  't_iap_receipts',
-  {
-    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
-    userId: varchar('user_id', { length: 64 })
-      .references(() => users.id, { onDelete: 'cascade' })
-      .notNull(),
+> `RechargeModel.existsByTxHash(db, transactionId)` 用于防重放检查，`txHash` 在表中有索引。
 
-    // Apple 交易信息（从 JWS Payload 解码）
-    transactionId: varchar('transaction_id', { length: 128 }).notNull(),
-    originalTransactionId: varchar('original_transaction_id', { length: 128 }),
-    productId: varchar('product_id', { length: 128 }).notNull(),
-
-    // 金额与积分
-    price: integer('price').notNull(),           // 单位：美分
-    currency: varchar('currency', { length: 3 }).notNull().default('USD'),
-    points: integer('points').notNull(),          // 发放积分数
-
-    // 原始 JWS Token
-    jwsToken: text('jws_token').notNull(),
-
-    // 验证环境（从 JWS Payload 的 environment 字段提取）
-    environment: varchar('environment', { length: 32 }),  // 'Production' | 'Sandbox'
-
-    // 处理状态
-    status: varchar('status', { length: 32 }).notNull().default('pending'),
-    // pending | verified | failed | duplicate
-
-    purchaseDate: timestamp('purchase_date', { withTimezone: true }),
-    createdAt: createdAt(),
-    updatedAt: updatedAt(),
-    verifiedAt: timestamp('verified_at', { withTimezone: true }),
-  },
-  (table) => [
-    index('idx_iap_receipts_user_id').on(table.userId),
-    index('idx_iap_receipts_product_id').on(table.productId),
-    index('idx_iap_receipts_status').on(table.status),
-    uniqueIndex('idx_iap_receipts_transaction_id').on(table.transactionId),
-  ],
-);
-```
-
-> `jws_token` 字段存储原始 JWS 字符串，便于后续审计回溯。
+> **注意**：`RechargeInsert` 类型中 `chain` 当前约束为 `'tron'`，需扩展为 `'tron' | 'apple-iap'`。
 
 ---
 
-### 2. 数据库模型
-
-**文件**: `packages/database/src/models/iapReceipt.ts`
-
-关键方法：
-
-| 方法 | 说明 |
-|---|---|
-| `existsByTransactionId(db, transactionId)` | 防重放检查 |
-| `insert(db, payload)` | 写入收据记录（含 jwsToken） |
-| `listByUser(db, userId, params)` | 分页查询用户购买记录 |
-| `countByUser(db, userId)` | 统计购买记录数 |
-| `updateStatus(db, transactionId, status)` | 更新记录状态 |
-
----
-
-### 3. PointFlowSourceType 枚举
-
-**文件**: `packages/types/src/points.ts`
-
-```typescript
-export enum PointFlowSourceType {
-  Chat = 'chat',
-  IAP = 'iap',           // App Store IAP
-  Recharge = 'recharge',
-  SignupBonus = 'signup_bonus',
-}
-```
-
----
-
-### 4. IAP 服务
+### 2. IAP 服务
 
 **文件**: `src/server/services/payment/iap.ts`
 
@@ -285,7 +213,7 @@ async processPurchase(params: {
   userId: string;
   jwsToken: string;   // transaction.jwsRepresentation
   productId: string;  // 用于前置合法性校验
-}): Promise<{ success: boolean; points: number; transactionId: string }>
+}): Promise<{ success: boolean; transactionId: string }>
 ```
 
 **处理流程**：
@@ -298,54 +226,40 @@ async processPurchase({ userId, jwsToken, productId }) {
 
   // 2. 先尝试生产环境验签；若抛出 VerificationException，再尝试沙盒环境
   let payload: JWSTransactionDecodedPayload;
-  let resolvedEnv: Environment;
 
   try {
     payload = await createVerifier(Environment.PRODUCTION).verifyAndDecodeTransaction(jwsToken);
-    resolvedEnv = Environment.PRODUCTION;
   } catch {
     payload = await createVerifier(Environment.SANDBOX).verifyAndDecodeTransaction(jwsToken);
-    resolvedEnv = Environment.SANDBOX;
   }
 
-  // 3. 校验 Payload 关键字段
+  // 3. 校验 Payload 业务字段
   // bundleId 已由 SignedDataVerifier 内部校验（不匹配时抛 INVALID_APP_IDENTIFIER）
-  // 此处仅需校验业务字段
   if (payload.productId !== productId) throw new Error('Product ID mismatch');
   if (payload.type !== 'Consumable') throw new Error('Unexpected product type');
 
-  const { transactionId, purchaseDate, environment } = payload;
+  const { transactionId, purchaseDate } = payload;
 
-  // 4. 防重放检查
-  const exists = await IAPReceiptModel.existsByTransactionId(db, transactionId);
+  // 4. 防重放检查（txHash = Apple transactionId）
+  const exists = await RechargeModel.existsByTxHash(db, transactionId);
   if (exists) throw new Error('Transaction already processed');
 
-  // 5. 数据库事务：入库 + 幂等发放积分
-  await db.transaction(async (tx) => {
-    await IAPReceiptModel.insert(tx, {
-      userId,
-      transactionId,
-      originalTransactionId: payload.originalTransactionId,
-      productId,
-      price: config.price,
-      currency: config.currency,
-      points: config.points,
-      jwsToken,                                      // 存储原始 JWS Token
-      environment: environment ?? resolvedEnv,
-      status: 'verified',
-      purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
-      verifiedAt: new Date(),
-    });
-
-    await PointsService.creditPointsOnce(tx, {
-      userId,
-      points: config.points,
-      source: PointFlowSourceType.IAP,
-      idempotencyKey: transactionId,               // transactionId 作为幂等键
-    });
+  // 5. 写入充值记录
+  await RechargeModel.insert(db, {
+    userId,
+    chain: 'apple-iap',
+    txHash: transactionId,
+    tokenName: 'usd',
+    amount: config.price,                          // 单位：美分
+    usdAmount: config.price,                       // 单位：美分
+    userAddress: userId,                           // IAP 无钱包地址，用 userId 占位
+    receiverAddress: 'apple-app-store',            // 固定占位符
+    blockNumber: 0,                                // IAP 无区块概念
+    confirmedAt: purchaseDate ? new Date(purchaseDate) : new Date(),
+    createdAt: new Date(),
   });
 
-  return { success: true, points: config.points, transactionId };
+  return { success: true, transactionId };
 }
 ```
 
@@ -386,14 +300,14 @@ async processPurchase({ userId, jwsToken, productId }) {
 
 ---
 
-### 5. tRPC 路由
+### 3. tRPC 路由
 
 **文件**: `src/server/routers/lambda/iap.ts`
 
 #### `iap.getProducts`
 
 ```
-GET /trpc/iap.getProducts
+GET /trpc/lambda/iap.getProducts
 ```
 
 返回：
@@ -409,7 +323,7 @@ Array<{
 #### `iap.verifyReceipt`
 
 ```
-POST /trpc/iap.verifyReceipt
+POST /trpc/lambda/iap.verifyReceipt
 ```
 
 输入：
@@ -426,7 +340,6 @@ POST /trpc/iap.verifyReceipt
 ```typescript
 {
   success: boolean;
-  points: number;          // 本次发放的积分数
   transactionId: string;
 }
 ```
@@ -434,40 +347,20 @@ POST /trpc/iap.verifyReceipt
 错误码：
 - `Transaction already processed` — 重放攻击，该交易已处理
 - `Unknown product ID` — 非法的 productId
-- `Bundle ID mismatch` — JWS 中的 bundleId 与服务器配置不一致
 - `Product ID mismatch` — JWS Payload 与客户端上报 productId 不一致
 - `VerificationException` — JWS 签名验证失败（伪造或过期）
 
-#### `iap.getHistory`
+#### 充值历史
+
+IAP 充值记录写入 `t_recharge_records`（`chain='apple-iap'`），历史查询复用现有接口：
 
 ```
-GET /trpc/iap.getHistory?input={"page":1,"pageSize":20}
-```
-
-返回：
-```typescript
-{
-  data: Array<{
-    id: number;
-    points: number;
-    price: number;
-    currency: string;
-    productId: string;
-    transactionId: string;
-    status: string;
-    environment: string | null;
-    purchaseDate: number | null;  // Unix timestamp（秒）
-    createdAt: number;            // Unix timestamp（秒）
-  }>;
-  page: number;
-  pageSize: number;
-  total: number;
-}
+GET /trpc/lambda/order.listOrders
 ```
 
 ---
 
-### 6. 主路由注册
+### 4. 主路由注册
 
 **文件**: `src/server/routers/lambda/index.ts`
 
@@ -623,27 +516,27 @@ struct RechargeView: View {
 
 | 风险 | 防护措施 |
 |---|---|
-| 重放攻击（同一交易重复提交） | `transactionId` 唯一索引 + `existsByTransactionId` 前置检查 |
+| 重放攻击（同一交易重复提交） | `RechargeModel.existsByTxHash(transactionId)` 前置检查，`tx_hash` 有索引 |
 | 伪造 JWS Token | `SignedDataVerifier` 验证 Apple Root CA 签名链，伪造 JWS 无法通过 |
 | JWS 字段与客户端不一致 | 后端从 JWS Payload 独立解码 bundleId / productId，不信任客户端上报 |
 | 沙盒 Token 进入生产 | `payload.environment` 字段自动区分 |
-| 并发重复发积分 | `creditPointsOnce()` 在事务内检查 `userPointFlow` 唯一约束 |
 | 过期证书链的 JWS 重放 | `enableOnlineChecks=true` 时使用当前时间校验证书有效期及 OCSP 吊销状态，过期证书签发的 JWS 无法通过 |
 
 ---
 
 ## 数据库迁移
 
-执行以下命令生成并应用迁移：
+IAP 复用现有 `t_recharge_records` 表，**无需新增表或迁移**。
 
-```bash
-# 生成迁移文件
-pnpm db:generate
+仅需确认 `RechargeInsert` 类型的 `chain` 字段已扩展为支持 `'apple-iap'`：
 
-# 应用迁移
-pnpm db:migrate
+```typescript
+// packages/database/src/models/recharge.ts
+export type RechargeInsert = {
+  // ...
+  chain: 'tron' | 'apple-iap';  // 新增 'apple-iap'
+  // ...
+};
 ```
-
-新增表：`t_iap_receipts`
 
 ---
