@@ -914,17 +914,55 @@ Events to send:
 
 #### 1. 架构设计
 
+```mermaid
+flowchart TB
+    subgraph Client["客户端"]
+        iOSApp["iOS/macOS App"]
+        StoreKit2["StoreKit 2"]
+    end
+
+    subgraph Apple["Apple 生态"]
+        AppStore["App Store"]
+        AppleServer["Apple 验证服务器<br/>buy.itunes.apple.com"]
+    end
+
+    subgraph Backend["后端服务"]
+        IAPAPI["/trpc/iap.verifyReceipt"]
+        IAPService["IAPService"]
+        PointsService["PointsService"]
+    end
+
+    subgraph Database["数据库"]
+        IAPTable["t_iap_receipts"]
+        PointsTable["t_points_flow"]
+    end
+
+    iOSApp -->|1. 请求商品| StoreKit2
+    StoreKit2 -->|2. 获取商品| AppStore
+    iOSApp -->|3. 发起购买| StoreKit2
+    StoreKit2 -->|4. 处理支付| AppStore
+    AppStore -->|5. 返回交易凭证| StoreKit2
+    iOSApp -->|6. 发送收据| IAPAPI
+    IAPAPI -->|7. 验证请求| IAPService
+    IAPService -->|8. 验证收据| AppleServer
+    AppleServer -->|9. 返回验证结果| IAPService
+    IAPService -->|10. 保存记录| IAPTable
+    IAPService -->|11. 充值积分| PointsService
+    PointsService -->|12. 记录流水| PointsTable
+
+    style Client fill:#e3f2fd
+    style Apple fill:#f3e5f5
+    style Backend fill:#e8f5e9
+    style Database fill:#fff3e0
 ```
-[iOS/macOS App]
-      ↓
-[StoreKit 2]
-      ↓
-[App Store Connect]
-      ↓
-[ainft 后端 /api/iap/verify]
-      ↓
-[验证收据 + 充值积分]
-```
+
+**IAP 流程说明**:
+1. App 通过 StoreKit 2 向 App Store 请求商品信息
+2. 用户发起购买，StoreKit 处理支付流程
+3. 支付成功后，App Store 返回交易凭证
+4. App 将收据发送到后端验证
+5. 后端调用 Apple 服务器验证收据真实性
+6. 验证通过后，为用户充值积分
 
 #### 2. 商品配置
 
@@ -975,6 +1013,54 @@ export const iapReceipts = pgTable('t_iap_receipts', {
 ```
 
 #### 4. 后端实现
+
+##### IAP 购买时序图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 用户
+    participant iOS as iOS App
+    participant StoreKit as StoreKit 2
+    participant AppStore as App Store
+    participant Backend as 后端 API
+    participant IAPService as IAPService
+    participant AppleAPI as Apple 验证 API
+    participant DB as PostgreSQL
+
+    User->>iOS: 点击购买积分
+    iOS->>StoreKit: product.purchase()
+    StoreKit->>AppStore: 请求支付
+    AppStore->>User: 显示支付确认 (Face ID/Touch ID)
+    User->>AppStore: 确认支付
+    AppStore-->>StoreKit: 返回 Transaction
+    StoreKit-->>iOS: .success(verification)
+
+    iOS->>iOS: checkVerified(verification)
+    iOS->>iOS: AppStore.sync() 获取收据
+
+    iOS->>Backend: iap.verifyReceipt<br/>{receipt, transactionId, productId}
+    Backend->>IAPService: processPurchase()
+
+    IAPService->>DB: 检查 transactionId 是否已存在
+    DB-->>IAPService: 不存在，继续处理
+
+    IAPService->>AppleAPI: POST /verifyReceipt<br/>{receipt-data, password}
+    AppleAPI-->>IAPService: {status: 0, receipt: {...}}
+
+    alt 验证成功
+        IAPService->>DB: INSERT t_iap_receipts
+        IAPService->>DB: UPDATE user points
+        IAPService-->>Backend: {success: true, points, transactionId}
+        Backend-->>iOS: 返回成功
+        iOS->>StoreKit: transaction.finish()
+        iOS-->>User: 显示充值成功
+    else 验证失败
+        IAPService-->>Backend: 抛出错误
+        Backend-->>iOS: 返回失败
+        iOS-->>User: 显示错误信息
+    end
+```
 
 ##### IAP 验证服务
 
@@ -1280,6 +1366,41 @@ struct RechargeView: View {
 
 ## 实施计划
 
+### 实施流程图
+
+```mermaid
+flowchart LR
+    subgraph Phase1["Phase 1: 基础设施<br/>2-3 周"]
+        P1_1["注册 Stripe 账号<br/>配置产品/价格"]
+        P1_2["数据库设计<br/>t_apple_pay_orders"]
+        P1_3["后端开发<br/>支付服务 + API"]
+        P1_4["前端开发<br/>Apple Pay 按钮"]
+    end
+
+    subgraph Phase2["Phase 2: IAP 支持<br/>3-4 周"]
+        P2_1["配置 App Store Connect<br/>创建 IAP 商品"]
+        P2_2["iOS App 开发<br/>StoreKit 2 集成"]
+        P2_3["后端 IAP 验证<br/>收据验证服务"]
+        P2_4["测试与优化<br/>沙盒/生产测试"]
+    end
+
+    subgraph Phase3["Phase 3: 上线监控<br/>1 周"]
+        P3_1["App Store 审核提交"]
+        P3_2["配置监控告警"]
+        P3_3["编写运维文档"]
+    end
+
+    P1_1 --> P1_2 --> P1_3 --> P1_4
+    P1_4 --> Phase2
+    P2_1 --> P2_2 --> P2_3 --> P2_4
+    P2_4 --> Phase3
+    P3_1 --> P3_2 --> P3_3
+
+    style Phase1 fill:#e3f2fd
+    style Phase2 fill:#e8f5e9
+    style Phase3 fill:#fff3e0
+```
+
 ### Phase 1: 基础设施（2-3 周）
 
 **Week 1**: 支付网关集成
@@ -1360,6 +1481,53 @@ App Store IAP:
 
 ## 风险与挑战
 
+### 风险矩阵
+
+```mermaid
+flowchart TB
+    subgraph RiskMatrix["风险评估矩阵"]
+        direction TB
+        
+        subgraph HighImpact["高影响"]
+            H1["重复充值<br/>资金损失"]
+            H2["Apple 审核拒绝<br/>无法上架"]
+        end
+        
+        subgraph MediumImpact["中影响"]
+            M1["Webhook 延迟<br/>充值延迟"]
+            M2["收据验证失败<br/>用户投诉"]
+            M3["退款率高<br/>收入损失"]
+        end
+        
+        subgraph LowImpact["低影响"]
+            L1["汇率波动<br/>积分价值变化"]
+            L2["欺诈订单<br/>资金损失"]
+        end
+    end
+
+    subgraph Mitigation["缓解措施"]
+        Mit1["幂等性设计 + 交易锁"]
+        Mit2["遵循 App Store 指南"]
+        Mit3["轮询机制备用"]
+        Mit4["重试机制 + 人工介入"]
+        Mit5["明确退款政策"]
+        Mit6["实时汇率 API"]
+        Mit7["风控系统"]
+    end
+
+    H1 --> Mit1
+    H2 --> Mit2
+    M1 --> Mit3
+    M2 --> Mit4
+    M3 --> Mit5
+    L1 --> Mit6
+    L2 --> Mit7
+
+    style HighImpact fill:#ffcdd2
+    style MediumImpact fill:#fff9c4
+    style LowImpact fill:#c8e6c9
+```
+
 ### 技术风险
 
 | 风险 | 影响 | 缓解措施 |
@@ -1392,6 +1560,54 @@ App Store IAP:
 ### 方案 C: 混合支付系统
 
 保留现有的 TRON 充值，同时支持 Apple Pay：
+
+```mermaid
+flowchart TB
+    subgraph User["用户"]
+        Web3User["Web3 用户"]
+        Web2User["Web2 用户"]
+    end
+
+    subgraph Platform["ainft 平台"]
+        subgraph RechargePage["充值中心"]
+            CryptoOption["加密货币充值"]
+            FiatOption["法币充值"]
+        end
+
+        subgraph PaymentMethods["支付方式"]
+            TRON["TRON 网络<br/>TRX/USDT/USDD"]
+            StripePay["Stripe<br/>Apple Pay / 信用卡"]
+        end
+
+        subgraph Processing["处理流程"]
+            BlockchainScanner["区块链扫描器"]
+            WebhookHandler["Webhook 处理器"]
+        end
+
+        subgraph Credit["积分系统"]
+            PointsService["PointsService"]
+            UserBalance["用户积分余额"]
+        end
+    end
+
+    Web3User -->|低手续费偏好| CryptoOption
+    Web2User -->|便捷性偏好| FiatOption
+
+    CryptoOption --> TRON
+    FiatOption --> StripePay
+
+    TRON -->|监听链上交易| BlockchainScanner
+    StripePay -->|接收支付通知| WebhookHandler
+
+    BlockchainScanner --> PointsService
+    WebhookHandler --> PointsService
+    PointsService --> UserBalance
+
+    style Web3User fill:#e8f5e9
+    style Web2User fill:#e3f2fd
+    style TRON fill:#fff3e0
+    style StripePay fill:#fce4ec
+```
 
 **优势**:
 - Web3 用户继续使用加密货币（低手续费）
@@ -1464,6 +1680,26 @@ const rechargeOptions = [
 
 ## 对比分析
 
+### 支付方式对比图
+
+```mermaid
+quadrantChart
+    title 支付方式评估矩阵
+    x-axis 低用户门槛 --> 高用户门槛
+    y-axis 低成本 --> 高成本
+    quadrant-1 高成本/高门槛
+    quadrant-2 高成本/低门槛
+    quadrant-3 低成本/低门槛
+    quadrant-4 低成本/高门槛
+    "TRON 充值": [0.8, 0.9]
+    "Apple Pay (Stripe)": [0.2, 0.7]
+    "App Store IAP": [0.1, 0.3]
+    "PayPal": [0.3, 0.6]
+    "信用卡直连": [0.4, 0.5]
+```
+
+### 详细对比表
+
 | 维度 | TRON 充值（现有） | Apple Pay | App Store IAP |
 |------|------------------|-----------|---------------|
 | **手续费** | 链上 Gas 费（~$0.01） | 2.9% + $0.30 | 15-30% |
@@ -1523,6 +1759,39 @@ const rechargeOptions = [
 ---
 
 ## 总结
+
+### 决策流程图
+
+```mermaid
+flowchart TD
+    Start([开始评估]) --> Q1{是否有充足<br/>开发资源?}
+    
+    Q1 -->|否| A1[优化现有 TRON 充值]
+    Q1 -->|是| Q2{Web2 用户<br/>占比 > 50%?}
+    
+    Q2 -->|否| A1
+    Q2 -->|是| Q3{是否接受<br/>3% 手续费?}
+    
+    Q3 -->|否| A1
+    Q3 -->|是| Q4{是否需要<br/>iOS App?}
+    
+    Q4 -->|否| A2[集成 Apple Pay Web]
+    Q4 -->|是| Q5{是否接受<br/>30% 抽成?}
+    
+    Q5 -->|否| A2
+    Q5 -->|是| A3[开发完整 IAP 支持]
+    
+    A1 --> End1([保持现状])
+    A2 --> End2([Apple Pay via Stripe])
+    A3 --> End3([Full IAP Integration])
+    
+    style Start fill:#e3f2fd
+    style End1 fill:#ffcdd2
+    style End2 fill:#fff9c4
+    style End3 fill:#c8e6c9
+```
+
+### 总结表
 
 | 项目 | 结论 |
 |------|------|
