@@ -577,7 +577,7 @@
                 }
               ]
             },
-            "description": "Generated from cURL: curl '{{host}}api/auth/callback/binance' \\\r\n  -H 'accept: */*' \\\r\n  -H 'content-type: application/x-www-form-urlencoded' \\\r\n  -H 'origin: https://chat-dev.ainft.com' \\\r\n  -H 'referer: {{host}}chat' \\\r\n  -H 'x-auth-return-redirect: 1' \\\r\n  -b '__Host-authjs.csrf-token=YOUR_CSRF_TOKEN; __Secure-authjs.callback-url=YOUR_CALLBACK_URL' \\\r\n  --data-urlencode 'chain=bnb' \\\r\n  --data-urlencode 'message=Welcome to AINFT !\r\nhttps://chat-dev.ainft.com wants you to sign in with your TRON account:\r\n0x40469ab4316c3a8a864bdab1273735bdbc78dbd1\r\n\r\nChain ID: 0x38\r\nExpiration Time: 2026-02-25T06:48:51.447Z\r\nNonce: 3YHUXD1771915726448' \\\r\n  --data-urlencode 'signature=0x1b978190e7fa657071c20b6bf7121e1e1317999667373d59857cc393049907712fa10b0ebb77b2d9f337b5048b926d42732b069787c52f65b9f117d44a8906351b' \\\r\n  --data-urlencode 'version=2' \\\r\n  --data-urlencode 'csrfToken=YOUR_CSRF_TOKEN' \\\r\n  --data-urlencode 'callbackUrl={{host}}chat'"
+            "description": "Generated from cURL: curl '{{host}}api/auth/callback/binance'  \n\\-H 'accept: _/_'  \n\\-H 'content-type: application/x-www-form-urlencoded'  \n\\-H 'origin: [https://chat-dev.ainft.com'](https://chat-dev.ainft.com')  \n\\-H 'referer: {{host}}chat'  \n\\-H 'x-auth-return-redirect: 1'  \n\\-b '__Host-authjs.csrf-token=YOUR_CSRF_TOKEN; __Secure-authjs.callback-url=YOUR_CALLBACK_URL'  \n\\--data-urlencode 'chain=bnb'  \n\\--data-urlencode 'message=Welcome to AINFT !  \n[https://chat-dev.ainft.com](https://chat-dev.ainft.com) wants you to sign in with your TRON account:  \n0x40469ab4316c3a8a864bdab1273735bdbc78dbd1\n\nChain ID: 0x38  \nExpiration Time: 2026-02-25T06:48:51.447Z  \nNonce: 3YHUXD1771915726448'  \n\\--data-urlencode 'signature=0x1b978190e7fa657071c20b6bf7121e1e1317999667373d59857cc393049907712fa10b0ebb77b2d9f337b5048b926d42732b069787c52f65b9f117d44a8906351b'  \n\\--data-urlencode 'version=2'  \n\\--data-urlencode 'csrfToken=YOUR_CSRF_TOKEN'  \n\\--data-urlencode 'callbackUrl={{host}}chat'"
           },
           "response": []
         },
@@ -1061,20 +1061,16 @@
         },
         {
           "name": "AppleLogin 使用SDK,NoCookie",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "X-Auth-CSRF-Token",
-                "value": "501f68591fb20394100f3d732a8638d749304783087fc4e8e56dded8541e3944%7Cbe70b8facc0bac1d971c68938b54c6fbb949e030040e2d1f2ec97241936e7a2a",
-                "type": "text",
-                "disabled": true
-              },
-              {
-                "key": "Cookie",
-                "value": "{{cookie}}",
-                "type": "text",
-                "disabled": true
+                "value": "{{csrf-full}}",
+                "type": "text"
               }
             ],
             "body": {
@@ -1082,7 +1078,7 @@
               "urlencoded": [
                 {
                   "key": "csrfToken",
-                  "value": "45da5210042a71a301a9b375840c208520e09e563945a98d7179722335a7d674",
+                  "value": "{{csrf-short}}",
                   "type": "text",
                   "uuid": "fc19710c-cf27-424c-a2d0-3782deed8838"
                 },
@@ -8121,6 +8117,135 @@
                   ]
                 },
                 "description": "Generated from cURL: curl '{{host}}trpc/lambda/wallet.getLinkedWalletAddresses?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D' \\\r\n  -H 'accept: */*' \\\r\n  -H 'accept-language: zh-CN,zh;q=0.9' \\\r\n  -b 'ph_sTMFPsFhdP1Ssg_posthog=%7B%22distinct_id%22%3A%22wy0xMPGdMDQGVzTYuy6kVW9NAyKEx7Nuj9WI5DpTUTZ%22%2C%22%24sesid%22%3A%5Bnull%2C%22019c7469-e1f1-7e91-81e4-e1a5d3626fbb%22%2C1771479622128%5D%2C%22%24epp%22%3Atrue%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22%24direct%22%2C%22u%22%3A%22https%3A%2F%2Fposthog.dev.ainft.com%2Fproject%2F1%2Factivity%2Fexplore%23q%3D%257B%2522kind%2522%253A%2522DataTableNode%2522%252C%2522full%2522%253Atrue%252C%2522source%2522%253A%257B%2522kind%2522%253A%2522EventsQuery%2522%252C%2522select%2522%253A%255B%2522*%2522%252C%2522event%2522%252C%2522person_display_name%2520--%2520Person%2522%252C%2522coalesce(properties.%2524current_url%252C%2520properties.%2524screen_name)%2520--%2520Url%2520%252F%2520Screen%2522%252C%2522properties.%2524lib%2522%252C%2522timestamp%2522%255D%252C%2522orderBy%2522%253A%255B%2522timestamp%2520DESC%2522%255D%252C%2522after%2522%253A%2522-24h%2522%257D%252C%2522propertiesViaUrl%2522%253Atrue%252C%2522showSavedQueries%2522%253Atrue%252C%2522showPersistentColumnConfigurator%2522%253Atrue%257D%22%7D%7D; __Host-authjs.csrf-token=bf87ed9c7b3f9150647d7e5044306ef9e6193f44d0a2db72a141598f152fd2d1%7Cf4dcdee965285bde15921e5515e01a49c6a86a0abe7ae42a3123facd12e220c2; AINFT_LANG=zh-CN; __Secure-authjs.callback-url=https%3A%2F%2Fchat-dev.ainft.com%2Fchat; ainft_posthog_id=user_vvmOPs1aQ79h; ph_phc_nsfbMp2AB7bO9dIg5rcwh5iSss7vt5TgXL1gfyk0bmk_posthog=%7B%22%24user_state%22%3A%22identified%22%2C%22%24sesid%22%3A%5B1771915823962%2C%22019c8e68-3e29-7951-836e-1faafc138409%22%2C1771915722280%5D%2C%22distinct_id%22%3A%22user_vvmOPs1aQ79h%22%2C%22%24device_id%22%3A%22019c8d93-12df-70c2-85b8-d3ce6a9707a4%22%2C%22%24last_posthog_reset%22%3A%222026-02-24T06%3A48%3A39.578Z%22%2C%22%24initialization_time%22%3A%222026-02-24T06%3A48%3A41.257Z%22%2C%22%24configured_session_timeout_ms%22%3A1800000%2C%22device_type%22%3A%22desktop%22%2C%22platform%22%3A%22web%22%2C%22%24capture_rate_limit%22%3A%7B%22tokens%22%3A99%2C%22last%22%3A1771915823962%7D%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%26topic%3Dtpc_VMFFes4fWOkw%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%22%7D%2C%22%24client_session_props%22%3A%7B%22sessionId%22%3A%22019c8e68-3e29-7951-836e-1faafc138409%22%2C%22props%22%3A%7B%22r%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%3Fsession%3Dinbox%26topic%3Dtpc_VMFFes4fWOkw%22%2C%22u%22%3A%22https%3A%2F%2Fchat-dev.ainft.com%2Fchat%22%7D%7D%2C%22%24epp%22%3Atrue%2C%22%24user_id%22%3A%22user_vvmOPs1aQ79h%22%2C%22%24stored_person_properties%22%3A%7B%22platform%22%3A%22web%22%2C%22business%22%3A%22lobe-chat%22%2C%22spm%22%3A%22lobe-chat%22%7D%2C%22user_id%22%3A%22user_vvmOPs1aQ79h%22%7D; __Secure-authjs.session-token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiZmRpajJBUnBic2FHNVVrRzBnNl9TMFRYS2s3LXNXV3lTdmlxV1J6Y2d6WVNzdXdTQk1XZ2Q2YXBFaEt0M2lrZjdrY3BFaUQ1Y1hpaHpaQVRHeDA5N1EifQ..6jBOyEz8I7QXUjOhwuuvqg.ECYLMf50QUMvTudqmQvkPpjif7JMOZpWNnUzyWSGatcFvT8C3UDlbcZdape7gFPTlBLGb75Vb3FbjZrDA8xgZv8TvvQGahzHr6ZD7C4-5E9XnPRr2r8AmgDnLDpO3WpG-xzvBVqh03StT_7n-Ht_xIyPiXmnugq-gGRKoZvut8M7WH9Ygduv79rEtaGDJ3c-bka_2EbehHOFRrhSeeC17aYV20mzGNhXWcSQt2fiJm0i6oZUtoY2lOgl9SXZsyI4VvahmGYkvZDuoAJ9uuZZhLVgnHyw1Onw6ew_fAYpCxY.9wDLAOm_UzvXFB5wPdSCORqlUAW2Ke9zPGdUIuC-MAA' \\\r\n  -H 'priority: u=1, i' \\\r\n  -H 'referer: {{host}}chat' \\\r\n  -H 'sec-ch-ua: \"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"' \\\r\n  -H 'sec-ch-ua-mobile: ?0' \\\r\n  -H 'sec-ch-ua-platform: \"Windows\"' \\\r\n  -H 'sec-fetch-dest: empty' \\\r\n  -H 'sec-fetch-mode: cors' \\\r\n  -H 'sec-fetch-site: same-origin' \\\r\n  -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36' \\\r\n  -H 'x-ainft-chat-auth: N00DBisQEVOB2EQpTVhHallAORwHFwERQBrgwlMpHT0TPhgtHBxTBBlCW0jgmwI+GgwRIRgHHB0NEyERB1LgjQIjHwcLKRxAMQ=='"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "iap",
+          "item": [
+            {
+              "name": "getProducts",
+              "protocolProfileBehavior": {
+                "disableCookies": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "accept",
+                    "value": "*/*",
+                    "disabled": true
+                  },
+                  {
+                    "key": "accept-language",
+                    "value": "zh-CN,zh;q=0.9",
+                    "disabled": true
+                  },
+                  {
+                    "key": "content-type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "priority",
+                    "value": "u=1, i",
+                    "disabled": true
+                  },
+                  {
+                    "key": "referer",
+                    "value": "{{host}}chat?session=inbox",
+                    "disabled": true
+                  },
+                  {
+                    "key": "sec-ch-ua",
+                    "value": "\"Not:A-Brand\";v=\"99\", \"Google Chrome\";v=\"145\", \"Chromium\";v=\"145\"",
+                    "disabled": true
+                  },
+                  {
+                    "key": "sec-ch-ua-mobile",
+                    "value": "?0",
+                    "disabled": true
+                  },
+                  {
+                    "key": "sec-ch-ua-platform",
+                    "value": "\"Windows\"",
+                    "disabled": true
+                  },
+                  {
+                    "key": "sec-fetch-dest",
+                    "value": "empty",
+                    "disabled": true
+                  },
+                  {
+                    "key": "sec-fetch-mode",
+                    "value": "cors",
+                    "disabled": true
+                  },
+                  {
+                    "key": "sec-fetch-site",
+                    "value": "same-origin",
+                    "disabled": true
+                  },
+                  {
+                    "key": "user-agent",
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+                    "disabled": true
+                  },
+                  {
+                    "key": "X-Auth-Session-Token",
+                    "value": "{{auth-full}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{host}}/trpc/lambda/ipa.getProducts",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "trpc",
+                    "lambda",
+                    "ipa.getProducts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "verifyReceipt",
+              "protocolProfileBehavior": {
+                "disableCookies": true
+              },
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-Auth-Session-Token",
+                    "value": "{{auth-full}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"0\": {\r\n        \"json\": {\r\n            \"jwsToken\": \"\",\r\n            \"productId\": \"com.ainft.points.10\"\r\n        }\r\n    }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/trpc/lambda/ipa.verifyReceipt",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "trpc",
+                    "lambda",
+                    "ipa.verifyReceipt"
+                  ]
+                }
               },
               "response": []
             }
