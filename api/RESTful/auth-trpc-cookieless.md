@@ -17,7 +17,7 @@
 | Header 字段 | 说明 | 使用场景 |
 |------------|------|----------|
 | `X-No-Cookie` | 固定值 `1`，告知服务端不使用 Cookie | 所有无 Cookie 请求 |
-| `X-Auth-Session-Token` | Session Token（从登录响应的 `_cookies` 中提取） | 所有需要认证的请求 |
+| `X-Auth-Session-Token` | Session Token | 所有需要认证的请求 |
 
 
 ## 请求格式
