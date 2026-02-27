@@ -95,8 +95,22 @@
                 "packages": {},
                 "requests": {}
               }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
             }
           ],
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
           "request": {
             "method": "GET",
             "header": [
@@ -107,12 +121,6 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "X-Auth-CSRF-Token",
-                "value": "8307448fb8d8278acb52608b4ec767a9822d88c4726e888830dd87c8f9e59493%7C8f2618082f13bcd9eb6873f16ee065dea37e68afd1c66b7418a8206528883870",
-                "type": "text",
-                "disabled": true
               }
             ],
             "url": {
@@ -395,6 +403,9 @@
         },
         {
           "name": "4. 获取当前会话 noCookie",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
           "request": {
             "method": "GET",
             "header": [
@@ -497,6 +508,9 @@
         },
         {
           "name": "5.Google登录请求 noCookie",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
           "request": {
             "method": "POST",
             "header": [
@@ -850,7 +864,8 @@
               "accept-encoding": true,
               "accept": true,
               "user-agent": true
-            }
+            },
+            "disableCookies": true
           },
           "request": {
             "method": "GET",
@@ -913,11 +928,6 @@
                 "key": "user-agent",
                 "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
                 "disabled": true
-              },
-              {
-                "key": "X-Auth-CSRF-Token",
-                "value": "{{csrf-full}}",
-                "type": "text"
               },
               {
                 "key": "X-Auth-Session-Token",
@@ -992,7 +1002,6 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "pm.request.headers.remove(\"Cookie\"); // 移除 Cookie 头（推荐）\r",
                   ""
                 ],
                 "type": "text/javascript",
@@ -1001,6 +1010,9 @@
               }
             }
           ],
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
           "request": {
             "method": "POST",
             "header": [
@@ -1208,6 +1220,9 @@
         },
         {
           "name": "Chat (openai) 基于登录 noCookie",
+          "protocolProfileBehavior": {
+            "disableCookies": true
+          },
           "request": {
             "method": "POST",
             "header": [
@@ -1454,7 +1469,6 @@
                   "listen": "prerequest",
                   "script": {
                     "exec": [
-                      "pm.request.headers.remove(\"Cookie\"); // 移除 Cookie 头（推荐）\r",
                       ""
                     ],
                     "type": "text/javascript",
@@ -1463,6 +1477,9 @@
                   }
                 }
               ],
+              "protocolProfileBehavior": {
+                "disableCookies": true
+              },
               "request": {
                 "method": "GET",
                 "header": [
