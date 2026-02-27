@@ -234,7 +234,6 @@ export enum PointFlowSourceType {
 
 ```typescript
 import {
-  AppStoreServerAPIClient,
   Environment,
   SignedDataVerifier,
 } from '@apple/app-store-server-library';
@@ -250,12 +249,19 @@ const appleRootCAs: Buffer[] = [
 
 const BUNDLE_ID = 'com.ainft.app';  // 与 App Store Connect 中一致
 
+// App Apple ID：App Store Connect > 我的 App > 通用 > Apple ID（纯数字）
+const APP_APPLE_ID = Number(process.env.APP_APPLE_ID);
+
 function createVerifier(environment: Environment): SignedDataVerifier {
+  // 生产环境强制要求 appAppleId，沙盒环境可省略
+  // 参见库源码：if (environment === PRODUCTION && appAppleId === undefined) throw
+  const appAppleId = environment === Environment.PRODUCTION ? APP_APPLE_ID : undefined;
   return new SignedDataVerifier(
     appleRootCAs,
     true,           // enableOnlineChecks：启用 OCSP 吊销检查
     environment,
     BUNDLE_ID,
+    appAppleId,
   );
 }
 ```
@@ -302,8 +308,9 @@ async processPurchase({ userId, jwsToken, productId }) {
     resolvedEnv = Environment.SANDBOX;
   }
 
-  // 3. 二次校验 Payload 关键字段（防止 JWS 内容与客户端上报不一致）
-  if (payload.bundleId !== BUNDLE_ID) throw new Error('Bundle ID mismatch');
+  // 3. 校验 Payload 关键字段
+  // bundleId 已由 SignedDataVerifier 内部校验（不匹配时抛 INVALID_APP_IDENTIFIER）
+  // 此处仅需校验业务字段
   if (payload.productId !== productId) throw new Error('Product ID mismatch');
   if (payload.type !== 'Consumable') throw new Error('Unexpected product type');
 
@@ -346,15 +353,19 @@ async processPurchase({ userId, jwsToken, productId }) {
 
 ```
 验签由 @apple/app-store-server-library 的 SignedDataVerifier 完成：
-  1. 解析 JWS Header 中的 x5c（X.509 证书链）
+  1. 解析 JWS Header 中的 x5c（X.509 证书链，固定 3 段）
   2. 验证证书链是否锚定到内置的 Apple Root CA
   3. 使用叶证书的公钥验证 JWS 签名（ES256/ECDSA）
-  4. 验证 signedDate 时效（默认 ±5 分钟内有效）
-  5. 返回解码后的 JWSTransactionDecodedPayload
+  4. 校验叶证书和中间证书在当前时间仍有效（enableOnlineChecks=true 时使用当前时间）
+  5. 执行 OCSP 吊销检查（enableOnlineChecks=true）
+  6. 校验 bundleId 与构造时传入的 bundleId 一致，否则抛 INVALID_APP_IDENTIFIER
+  7. 校验 payload.environment 与构造时传入的 environment 一致，否则抛 INVALID_ENVIRONMENT
+  8. 返回解码后的 JWSTransactionDecodedPayload
 
-环境区分（无需 status 码）：
-  - payload.environment = 'Production' | 'Sandbox'
-  - 若生产验签抛 VerificationException，则改用 Sandbox 验证器重试
+环境区分：
+  - 先用 PRODUCTION 验证器尝试，若抛 VerificationException(INVALID_ENVIRONMENT)
+    则说明是 Sandbox Token，改用 Sandbox 验证器重试
+  - payload.environment 枚举值：'Production' | 'Sandbox'
 ```
 
 #### JWSTransactionDecodedPayload 关键字段
@@ -479,6 +490,10 @@ export const lambdaRouter = router({
 
 # App Bundle ID（与 App Store Connect 一致）
 APP_BUNDLE_ID=com.ainft.app
+
+# App Apple ID：App Store Connect > 我的 App > 通用 > Apple ID（纯数字）
+# 生产环境 SignedDataVerifier 强制要求，缺少则抛异常
+APP_APPLE_ID=1234567890
 ```
 
 ---
@@ -613,7 +628,7 @@ struct RechargeView: View {
 | JWS 字段与客户端不一致 | 后端从 JWS Payload 独立解码 bundleId / productId，不信任客户端上报 |
 | 沙盒 Token 进入生产 | `payload.environment` 字段自动区分 |
 | 并发重复发积分 | `creditPointsOnce()` 在事务内检查 `userPointFlow` 唯一约束 |
-| JWS 时效攻击（过期 Token 重放） | `SignedDataVerifier` 校验 `signedDate` 时效（默认 ±5 分钟） |
+| 过期证书链的 JWS 重放 | `enableOnlineChecks=true` 时使用当前时间校验证书有效期及 OCSP 吊销状态，过期证书签发的 JWS 无法通过 |
 
 ---
 
