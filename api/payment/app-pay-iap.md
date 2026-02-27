@@ -506,14 +506,3 @@ pnpm db:migrate
 新增表：`t_iap_receipts`
 
 ---
-
-## 适用场景
-
-> **原生 iOS / macOS App 内购买数字商品（积分、会员）必须使用 IAP**，否则违反 App Store 政策，存在被下架风险。
-
-| 场景 | 建议方案 |
-|---|---|
-| 原生 iOS App 内积分充值 | **本方案（IAP）** |
-| Web / H5 端充值 | 方案 A（Apple Pay + Stripe） |
-| macOS 非沙盒 App | 方案 A（Apple Pay + Stripe） |
-| 最优实践 | 两套并行：App 内走 IAP，Web 端走 Apple Pay |
