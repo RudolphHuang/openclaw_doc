@@ -2,7 +2,7 @@
 
 > **方案 B**：适用于 iOS/macOS 原生 App 内销售数字商品（积分、会员）的唯一合规方式。
 >
-> **验证机制**：StoreKit 2 + JWS 本地验签（`@apple/app-store-server-library`），已废弃的 `verifyReceipt` 接口不再使用。
+> **验证机制**：StoreKit 2 + JWS 本地验签（`@apple/app-store-server-library`）。
 
 ---
 
@@ -52,8 +52,6 @@ flowchart TB
     style Backend fill:#e8f5e9
     style Database fill:#fff3e0
 ```
-
-> **关键改变**：后端不再向 Apple 发起网络请求，改为使用 `@apple/app-store-server-library` 在本地通过 Apple 根证书验证 JWS 签名，延迟更低，且不受 Apple 服务器可用性影响。
 
 ---
 
@@ -169,7 +167,7 @@ export const iapReceipt = pgTable(
     currency: varchar('currency', { length: 3 }).notNull().default('USD'),
     points: integer('points').notNull(),          // 发放积分数
 
-    // 原始 JWS Token（替代旧版 Base64 收据）
+    // 原始 JWS Token
     jwsToken: text('jws_token').notNull(),
 
     // 验证环境（从 JWS Payload 的 environment 字段提取）
@@ -193,7 +191,7 @@ export const iapReceipt = pgTable(
 );
 ```
 
-> `jws_token` 字段存储原始 JWS 字符串，替代旧版 Base64 收据，便于后续审计回溯。
+> `jws_token` 字段存储原始 JWS 字符串，便于后续审计回溯。
 
 ---
 
@@ -279,7 +277,7 @@ const IAP_PRODUCT_CONFIGS: Record<string, { currency: string; points: number; pr
 ```typescript
 async processPurchase(params: {
   userId: string;
-  jwsToken: string;   // transaction.jwsRepresentation（替代旧版 receipt）
+  jwsToken: string;   // transaction.jwsRepresentation
   productId: string;  // 用于前置合法性校验
 }): Promise<{ success: boolean; points: number; transactionId: string }>
 ```
@@ -403,15 +401,15 @@ Array<{
 POST /trpc/iap.verifyReceipt
 ```
 
-输入（字段变更）：
+输入：
 ```typescript
 {
-  jwsToken: string;   // transaction.jwsRepresentation（JWS 格式，替代旧版 Base64 receipt）
+  jwsToken: string;   // transaction.jwsRepresentation
   productId: string;  // 如 com.ainft.points.10（用于前置合法性校验）
 }
 ```
 
-> `transactionId` 不再作为独立字段上传，由后端从 JWS Payload 中解码提取，防止客户端伪造。
+> `transactionId` 由后端从 JWS Payload 中解码提取，防止客户端伪造。
 
 返回：
 ```typescript
@@ -481,12 +479,7 @@ export const lambdaRouter = router({
 
 # App Bundle ID（与 App Store Connect 一致）
 APP_BUNDLE_ID=com.ainft.app
-
-# 注意：JWS 方案不需要 APP_STORE_SHARED_SECRET
-# 验签通过本地 Apple Root CA 证书完成，无需任何密钥
 ```
-
-> **与旧方案对比**：旧方案需要配置 `APP_STORE_SHARED_SECRET`（共享密钥），一旦泄露将带来安全风险。JWS 方案完全基于公钥密码学，无需共享密钥。
 
 ---
 
@@ -538,7 +531,6 @@ class IAPManager: ObservableObject {
         case .success(let verification):
             let transaction = try checkVerified(verification)
 
-            // 直接使用 JWS Token，无需读取 Bundle 收据文件
             await verifyOnBackend(transaction: transaction, productId: product.id)
 
             // 后端验证成功后再 finish，确保积分已发放
@@ -553,7 +545,6 @@ class IAPManager: ObservableObject {
     }
 
     private func verifyOnBackend(transaction: Transaction, productId: String) async {
-        // 获取 JWS Token（StoreKit 2 直接提供，无需读取 Bundle 收据文件）
         let jwsToken = transaction.jwsRepresentation
 
         // 调用后端 tRPC 接口
@@ -574,8 +565,6 @@ enum IAPError: Error {
     case failedVerification
 }
 ```
-
-> **关键变更**：不再使用 `Bundle.main.appStoreReceiptURL` 读取旧版收据文件，改为直接使用 `transaction.jwsRepresentation`。StoreKit 2 已在客户端完成一次本地验签，服务端再做一次独立验签，形成双重保障。
 
 ### SwiftUI 充值页面
 
@@ -622,8 +611,7 @@ struct RechargeView: View {
 | 重放攻击（同一交易重复提交） | `transactionId` 唯一索引 + `existsByTransactionId` 前置检查 |
 | 伪造 JWS Token | `SignedDataVerifier` 验证 Apple Root CA 签名链，伪造 JWS 无法通过 |
 | JWS 字段与客户端不一致 | 后端从 JWS Payload 独立解码 bundleId / productId，不信任客户端上报 |
-| 沙盒 Token 进入生产 | `payload.environment` 字段自动区分，无需依赖错误码 |
-| Shared Secret 泄露 | JWS 方案无需 Shared Secret，彻底消除该风险面 |
+| 沙盒 Token 进入生产 | `payload.environment` 字段自动区分 |
 | 并发重复发积分 | `creditPointsOnce()` 在事务内检查 `userPointFlow` 唯一约束 |
 | JWS 时效攻击（过期 Token 重放） | `SignedDataVerifier` 校验 `signedDate` 时效（默认 ±5 分钟） |
 
