@@ -617,22 +617,6 @@ struct RechargeView: View {
 
 ---
 
-## 与旧方案对比
-
-| 对比项 | 旧方案（verifyReceipt） | JWS 方案（当前） |
-|---|---|---|
-| Apple API 状态 | ⚠️ 已废弃（Deprecated） | ✅ 现行推荐 |
-| 后端是否需要调 Apple 服务器 | ✅ 每次都需要 | ✅ 不需要（本地验签） |
-| 网络延迟 | 高（额外一次 Apple 往返） | 低（本地毫秒级） |
-| 受 Apple 服务器可用性影响 | 是 | 否 |
-| 需要 Shared Secret | 是（需保密） | 否 |
-| 环境区分方式 | status=21007 错误码 | payload.environment 字段 |
-| 数据结构 | 嵌套 JSON，字段繁杂 | 标准 JWT Payload，结构清晰 |
-| iOS 端收据获取 | 读取 Bundle 文件（旧 API） | `transaction.jwsRepresentation`（StoreKit 2） |
-| 客户端 transactionId 可信度 | 客户端上报，需服务端核对 | 服务端从 JWS Payload 解码，不依赖客户端 |
-
----
-
 ## 数据库迁移
 
 执行以下命令生成并应用迁移：
@@ -645,8 +629,6 @@ pnpm db:generate
 pnpm db:migrate
 ```
 
-变更说明：
-- 新增表：`t_iap_receipts`
-- 字段 `receipt`（旧版 Base64 收据）改为 `jws_token`（JWS Token）
+新增表：`t_iap_receipts`
 
 ---
