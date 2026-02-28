@@ -51,17 +51,26 @@ input = encodeURIComponent(JSON.stringify({
 
 ### 5. 认证
 
-- **Cookie**：登录后由浏览器自动携带（如 `__Secure-authjs.session-token` 等）。
-- **请求头（二选一或同时使用）**：  
-  - `x-ainft-chat-auth: <token>`  
-  前端从会话或接口拿到的 auth token，可直接用于 Postman/curl。
+所有 tRPC 接口均支持以下认证方式（可任选其一或同时使用）：
 
-示例（无入参）：
+- **Cookie**：登录后由浏览器自动携带（如 `__Secure-authjs.session-token` 等）。
+- **请求头**：  
+  - `X-Auth-Session-Token: <token>` — 前端从会话或接口拿到的 auth token，可直接用于 Postman/curl。  
+  - `Authorization: Bearer <token>` — 使用 Bearer Token 访问，适用于 API 调用、脚本或第三方集成。
+
+示例（无入参，使用 X-Auth-Session-Token）：
 
 ```bash
 curl 'https://chat-dev.ainft.com/trpc/lambda/usage.points?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D%7D' \
   -H 'accept: */*' \
-  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN'
+  -H 'X-Auth-Session-Token: YOUR_AUTH_TOKEN'
+```
+
+示例（有入参，使用 Authorization Bearer）：
+
+```bash
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/order.listOrders?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22page%22%3A1%2C%22pageSize%22%3A20%2C%22sortBy%22%3A%22createdAt%22%2C%22order%22%3A%22desc%22%7D%7D%7D' \
+  --header 'Authorization: Bearer YOUR_BEARER_TOKEN'
 ```
 
 ### 6. 与前端 tRPC 客户端的对应关系
