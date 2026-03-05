@@ -1,6 +1,6 @@
 # Google V2 登录 API 文档
 
-适用于移动端/桌面端等无法使用浏览器 OAuth 流程的场景。客户端先通过 Google SDK 获取 access token，然后直接传递给服务端完成登录。
+适用于移动端/桌面端等无法使用浏览器 OAuth 流程的场景。客户端先通过 Google SDK 获取 **Authorization Code**，然后传递给服务端，服务端使用 code 换取 access token，再获取用户信息完成登录。
 
 ## 流程概述
 
@@ -11,15 +11,26 @@ sequenceDiagram
     participant Server as 服务端<br/>(NextAuth)
 
     Client->>Google: 1. Google SDK 登录
-    Google-->>Client: 2. 返回 accessToken
+    Google-->>Client: 2. 返回 Authorization Code
     
-    Client->>Server: 3. POST /callback/google-v2<br/>(accessToken + csrfToken)
-    Server->>Google: 验证 accessToken
-    Google-->>Server: 返回用户信息
-    Server-->>Client: 4. 返回 sessionToken + redirectUrl
+    Client->>Server: 3. POST /callback/google-v2<br/>(code + csrfToken)
+    Server->>Google: 4. 用 code 换取 access token
+    Google-->>Server: 5. 返回 access token + 用户信息
+    Server-->>Client: 6. 返回 sessionToken + redirectUrl
     
-    Client->>Server: 5. 后续请求携带 sessionToken
+    Client->>Server: 7. 后续请求携带 sessionToken
 ```
+
+## 环境变量配置
+
+服务端需要配置以下环境变量：
+
+| 环境变量 | 说明 | 示例 |
+|---------|------|------|
+| `AUTH_GOOGLE_CLIENT_ID` | Google OAuth Client ID | `xxx.apps.googleusercontent.com` |
+| `AUTH_GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | `GOCSPX-xxx` |
+
+---
 
 ## 1. 获取 CSRF Token
 
@@ -54,16 +65,16 @@ curl --location 'https://chat-dev.ainft.com/api/auth/csrf?noCookie=1'
 
 ## 2. Google V2 登录
 
-使用 Google access token 完成登录。
+使用 Google **Authorization Code** 完成登录。
 
 ### 请求
 
 ```bash
-curl --location 'https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=null' \
+curl --location 'https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=1' \
 --header 'X-Auth-CSRF-Token: f6b8b4f40f689a82fcf6dd3a21832ced0777efd55a62baba5462f9eadbe4b414%7C9c8b39a33536a8029ae763844622989d14d921fd2abc5693e7034dfe4505d149' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'csrfToken=' \
---data-urlencode 'accessToken='
+--data-urlencode 'csrfToken=f6b8b4f40f689a82fcf6dd3a21832ced0777efd55a62baba5462f9eadbe4b414' \
+--data-urlencode 'code=4/0A...' \
 ```
 
 ### 请求参数
@@ -72,7 +83,7 @@ curl --location 'https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `noCookie` | string | 是 | 固定值 `null` 或 `1`，表示使用无 cookie 模式 |
+| `noCookie` | string | 是 | 固定值 `1`，表示使用无 cookie 模式 |
 
 #### Header
 
@@ -86,7 +97,7 @@ curl --location 'https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `csrfToken` | string | 是 | CSRF token（仅 `\|` 前面的部分） |
-| `accessToken` | string | 是 | 从 Google SDK 获取的 access token |
+| `code` | string | 是 | Google Authorization Code，通过 Google SDK 获取 |
 
 ### 响应
 
@@ -118,7 +129,7 @@ curl --location 'https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie
 }
 ```
 
-#### Google Token 无效
+#### Authorization Code 无效
 
 ```json
 {
@@ -160,90 +171,80 @@ curl --location 'https://chat-dev.ainft.com/trpc/lambda/user.getUserState?batch=
 
 ---
 
-## 客户端完整示例
+## 客户端获取 Authorization Code 示例
 
 ### iOS (Swift)
 
 ```swift
 import GoogleSignIn
 
-class AuthManager {
-    private var sessionToken: String?
+func signInWithGoogle() {
+    guard let clientID = FirebaseApp.app()?.options.clientID else { return }
     
-    // 1. Google 登录
-    func signInWithGoogle() {
-        GIDSignIn.sharedInstance.signIn(withPresenting: self) { result, error in
-            guard error == nil, let user = result?.user else { return }
-            
-            user.accessToken.do { accessToken in
-                let token = accessToken.tokenString
-                self.loginWithGoogleV2(accessToken: token)
-            }
-        }
-    }
+    let config = GIDConfiguration(clientID: clientID)
+    GIDSignIn.sharedInstance.configuration = config
     
-    // 2. 服务端登录
-    private func loginWithGoogleV2(accessToken: String) {
-        // 2.1 获取 CSRF token
-        getCsrfToken { csrfToken, csrfCookie in
-            // 2.2 调用登录接口
-            let url = URL(string: "https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=null")!
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue(csrfCookie, forHTTPHeaderField: "X-Auth-CSRF-Token")
-            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-            
-            let body = "csrfToken=\(csrfToken)&accessToken=\(accessToken)"
-            request.httpBody = body.data(using: .utf8)
-            
-            URLSession.shared.dataTask(with: request) { data, response, error in
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let cookies = json["_cookies"] as? [String] else { return }
-                
-                // 提取 session token
-                self.sessionToken = self.extractSessionToken(from: cookies)
-            }.resume()
-        }
-    }
-    
-    // 3. 获取 CSRF token
-    private func getCsrfToken(completion: @escaping (String, String) -> Void) {
-        let url = URL(string: "https://chat-dev.ainft.com/api/auth/csrf?noCookie=1")!
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let csrfToken = json["csrfToken"] as? String,
-                  let cookies = json["_cookies"] as? [String] else { return }
-            
-            let csrfCookie = cookies.first { $0.contains("csrf-token") } ?? ""
-            completion(csrfToken, csrfCookie)
-        }.resume()
-    }
-    
-    // 4. 提取 session token
-    private func extractSessionToken(from cookies: [String]) -> String? {
-        guard let cookie = cookies.first(where: { $0.contains("session-token") }),
-              let range = cookie.range(of: "session-token=") else { return nil }
+    GIDSignIn.sharedInstance.signIn(withPresenting: getRootViewController()) { result, error in
+        guard error == nil else { return }
         
-        let tokenStart = cookie.index(range.upperBound, offsetBy: 0)
-        let tokenEnd = cookie.firstIndex(of: ";") ?? cookie.endIndex
-        return String(cookie[tokenStart..<tokenEnd])
-    }
-    
-    // 5. 调用 API
-    func fetchUserState() {
-        guard let sessionToken = sessionToken else { return }
+        guard let user = result?.user,
+              let authCode = user.serverAuthCode else { 
+            print("No authorization code")
+            return 
+        }
         
-        let url = URL(string: "https://chat-dev.ainft.com/trpc/lambda/user.getUserState?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%7D%7D")!
+        // 将 authCode 发送到服务端
+        loginWithGoogleV2(code: authCode)
+    }
+}
+
+// 服务端登录
+private func loginWithGoogleV2(code: String) {
+    // 1. 获取 CSRF token
+    getCsrfToken { csrfToken, csrfCookie in
+        // 2. 调用登录接口
+        let url = URL(string: "https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=1")!
         var request = URLRequest(url: url)
-        request.setValue("1", forHTTPHeaderField: "X-No-Cookie")
-        request.setValue(sessionToken, forHTTPHeaderField: "X-Auth-Session-Token")
+        request.httpMethod = "POST"
+        request.setValue(csrfCookie, forHTTPHeaderField: "X-Auth-CSRF-Token")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        
+        let body = "csrfToken=\(csrfToken)&code=\(code)"
+        request.httpBody = body.data(using: .utf8)
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            // 处理响应
+            guard let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let cookies = json["_cookies"] as? [String] else { return }
+            
+            // 提取 session token
+            self.sessionToken = self.extractSessionToken(from: cookies)
         }.resume()
     }
+}
+
+// 获取 CSRF token
+private func getCsrfToken(completion: @escaping (String, String) -> Void) {
+    let url = URL(string: "https://chat-dev.ainft.com/api/auth/csrf?noCookie=1")!
+    URLSession.shared.dataTask(with: url) { data, response, error in
+        guard let data = data,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let csrfToken = json["csrfToken"] as? String,
+              let cookies = json["_cookies"] as? [String] else { return }
+        
+        let csrfCookie = cookies.first { $0.contains("csrf-token") } ?? ""
+        completion(csrfToken, csrfCookie)
+    }.resume()
+}
+
+// 提取 session token
+private func extractSessionToken(from cookies: [String]) -> String? {
+    guard let cookie = cookies.first(where: { $0.contains("session-token") }),
+          let range = cookie.range(of: "session-token=") else { return nil }
+    
+    let tokenStart = cookie.index(range.upperBound, offsetBy: 0)
+    let tokenEnd = cookie.firstIndex(of: ";") ?? cookie.endIndex
+    return String(cookie[tokenStart..<tokenEnd])
 }
 ```
 
@@ -255,10 +256,10 @@ class AuthManager(private val context: Context) {
     private val client = OkHttpClient()
     private val gson = Gson()
     
-    // 1. Google 登录
+    // 1. Google 登录 - 获取 Authorization Code
     fun signInWithGoogle(activity: Activity) {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("YOUR_WEB_CLIENT_ID")
+            .requestServerAuthCode("YOUR_WEB_CLIENT_ID") // 重要：使用 Web Client ID
             .requestEmail()
             .build()
         
@@ -271,23 +272,24 @@ class AuthManager(private val context: Context) {
         val task = GoogleSignIn.getSignedInAccountFromIntent(data)
         try {
             val account = task.getResult(ApiException::class.java)
-            val accessToken = account?.serverAuthCode // 或使用 account.idToken
-            accessToken?.let { loginWithGoogleV2(it) }
+            // 获取 authorization code（不是 idToken）
+            val authCode = account?.serverAuthCode
+            authCode?.let { loginWithGoogleV2(it) }
         } catch (e: ApiException) {
             Log.e("Auth", "Google sign in failed", e)
         }
     }
     
     // 2. 服务端登录
-    private fun loginWithGoogleV2(accessToken: String) {
+    private fun loginWithGoogleV2(code: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // 2.1 获取 CSRF token
                 val (csrfToken, csrfCookie) = getCsrfToken()
                 
                 // 2.2 调用登录接口
-                val url = "https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=null"
-                val body = "csrfToken=$csrfToken&accessToken=$accessToken"
+                val url = "https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=1"
+                val body = "csrfToken=$csrfToken&code=$code&redirectUri="
                     .toRequestBody("application/x-www-form-urlencoded".toMediaType())
                 
                 val request = Request.Builder()
@@ -365,20 +367,121 @@ class AuthManager(private val context: Context) {
 }
 ```
 
+### Flutter
+
+```dart
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+class AuthManager {
+  String? sessionToken;
+  
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+    serverClientId: 'YOUR_WEB_CLIENT_ID', // 用于获取 authorization code
+  );
+
+  // 1. Google 登录
+  Future<void> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+      if (account != null) {
+        final GoogleSignInAuthentication auth = await account.authentication;
+        // 获取 authorization code（不是 accessToken）
+        final String? authCode = auth.serverAuthCode;
+        if (authCode != null) {
+          await loginWithGoogleV2(code: authCode);
+        }
+      }
+    } catch (error) {
+      print('Google Sign-In error: $error');
+    }
+  }
+  
+  // 2. 服务端登录
+  Future<void> loginWithGoogleV2({required String code}) async {
+    // 2.1 获取 CSRF token
+    final csrfData = await getCsrfToken();
+    final csrfToken = csrfData['token'];
+    final csrfCookie = csrfData['cookie'];
+    
+    // 2.2 调用登录接口
+    final url = Uri.parse('https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=1');
+    final response = await http.post(
+      url,
+      headers: {
+        'X-Auth-CSRF-Token': csrfCookie,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'csrfToken=$csrfToken&code=$code&redirectUri=',
+    );
+    
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final cookies = json['_cookies'] as List<dynamic>;
+      sessionToken = extractSessionToken(cookies);
+    } else {
+      throw Exception('Login failed: ${response.body}');
+    }
+  }
+  
+  // 3. 获取 CSRF token
+  Future<Map<String, String>> getCsrfToken() async {
+    final url = Uri.parse('https://chat-dev.ainft.com/api/auth/csrf?noCookie=1');
+    final response = await http.get(url);
+    
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final token = json['csrfToken'] as String;
+      final cookies = json['_cookies'] as List<dynamic>;
+      final csrfCookie = cookies.firstWhere(
+        (c) => c.toString().contains('csrf-token'),
+        orElse: () => '',
+      ) as String;
+      
+      return {'token': token, 'cookie': csrfCookie};
+    } else {
+      throw Exception('Failed to get CSRF token');
+    }
+  }
+  
+  // 4. 提取 session token
+  String? extractSessionToken(List<dynamic> cookies) {
+    final cookie = cookies.firstWhere(
+      (c) => c.toString().contains('session-token'),
+      orElse: () => null,
+    );
+    if (cookie == null) return null;
+    
+    final regex = RegExp(r'session-token=([^;]+)');
+    final match = regex.firstMatch(cookie.toString());
+    return match?.group(1);
+  }
+}
+```
+
 ---
 
 ## 注意事项
 
-1. **Access Token 有效期** - Google access token 通常有效期为 1 小时，需要在过期前刷新
-2. **CSRF Token 一次性使用** - 每个 CSRF token 只能使用一次，登录失败后需要重新获取
-3. **Session Token 存储** - 需要安全存储（iOS Keychain / Android Keystore）
-4. **HTTPS 必需** - 生产环境必须使用 HTTPS 传输 token
-5. **Cookie 前缀差异** - 开发环境使用 `authjs.*`，生产环境可能使用 `__Secure-authjs.*` 或 `__Host-authjs.*`
+1. **Authorization Code 一次性使用** - Google 的 authorization code 只能使用一次，如果验证失败需要重新获取
+2. **Code 有效期** - Authorization code 通常有几分钟的有效期，过期后需要重新获取
+3. **Server Client ID** - 移动端获取 authorization code 时需要使用 **Web Client ID**（Server Client ID），而不是 Android/iOS Client ID
+4. **CSRF Token 一次性使用** - 每个 CSRF token 只能使用一次，登录失败后需要重新获取
+5. **Session Token 存储** - 需要安全存储（iOS Keychain / Android Keystore）
+6. **HTTPS 必需** - 生产环境必须使用 HTTPS 传输 token
+7. **Cookie 前缀差异** - 开发环境使用 `authjs.*`，生产环境可能使用 `__Secure-authjs.*` 或 `__Host-authjs.*`
 
-在
-https://developers.google.com/oauthplayground/
+---
 
-找到 Google OAuth2 API v2
-https://www.googleapis.com/auth/userinfo.email
+## 测试工具
 
-中可以生成 accessToken
+可以使用 [Google OAuth Playground](https://developers.google.com/oauthplayground/) 生成测试用的 authorization code：
+
+1. 访问 https://developers.google.com/oauthplayground/
+2. 选择 "Google OAuth2 API v2"
+3. 选择 scope: `https://www.googleapis.com/auth/userinfo.email`
+4. 点击 "Authorize APIs" 并登录
+5. 点击 "Exchange authorization code for tokens"
+6. 复制 authorization code 用于测试
