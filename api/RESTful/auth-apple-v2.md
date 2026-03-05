@@ -16,7 +16,7 @@ sequenceDiagram
     Client->>Server: 3. POST /callback/apple-v2<br/>(authorizationCode + csrfToken)
     Server->>Apple: 验证 authorizationCode
     Apple-->>Server: 返回 id_token + 用户信息
-    Server-->>Client: 4. 返回 sessionToken + redirectUrl
+    Server-->>Client: 4. 返回 sessionToken
     
     Client->>Server: 5. 后续请求携带 sessionToken
 ```
