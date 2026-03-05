@@ -1037,10 +1037,10 @@
                   "uuid": "48debff2-05aa-455f-9112-d61d05032a33"
                 },
                 {
-                  "key": "accessToken",
-                  "value": "{{google-access-token}}",
+                  "key": "code",
+                  "value": "{{google-auth-code}}",
                   "type": "text",
-                  "uuid": "cc52d7c0-e656-42b5-9e55-61ac258dbd3d"
+                  "uuid": "28cc6561-c569-4a20-af9f-0238a73fd471"
                 }
               ]
             },
@@ -1276,7 +1276,7 @@
               },
               {
                 "key": "x-ainft-chat-auth",
-                "value": "{{auth}}"
+                "value": "{{auth-full}}"
               }
             ],
             "body": {
@@ -7738,6 +7738,41 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "listOrders ApiKey",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer sk-12qsqqf48cislktw1a9tkrj3mcpyo0fs",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{host}}/trpc/lambda/order.listOrders?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22page%22%3A1%2C%22pageSize%22%3A20%2C%22sortBy%22%3A%22createdAt%22%2C%22order%22%3A%22desc%22%7D%7D%7D",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "trpc",
+                    "lambda",
+                    "order.listOrders"
+                  ],
+                  "query": [
+                    {
+                      "key": "batch",
+                      "value": "1"
+                    },
+                    {
+                      "key": "input",
+                      "value": "%7B%220%22%3A%7B%22json%22%3A%7B%22page%22%3A1%2C%22pageSize%22%3A20%2C%22sortBy%22%3A%22createdAt%22%2C%22order%22%3A%22desc%22%7D%7D%7D"
+                    }
+                  ]
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -8286,6 +8321,44 @@
             {
               "key": "alt",
               "value": "json"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "google change code to token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "https://oauth2.googleapis.com/token?client_id={{google-client-id}}&client_secret={{google-client-secret}}&code={{google-auth-code}}&grant_type=authorization_code",
+          "protocol": "https",
+          "host": [
+            "oauth2",
+            "googleapis",
+            "com"
+          ],
+          "path": [
+            "token"
+          ],
+          "query": [
+            {
+              "key": "client_id",
+              "value": "{{google-client-id}}"
+            },
+            {
+              "key": "client_secret",
+              "value": "{{google-client-secret}}"
+            },
+            {
+              "key": "code",
+              "value": "{{google-auth-code}}"
+            },
+            {
+              "key": "grant_type",
+              "value": "authorization_code"
             }
           ]
         }
