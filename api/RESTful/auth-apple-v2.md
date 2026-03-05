@@ -397,6 +397,7 @@ class AuthManager(private val context: Context) {
 ## Apple Token 接口
 
 服务端使用 Apple 的 token 接口验证 authorization code 并获取用户信息。
+文档 https://developer.apple.com/documentation/signinwithapplerestapi/generate-and-validate-tokens
 
 ### 请求示例
 
