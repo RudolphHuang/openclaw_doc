@@ -417,9 +417,342 @@ curl --location 'https://appleid.apple.com/auth/token' \
 | `code` | string | 是 | 从 Apple Sign In SDK 获取的 authorization code |
 | `grant_type` | string | 是 | 固定值 `authorization_code` |
 
-### client_secret 密钥文件
+### client_secret 生成方式
 
-`client_secret` 是一个 JWT (JSON Web Token)，需要使用以下方式生成：
+`client_secret` 是一个 JWT (JSON Web Token)，需要使用以下方式生成。
+
+项目提供了 TypeScript 脚本用于生成 Apple Client Secret：
+
+**脚本位置:** `scripts/generate-apple-client-secret.ts`
+
+#### 使用方法
+
+**方式 1: 使用环境变量**
+
+```bash
+# 设置环境变量
+export AUTH_APPLE_V2_ID="com.ainft.app"
+export AUTH_APPLE_V2_TEAM_ID="YOUR_TEAM_ID"
+export AUTH_APPLE_V2_KEY_ID="YOUR_KEY_ID"
+export AUTH_APPLE_V2_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
+YOUR_PRIVATE_KEY_CONTENT
+-----END PRIVATE KEY-----"
+
+# 运行脚本
+npx tsx scripts/generate-apple-client-secret.ts
+```
+
+**方式 2: 从 .env 文件加载**
+
+```bash
+npx tsx scripts/generate-apple-client-secret.ts --env-file=.env
+```
+
+#### 环境变量说明
+
+| 环境变量 | 说明 | 示例 |
+|----------|------|------|
+| `AUTH_APPLE_V2_ID` | Apple Services ID | `com.ainft.app` |
+| `AUTH_APPLE_V2_TEAM_ID` | Apple Team ID (10字符) | `2UF5J9V3F3` |
+| `AUTH_APPLE_V2_KEY_ID` | Private Key ID (10字符) | `HTR4N3A4F7` |
+| `AUTH_APPLE_V2_PRIVATE_KEY` | 私钥内容 (.p8 文件) | `-----BEGIN PRIVATE KEY-----...` |
+| `OUTPUT_FILE` | (可选) 输出文件路径 | `/path/to/apple-client-secret.jwt` |
+
+#### 私钥格式支持
+
+脚本支持两种私钥格式：
+- **PKCS#8**: `-----BEGIN PRIVATE KEY-----`
+- **PKCS#1 EC**: `-----BEGIN EC PRIVATE KEY-----`
+
+#### 输出示例
+
+```
+========================================
+  Apple Client Secret (JWT) 生成工具
+========================================
+
+[INFO] 已加载环境变量文件: .env
+
+[INFO] 环境变量检查通过:
+  - AUTH_APPLE_V2_ID: com.ainft.app
+  - AUTH_APPLE_V2_TEAM_ID: 2UF5J9V3F3
+  - AUTH_APPLE_V2_KEY_ID: HTR4N3A4F7
+  - 私钥格式: PKCS#8
+
+[INFO] 正在导入私钥...
+[INFO] 私钥导入成功
+
+[INFO] 正在生成 JWT...
+  - 签发时间 (iat): 2025-01-01T00:00:00.000Z
+  - 过期时间 (exp): 2025-06-30T00:00:00.000Z
+  - 有效期: 180 天
+
+========== 生成的 JWT ==========
+eyJhbGciOiJFUzI1NiIsImtpZCI6IkhUUjROM0E0RjcifQ...
+================================
+
+========== JWT 解码 ==========
+
+[Header]:
+{
+  "alg": "ES256",
+  "kid": "HTR4N3A4F7"
+}
+
+[Payload]:
+{
+  "aud": "https://appleid.apple.com",
+  "exp": 1788233820,
+  "iat": 1772681820,
+  "iss": "2UF5J9V3F3",
+  "sub": "com.ainft.app"
+}
+
+[iat] 签发时间: 2025-01-01T00:00:00.000Z
+[exp] 过期时间: 2025-06-30T00:00:00.000Z
+      剩余: 180 天
+==============================
+
+[INFO] JWT 已保存到: /path/to/apple-client-secret.jwt
+[INFO] 完成！
+```
+
+#### 脚本完整代码
+
+```typescript
+#!/usr/bin/env tsx
+/**
+ * Apple Client Secret (JWT) 生成脚本
+ *
+ * 使用方法:
+ * 1. 设置环境变量:
+ *    export AUTH_APPLE_V2_ID="com.example.app"
+ *    export AUTH_APPLE_V2_TEAM_ID="YOUR_TEAM_ID"
+ *    export AUTH_APPLE_V2_KEY_ID="YOUR_KEY_ID"
+ *    export AUTH_APPLE_V2_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+ *
+ * 2. 运行脚本:
+ *    npx tsx scripts/generate-apple-client-secret.ts
+ *
+ * 3. 或者从 .env 文件加载:
+ *    npx tsx scripts/generate-apple-client-secret.ts --env-file=.env
+ *
+ * 注意: 支持 PKCS#8 (-----BEGIN PRIVATE KEY-----) 和 PKCS#1 EC (-----BEGIN EC PRIVATE KEY-----) 格式
+ */
+
+import * as jose from 'jose';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
+/**
+ * 从命令行参数解析选项
+ */
+function parseArgs(): { envFile?: string } {
+  const args = process.argv.slice(2);
+  const options: { envFile?: string } = {};
+
+  for (const arg of args) {
+    if (arg.startsWith('--env-file=')) {
+      options.envFile = arg.split('=')[1];
+    }
+  }
+
+  return options;
+}
+
+/**
+ * 从 .env 文件加载环境变量
+ */
+function loadEnvFile(filePath: string): void {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const lines = content.split('\n');
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      // 跳过注释和空行
+      if (!trimmed || trimmed.startsWith('#')) continue;
+
+      const match = trimmed.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        const key = match[1].trim();
+        const value = match[2].trim().replace(/^["']|["']$/g, '');
+        if (!process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+    }
+
+    console.log(`[INFO] 已加载环境变量文件: ${filePath}\n`);
+  } catch (error) {
+    console.error(`[ERROR] 无法加载环境变量文件: ${filePath}`, error);
+    process.exit(1);
+  }
+}
+
+/**
+ * 生成 Apple Client Secret (JWT)
+ */
+async function generateAppleClientSecret(): Promise<string | null> {
+  const clientId = process.env.AUTH_APPLE_V2_ID;
+  const teamId = process.env.AUTH_APPLE_V2_TEAM_ID;
+  const keyId = process.env.AUTH_APPLE_V2_KEY_ID;
+  const privateKey = process.env.AUTH_APPLE_V2_PRIVATE_KEY;
+
+  // 检查必需的环境变量
+  const missing: string[] = [];
+  if (!clientId) missing.push('AUTH_APPLE_V2_ID');
+  if (!teamId) missing.push('AUTH_APPLE_V2_TEAM_ID');
+  if (!keyId) missing.push('AUTH_APPLE_V2_KEY_ID');
+  if (!privateKey) missing.push('AUTH_APPLE_V2_PRIVATE_KEY');
+
+  if (missing.length > 0) {
+    console.error('[ERROR] 缺少必需的环境变量:');
+    for (const key of missing) {
+      console.error(`  - ${key}`);
+    }
+    return null;
+  }
+
+  console.log('[INFO] 环境变量检查通过:');
+  console.log(`  - AUTH_APPLE_V2_ID: ${clientId}`);
+  console.log(`  - AUTH_APPLE_V2_TEAM_ID: ${teamId}`);
+  console.log(`  - AUTH_APPLE_V2_KEY_ID: ${keyId}`);
+
+  // 检测私钥格式
+  const keyFormat = privateKey!.includes('-----BEGIN EC PRIVATE KEY-----')
+    ? 'PKCS#1 EC'
+    : privateKey!.includes('-----BEGIN PRIVATE KEY-----')
+      ? 'PKCS#8'
+      : '未知';
+  console.log(`  - 私钥格式: ${keyFormat}`);
+  console.log();
+
+  try {
+    // 清理 private key (移除多余的引号和转义换行)
+    const cleanedPrivateKey = privateKey!
+      .replace(/^["']|["']$/g, '')
+      .replace(/\\n/g, '\n')
+      .trim();
+
+    console.log('[INFO] 正在导入私钥...');
+    const secret = await jose.importPKCS8(cleanedPrivateKey, 'ES256');
+    console.log('[INFO] 私钥导入成功\n');
+
+    const now = Math.floor(Date.now() / 1000);
+    const exp = now + 86_400 * 180; // 180 days max
+
+    console.log('[INFO] 正在生成 JWT...');
+    console.log(`  - 签发时间 (iat): ${new Date(now * 1000).toISOString()}`);
+    console.log(`  - 过期时间 (exp): ${new Date(exp * 1000).toISOString()}`);
+    console.log(`  - 有效期: 180 天`);
+    console.log();
+
+    const jwt = await new jose.SignJWT({
+      aud: 'https://appleid.apple.com',
+      exp: exp,
+      iat: now,
+      iss: teamId,
+      sub: clientId,
+    })
+      .setProtectedHeader({
+        alg: 'ES256',
+        kid: keyId,
+      })
+      .sign(secret);
+
+    return jwt;
+  } catch (error: any) {
+    console.error('[ERROR] 生成 client secret 失败:', error.message);
+    if (error.message.includes('Failed to read private key')) {
+      console.error('[HINT] 请检查私钥格式是否正确');
+    }
+    return null;
+  }
+}
+
+/**
+ * 解码 JWT（不验证签名）
+ */
+function decodeJwt(token: string): void {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.error('[ERROR] 无效的 JWT 格式');
+      return;
+    }
+
+    const header = JSON.parse(Buffer.from(parts[0]!, 'base64url').toString());
+    const payload = JSON.parse(Buffer.from(parts[1]!, 'base64url').toString());
+
+    console.log('========== JWT 解码 ==========');
+    console.log('\n[Header]:');
+    console.log(JSON.stringify(header, null, 2));
+    console.log('\n[Payload]:');
+    console.log(JSON.stringify(payload, null, 2));
+
+    // 格式化时间
+    if (payload.iat) {
+      console.log(`\n[iat] 签发时间: ${new Date(payload.iat * 1000).toISOString()}`);
+    }
+    if (payload.exp) {
+      console.log(`[exp] 过期时间: ${new Date(payload.exp * 1000).toISOString()}`);
+      const daysLeft = Math.floor((payload.exp - Date.now() / 1000) / 86400);
+      console.log(`      剩余: ${daysLeft} 天`);
+    }
+    console.log('==============================\n');
+  } catch (error) {
+    console.error('[ERROR] 解码 JWT 失败:', error);
+  }
+}
+
+/**
+ * 主函数
+ */
+async function main(): Promise<void> {
+  console.log('========================================');
+  console.log('  Apple Client Secret (JWT) 生成工具');
+  console.log('========================================\n');
+
+  const options = parseArgs();
+
+  // 如果指定了 env 文件，加载它
+  if (options.envFile) {
+    const envPath = path.resolve(options.envFile);
+    loadEnvFile(envPath);
+  }
+
+  // 生成 JWT
+  const jwt = await generateAppleClientSecret();
+
+  if (!jwt) {
+    console.error('[ERROR] 生成失败，请检查环境变量配置');
+    process.exit(1);
+  }
+
+  console.log('========== 生成的 JWT ==========');
+  console.log(jwt);
+  console.log('================================\n');
+
+  // 解码并显示 JWT 内容
+  decodeJwt(jwt);
+
+  // 保存到文件（可选）
+  const outputFile = process.env.OUTPUT_FILE;
+  if (outputFile) {
+    fs.writeFileSync(outputFile, jwt);
+    console.log(`[INFO] JWT 已保存到: ${outputFile}`);
+  }
+
+  console.log('[INFO] 完成！');
+}
+
+// 运行主函数
+main().catch((error) => {
+  console.error('[ERROR] 程序执行失败:', error);
+  process.exit(1);
+});
+```
 
 ### 响应示例
 
