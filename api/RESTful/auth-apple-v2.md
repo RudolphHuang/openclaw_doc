@@ -394,6 +394,66 @@ class AuthManager(private val context: Context) {
 
 ---
 
+## Apple Token 接口
+
+服务端使用 Apple 的 token 接口验证 authorization code 并获取用户信息。
+
+### 请求示例
+
+```bash
+curl --location 'https://appleid.apple.com/auth/token' \
+--form 'client_id="com.ainft.app"' \
+--form 'client_secret="？？？"' \
+--form 'code="c43bab889fd63488abc5e7e607ddf3566.0.mrxuv.mDSfuKelQNU_LqEecDRRHw"' \
+--form 'grant_type="authorization_code"'
+```
+
+### 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `client_id` | string | 是 | Apple Services ID (如 `com.ainft.app`) |
+| `client_secret` | string | 是 | 从密钥文件读取的 JWT 令牌，使用 `@/path/to/file` 语法 |
+| `code` | string | 是 | 从 Apple Sign In SDK 获取的 authorization code |
+| `grant_type` | string | 是 | 固定值 `authorization_code` |
+
+### client_secret 密钥文件
+
+`client_secret` 是一个 JWT (JSON Web Token)，需要使用以下方式生成：
+
+### 响应示例
+
+```json
+{
+  "access_token": "eyJraWQiOiJlWGF1bm1MIiwiYWxnIjoiUlMyNTYifQ...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "eyJraWQiOiJlWGF1bm1MIiwiYWxnIjoiUlMyNTYifQ...",
+  "id_token": "eyJraWQiOiJlWGF1bm1MIiwiYWxnIjoiUlMyNTYifQ..."
+}
+```
+
+### 响应字段说明
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `access_token` | string | Apple 访问令牌 |
+| `token_type` | string | 令牌类型，固定为 `Bearer` |
+| `expires_in` | number | 访问令牌有效期（秒） |
+| `refresh_token` | string | 刷新令牌（仅首次授权时返回） |
+| `id_token` | string | JWT 格式的用户身份信息，包含 `sub`（Apple User ID） |
+
+### 错误响应
+
+```json
+{
+  "error": "invalid_grant",
+  "error_description": "The code has already been used or has expired"
+}
+```
+
+---
+
 ## 环境变量配置
 
 服务端需要配置以下环境变量：
@@ -403,9 +463,7 @@ class AuthManager(private val context: Context) {
 AUTH_APPLE_V2_ID=com.example.app          # Apple Services ID
 AUTH_APPLE_V2_TEAM_ID=YOUR_TEAM_ID        # Apple Team ID (10字符)
 AUTH_APPLE_V2_KEY_ID=YOUR_KEY_ID          # Private Key ID (10字符)
-AUTH_APPLE_V2_PRIVATE_KEY=-----BEGIN EC PRIVATE KEY-----
-YOUR_PRIVATE_KEY_CONTENT
------END EC PRIVATE KEY-----
+AUTH_APPLE_V2_PRIVATE_KEY=-----BEGIN EC PRIVATE KEY-----YOUR_PRIVATE_KEY_CONTENT-----END EC PRIVATE KEY-----
 ```
 
 ---
