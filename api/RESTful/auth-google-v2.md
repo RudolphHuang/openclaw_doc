@@ -16,7 +16,7 @@ sequenceDiagram
     Client->>Server: 3. POST /callback/google-v2<br/>(code + csrfToken)
     Server->>Google: 4. 用 code 换取 access token
     Google-->>Server: 5. 返回 access token + 用户信息
-    Server-->>Client: 6. 返回 sessionToken + redirectUrl
+    Server-->>Client: 6. 返回 sessionToken
     
     Client->>Server: 7. 后续请求携带 sessionToken
 ```
@@ -289,7 +289,7 @@ class AuthManager(private val context: Context) {
                 
                 // 2.2 调用登录接口
                 val url = "https://chat-dev.ainft.com/api/auth/callback/google-v2?noCookie=1"
-                val body = "csrfToken=$csrfToken&code=$code&redirectUri="
+                val body = "csrfToken=$csrfToken&code=$code"
                     .toRequestBody("application/x-www-form-urlencoded".toMediaType())
                 
                 val request = Request.Builder()
@@ -414,7 +414,7 @@ class AuthManager {
         'X-Auth-CSRF-Token': csrfCookie,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: 'csrfToken=$csrfToken&code=$code&redirectUri=',
+      body: 'csrfToken=$csrfToken&code=$code',
     );
     
     if (response.statusCode == 200) {
