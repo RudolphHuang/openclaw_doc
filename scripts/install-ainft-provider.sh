@@ -25,6 +25,145 @@ AINFT_MODELS_API="https://chat.ainft.com/v1/models"
 AVAILABLE_MODELS=""
 DEFAULT_MODEL=""
 
+# 检测系统语言（中文环境返回 zh，其他返回 en）
+detect_language() {
+    local lang="${LANG:-}"
+    local lc_all="${LC_ALL:-}"
+    local lc_messages="${LC_MESSAGES:-}"
+    
+    # 优先检查 LC_ALL，然后是 LC_MESSAGES，最后是 LANG
+    local check_lang="${lc_all:-${lc_messages:-${lang:-}}}"
+    
+    # 检查是否包含中文语言代码
+    if [[ "$check_lang" =~ ^(zh|zh_CN|zh_TW|zh_HK|zh_SG) ]]; then
+        echo "zh"
+    else
+        echo "en"
+    fi
+}
+
+# 设置语言
+LANG_CODE=$(detect_language)
+
+# 多语言消息定义
+# 格式: msg_key="zh_message|en_message"
+declare -A MESSAGES
+
+# 标题和通用
+MESSAGES[TITLE]="OpenClaw AINFT Provider 安装脚本|OpenClaw AINFT Provider Installation Script"
+MESSAGES[SUPPORT]="支持 Linux / macOS|Supports Linux / macOS"
+MESSAGES[INFO_PREFIX]="[INFO]|[INFO]"
+MESSAGES[SUCCESS_PREFIX]="[SUCCESS]|[SUCCESS]"
+MESSAGES[WARN_PREFIX]="[WARN]|[WARN]"
+MESSAGES[ERROR_PREFIX]="[ERROR]|[ERROR]"
+
+# 环境检查
+MESSAGES[CHECK_ENV]="检查系统环境|Checking System Environment"
+MESSAGES[DETECTED_OS]="检测到操作系统|Detected Operating System"
+MESSAGES[CHECK_NODE]="检查 Node.js 版本|Checking Node.js version"
+MESSAGES[CHECK_OPENCLAW]="检查 OpenClaw 安装|Checking OpenClaw installation"
+MESSAGES[CHECK_CONFIG_DIR]="检查配置目录|Checking configuration directory"
+MESSAGES[CHECK_CURL]="检查 curl 安装|Checking curl installation"
+MESSAGES[CHECK_JQ]="检查 jq 安装|Checking jq installation"
+MESSAGES[ENV_CHECK_PASSED]="环境检查全部通过|Environment check passed"
+MESSAGES[ENV_CHECK_FAILED]="环境检查未通过，请先完成 OpenClaw 的安装和初始化|Environment check failed, please complete OpenClaw installation and initialization first"
+
+# Node.js 相关
+MESSAGES[NODE_NOT_INSTALLED]="Node.js 未安装|Node.js is not installed"
+MESSAGES[NODE_INSTALL_PROMPT]="请前往 https://nodejs.org/ 安装 Node.js >= 22|Please visit https://nodejs.org/ to install Node.js >= 22"
+MESSAGES[NODE_VERSION_LOW]="Node.js 版本需要 >= 22，当前版本|Node.js version >= 22 is required, current version"
+MESSAGES[NODE_VERSION_OK]="Node.js 版本检查通过|Node.js version check passed"
+MESSAGES[NODE_UPGRADE]="请升级 Node.js|Please upgrade Node.js"
+
+# OpenClaw 相关
+MESSAGES[OPENCLAW_NOT_FOUND]="openclaw 命令未找到|openclaw command not found"
+MESSAGES[OPENCLAW_INSTALL_PROMPT]="请先安装 OpenClaw|Please install OpenClaw first"
+MESSAGES[OPENCLAW_INSTALL_CMD]="  curl -fsSL https://openclaw.bot/install.sh | bash|  curl -fsSL https://openclaw.bot/install.sh | bash"
+MESSAGES[OPENCLAW_INSTALLED]="OpenClaw 已安装|OpenClaw is installed"
+MESSAGES[CONFIG_DIR_NOT_FOUND]="OpenClaw 配置目录不存在|OpenClaw configuration directory does not exist"
+MESSAGES[CONFIG_DIR_PROMPT]="请先运行 'openclaw onboard' 完成初始化配置|Please run 'openclaw onboard' first to complete initialization"
+MESSAGES[CONFIG_DIR_OK]="配置目录检查通过|Configuration directory check passed"
+
+# curl 和 jq
+MESSAGES[CURL_NOT_INSTALLED]="curl 未安装，请先安装 curl|curl is not installed, please install curl first"
+MESSAGES[CURL_INSTALL_MACOS]="macOS 用户可以使用|macOS users can use"
+MESSAGES[CURL_INSTALL_LINUX_DEB]="Ubuntu/Debian|Ubuntu/Debian"
+MESSAGES[CURL_INSTALL_LINUX_RPM]="CentOS/RHEL|CentOS/RHEL"
+MESSAGES[JQ_NOT_INSTALLED]="jq 未安装，将使用内置方式处理 JSON|jq is not installed, will use built-in method to process JSON"
+MESSAGES[JQ_INSTALLED]="jq 已安装|jq is installed"
+
+# API Key
+MESSAGES[CONFIG_API_KEY]="配置 AINFT API Key|Configuring AINFT API Key"
+MESSAGES[API_KEY_PROMPT]="请前往 https://chat.ainft.com/key 申请 API Key|Please visit https://chat.ainft.com/key to apply for an API Key"
+MESSAGES[ENTER_API_KEY]="请输入您的 AINFT API Key|Please enter your AINFT API Key"
+MESSAGES[API_KEY_EMPTY]="API Key 不能为空|API Key cannot be empty"
+MESSAGES[API_KEY_FORMAT_WARN]="API Key 格式看起来不太常见，请确认是否正确|API Key format looks unusual, please verify"
+MESSAGES[API_KEY_CONFIRM]="是否继续使用此 API Key?|Continue with this API Key?"
+MESSAGES[API_KEY_RECEIVED]="API Key 已接收|API Key received"
+
+# 模型相关
+MESSAGES[FETCHING_MODELS]="正在从 AINFT API 获取可用模型列表|Fetching available model list from AINFT API"
+MESSAGES[FETCH_MODELS_FAILED]="获取模型列表失败|Failed to fetch model list"
+MESSAGES[CHECK_API_KEY]="请检查您的 API Key 是否正确|Please check if your API Key is correct"
+MESSAGES[HTTP_401_HINT]="提示: HTTP 401 表示认证失败，请检查 API Key 是否有效|Hint: HTTP 401 indicates authentication failure, please check if API Key is valid"
+MESSAGES[HTTP_000_HINT]="提示: 无法连接到服务器，请检查网络连接|Hint: Cannot connect to server, please check network connection"
+MESSAGES[INVALID_RESPONSE_FORMAT]="API 返回数据格式异常|API returned invalid data format"
+MESSAGES[NO_MODELS]="未获取到任何模型|No models retrieved"
+MESSAGES[MODELS_FETCHED]="成功获取|Successfully fetched"
+MESSAGES[MODELS_COUNT]="个模型|models"
+MESSAGES[CONFIG_ABORTED]="无法获取模型列表，配置中止|Cannot fetch model list, configuration aborted"
+
+# 选择模型
+MESSAGES[SELECT_DEFAULT_MODEL]="选择默认模型|Select Default Model"
+MESSAGES[AVAILABLE_MODELS_LIST]="可用模型列表|Available Models"
+MESSAGES[RECOMMENDED_MODEL]="推荐默认模型|Recommended default model"
+MESSAGES[USE_RECOMMENDED]="是否使用推荐模型作为默认?|Use recommended model as default?"
+MESSAGES[ENTER_MODEL_NUMBER]="请输入模型编号|Please enter model number"
+MESSAGES[INVALID_SELECTION]="无效的选择，请重新输入|Invalid selection, please try again"
+MESSAGES[DEFAULT_MODEL_SET]="默认模型设置为|Default model set to"
+
+# 配置文件
+MESSAGES[UPDATE_CONFIG]="更新 OpenClaw 配置文件|Updating OpenClaw Configuration File"
+MESSAGES[CONFIG_BACKUP]="原配置已备份到|Original configuration backed up to"
+MESSAGES[CONFIG_UPDATED]="配置文件已更新|Configuration file updated"
+MESSAGES[CONFIG_FILE]="配置文件|Configuration file"
+
+# Gateway
+MESSAGES[RESTART_GATEWAY]="重启 OpenClaw Gateway|Restarting OpenClaw Gateway"
+MESSAGES[GATEWAY_RESTARTING]="正在重启 Gateway...|Restarting Gateway..."
+MESSAGES[GATEWAY_RESTART_SUCCESS]="Gateway 重启成功|Gateway restarted successfully"
+MESSAGES[GATEWAY_RESTART_FAILED]="Gateway 重启失败|Gateway restart failed"
+MESSAGES[GATEWAY_MANUAL_RESTART]="您可以手动运行|You can manually run"
+MESSAGES[GATEWAY_STATUS_CHECK]="检查 Gateway 状态|Checking Gateway status"
+MESSAGES[GATEWAY_RUNNING]="Gateway 运行正常|Gateway is running normally"
+MESSAGES[GATEWAY_STATUS_FAILED]="Gateway 状态检查失败，请手动检查|Gateway status check failed, please check manually"
+
+# 验证和测试
+MESSAGES[VERIFY_CONFIG]="验证配置|Verifying Configuration"
+MESSAGES[TEST_COMMAND_HINT]="提示: 您可以运行以下命令测试模型|Hint: You can run the following command to test the model"
+MESSAGES[TEST_COMMAND]="  openclaw agent --agent main --message \"你好\"|  openclaw agent --agent main --message \"Hello\""
+MESSAGES[CONFIGURED_MODELS]="已配置的模型|Configured Models"
+MESSAGES[DEFAULT]="默认|default"
+MESSAGES[SWITCH_MODEL_HINT]="如需切换模型，请编辑|To switch models, please edit"
+MESSAGES[SWITCH_MODEL_CMD]="或使用命令|Or use command"
+MESSAGES[SWITCH_MODEL_CMD_EXAMPLE]="openclaw models set ainft/<model-name>|openclaw models set ainft/<model-name>"
+
+# 完成
+MESSAGES[INSTALL_COMPLETE]="安装完成|Installation Complete"
+MESSAGES[CONFIG_SUCCESS]="AINFT Provider 配置成功！|AINFT Provider configured successfully!"
+MESSAGES[DEFAULT_MODEL_LABEL]="默认模型|Default Model"
+
+# 获取本地化消息
+get_msg() {
+    local key="$1"
+    local msg="${MESSAGES[$key]:-$key}"
+    if [ "$LANG_CODE" = "zh" ]; then
+        echo "$msg" | cut -d'|' -f1
+    else
+        echo "$msg" | cut -d'|' -f2
+    fi
+}
+
 # 检测操作系统
 detect_os() {
     case "$(uname -s)" in
@@ -41,19 +180,19 @@ OS=$(detect_os)
 
 # 打印带颜色的消息
 print_info() {
-    echo -e "${INFO}[INFO]${NC} $1"
+    echo -e "${INFO}$(get_msg INFO_PREFIX)${NC} $1"
 }
 
 print_success() {
-    echo -e "${SUCCESS}[SUCCESS]${NC} $1"
+    echo -e "${SUCCESS}$(get_msg SUCCESS_PREFIX)${NC} $1"
 }
 
 print_warn() {
-    echo -e "${WARN}[WARN]${NC} $1"
+    echo -e "${WARN}$(get_msg WARN_PREFIX)${NC} $1"
 }
 
 print_error() {
-    echo -e "${ERROR}[ERROR]${NC} $1"
+    echo -e "${ERROR}$(get_msg ERROR_PREFIX)${NC} $1"
 }
 
 print_bold() {
@@ -74,8 +213,8 @@ check_node_version() {
     local major_version
     
     if ! check_command node; then
-        print_error "Node.js 未安装"
-        print_info "请前往 https://nodejs.org/ 安装 Node.js >= 22"
+        print_error "$(get_msg NODE_NOT_INSTALLED)"
+        print_info "$(get_msg NODE_INSTALL_PROMPT)"
         return 1
     fi
     
@@ -83,60 +222,60 @@ check_node_version() {
     major_version=$(echo "$node_version" | cut -d. -f1)
     
     if [ "$major_version" -lt 22 ]; then
-        print_error "Node.js 版本需要 >= 22，当前版本: $node_version"
-        print_info "请升级 Node.js: https://nodejs.org/"
+        print_error "$(get_msg NODE_VERSION_LOW): $node_version"
+        print_info "$(get_msg NODE_UPGRADE): https://nodejs.org/"
         return 1
     fi
     
-    print_success "Node.js 版本检查通过: v$node_version"
+    print_success "$(get_msg NODE_VERSION_OK): v$node_version"
     return 0
 }
 
 # 检查 openclaw 是否已安装
 check_openclaw_installed() {
     if ! check_command openclaw; then
-        print_error "openclaw 命令未找到"
-        print_info "请先安装 OpenClaw:"
-        print_info "  curl -fsSL https://openclaw.bot/install.sh | bash"
+        print_error "$(get_msg OPENCLAW_NOT_FOUND)"
+        print_info "$(get_msg OPENCLAW_INSTALL_PROMPT):"
+        print_info "$(get_msg OPENCLAW_INSTALL_CMD)"
         return 1
     fi
     
     local version
     version=$(openclaw --version 2>/dev/null || echo "unknown")
-    print_success "OpenClaw 已安装: $version"
+    print_success "$(get_msg OPENCLAW_INSTALLED): $version"
     return 0
 }
 
 # 检查配置文件目录是否存在
 check_config_dir() {
     if [ ! -d "$OPENCLAW_CONFIG_DIR" ]; then
-        print_error "OpenClaw 配置目录不存在: $OPENCLAW_CONFIG_DIR"
-        print_info "请先运行 'openclaw onboard' 完成初始化配置"
+        print_error "$(get_msg CONFIG_DIR_NOT_FOUND): $OPENCLAW_CONFIG_DIR"
+        print_info "$(get_msg CONFIG_DIR_PROMPT)"
         return 1
     fi
-    print_success "配置目录检查通过: $OPENCLAW_CONFIG_DIR"
+    print_success "$(get_msg CONFIG_DIR_OK): $OPENCLAW_CONFIG_DIR"
     return 0
 }
 
 # 检查 jq 是否安装（用于处理 JSON）
 check_jq() {
     if ! check_command jq; then
-        print_warn "jq 未安装，将使用内置方式处理 JSON"
+        print_warn "$(get_msg JQ_NOT_INSTALLED)"
         return 1
     fi
-    print_success "jq 已安装"
+    print_success "$(get_msg JQ_INSTALLED)"
     return 0
 }
 
 # 检查 curl 是否安装
 check_curl() {
     if ! check_command curl; then
-        print_error "curl 未安装，请先安装 curl"
+        print_error "$(get_msg CURL_NOT_INSTALLED)"
         if [ "$OS" = "macOS" ]; then
-            print_info "macOS 用户可以使用: brew install curl"
+            print_info "$(get_msg CURL_INSTALL_MACOS): brew install curl"
         elif [ "$OS" = "Linux" ]; then
-            print_info "Ubuntu/Debian: sudo apt-get install curl"
-            print_info "CentOS/RHEL: sudo yum install curl"
+            print_info "$(get_msg CURL_INSTALL_LINUX_DEB): sudo apt-get install curl"
+            print_info "$(get_msg CURL_INSTALL_LINUX_RPM): sudo yum install curl"
         fi
         return 1
     fi
@@ -145,8 +284,8 @@ check_curl() {
 
 # 环境检查
 check_environment() {
-    print_bold "\n=== 检查系统环境 ==="
-    print_info "检测到操作系统: $OS"
+    print_bold "\n=== $(get_msg CHECK_ENV) ==="
+    print_info "$(get_msg DETECTED_OS): $OS"
     
     local all_passed=true
     
@@ -171,17 +310,17 @@ check_environment() {
     fi
     
     if [ "$all_passed" = false ]; then
-        print_error "环境检查未通过，请先完成 OpenClaw 的安装和初始化"
+        print_error "$(get_msg ENV_CHECK_FAILED)"
         exit 1
     fi
     
-    print_success "环境检查全部通过"
+    print_success "$(get_msg ENV_CHECK_PASSED)"
 }
 
 # 询问用户输入 API Key
 ask_api_key() {
-    print_bold "\n=== 配置 AINFT API Key ==="
-    print_info "请前往 https://chat.ainft.com/key 申请 API Key"
+    print_bold "\n=== $(get_msg CONFIG_API_KEY) ==="
+    print_info "$(get_msg API_KEY_PROMPT)"
     echo ""
     
     local api_key
@@ -189,7 +328,7 @@ ask_api_key() {
         # 在 macOS 和 Linux 上都兼容的方式读取输入
         if [ -t 0 ]; then
             # 交互式终端
-            printf "请输入您的 AINFT API Key: "
+            printf "$(get_msg ENTER_API_KEY): "
             read -r api_key
         else
             # 非交互式（管道输入）
@@ -197,14 +336,14 @@ ask_api_key() {
         fi
         
         if [ -z "$api_key" ]; then
-            print_error "API Key 不能为空"
+            print_error "$(get_msg API_KEY_EMPTY)"
             continue
         fi
         
         # 简单的格式检查
         if [[ ! "$api_key" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-            print_warn "API Key 格式看起来不太常见，请确认是否正确"
-            printf "是否继续使用此 API Key? (y/N): "
+            print_warn "$(get_msg API_KEY_FORMAT_WARN)"
+            printf "$(get_msg API_KEY_CONFIRM) (y/N): "
             read -r confirm
             if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
                 continue
@@ -215,7 +354,7 @@ ask_api_key() {
     done
     
     AINFT_API_KEY="$api_key"
-    print_success "API Key 已接收"
+    print_success "$(get_msg API_KEY_RECEIVED)"
 }
 
 # 从 API 获取模型列表
@@ -225,7 +364,7 @@ fetch_models_from_api() {
     local http_code
     local body
     
-    print_info "正在从 AINFT API 获取可用模型列表..."
+    print_info "$(get_msg FETCHING_MODELS)..."
     
     # 使用 curl 获取模型列表
     response=$(curl -s -w "\n%{http_code}" \
@@ -237,12 +376,12 @@ fetch_models_from_api() {
     body=$(echo "$response" | sed '$d')
     
     if [ "$http_code" != "200" ]; then
-        print_error "获取模型列表失败 (HTTP $http_code)"
-        print_info "请检查您的 API Key 是否正确"
+        print_error "$(get_msg FETCH_MODELS_FAILED) (HTTP $http_code)"
+        print_info "$(get_msg CHECK_API_KEY)"
         if [ "$http_code" = "401" ]; then
-            print_info "提示: HTTP 401 表示认证失败，请检查 API Key 是否有效"
+            print_info "$(get_msg HTTP_401_HINT)"
         elif [ "$http_code" = "000" ]; then
-            print_info "提示: 无法连接到服务器，请检查网络连接"
+            print_info "$(get_msg HTTP_000_HINT)"
         fi
         return 1
     fi
@@ -250,7 +389,7 @@ fetch_models_from_api() {
     # 检查响应是否包含有效的模型数据
     if check_jq; then
         if ! echo "$body" | jq -e '.data' &>/dev/null; then
-            print_error "API 返回数据格式异常"
+            print_error "$(get_msg INVALID_RESPONSE_FORMAT)"
             return 1
         fi
         # 提取模型 ID 列表
@@ -261,19 +400,19 @@ fetch_models_from_api() {
     fi
     
     if [ -z "$AVAILABLE_MODELS" ]; then
-        print_error "未获取到任何模型"
+        print_error "$(get_msg NO_MODELS)"
         return 1
     fi
     
     local model_count
     model_count=$(echo "$AVAILABLE_MODELS" | wc -l | tr -d ' ')
-    print_success "成功获取 $model_count 个模型"
+    print_success "$(get_msg MODELS_FETCHED) $model_count $(get_msg MODELS_COUNT)"
     return 0
 }
 
 # 选择默认模型
 select_default_model() {
-    print_bold "\n=== 选择默认模型 ==="
+    print_bold "\n=== $(get_msg SELECT_DEFAULT_MODEL) ==="
     
     # 将模型列表转换为数组
     local models_array=()
@@ -282,7 +421,7 @@ select_default_model() {
     done <<< "$AVAILABLE_MODELS"
     
     # 显示可用模型
-    print_info "可用模型列表:"
+    print_info "$(get_msg AVAILABLE_MODELS_LIST):"
     local i=1
     for model in "${models_array[@]}"; do
         echo "  $i) $model"
@@ -300,11 +439,11 @@ select_default_model() {
     fi
     
     echo ""
-    print_info "推荐默认模型: $recommended"
+    print_info "$(get_msg RECOMMENDED_MODEL): $recommended"
     
     # 询问用户是否使用推荐模型
     local use_recommended
-    printf "是否使用推荐模型作为默认? (Y/n): "
+    printf "$(get_msg USE_RECOMMENDED) (Y/n): "
     read -r use_recommended
     
     if [[ ! "$use_recommended" =~ ^[Nn]$ ]]; then
@@ -313,19 +452,19 @@ select_default_model() {
         # 让用户手动选择
         while true; do
             local selection
-            printf "请输入模型编号 (1-${#models_array[@]}): "
+            printf "$(get_msg ENTER_MODEL_NUMBER) (1-${#models_array[@]}): "
             read -r selection
             
             if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#models_array[@]}" ]; then
                 DEFAULT_MODEL="${models_array[$((selection-1))]}"
                 break
             else
-                print_error "无效的选择，请重新输入"
+                print_error "$(get_msg INVALID_SELECTION)"
             fi
         done
     fi
     
-    print_success "默认模型设置为: $DEFAULT_MODEL"
+    print_success "$(get_msg DEFAULT_MODEL_SET): $DEFAULT_MODEL"
 }
 
 # 将模型列表转换为 JSON 格式
@@ -465,13 +604,13 @@ EOF
 
 # 更新配置文件
 update_config() {
-    print_bold "\n=== 更新 OpenClaw 配置文件 ==="
+    print_bold "\n=== $(get_msg UPDATE_CONFIG) ==="
     
     # 备份原配置
     if [ -f "$OPENCLAW_CONFIG_FILE" ]; then
         local backup_file="${OPENCLAW_CONFIG_FILE}.backup.$(date +%Y%m%d%H%M%S)"
         cp "$OPENCLAW_CONFIG_FILE" "$backup_file"
-        print_info "原配置已备份到: $backup_file"
+        print_info "$(get_msg CONFIG_BACKUP): $backup_file"
     fi
     
     # 使用 jq 或 sed 更新配置
@@ -481,49 +620,49 @@ update_config() {
         update_config_with_sed "$OPENCLAW_CONFIG_FILE" "$AINFT_API_KEY"
     fi
     
-    print_success "配置文件已更新: $OPENCLAW_CONFIG_FILE"
+    print_success "$(get_msg CONFIG_UPDATED): $OPENCLAW_CONFIG_FILE"
 }
 
 # 重启 Gateway
 restart_gateway() {
-    print_bold "\n=== 重启 OpenClaw Gateway ==="
+    print_bold "\n=== $(get_msg RESTART_GATEWAY) ==="
     
     if ! check_command openclaw; then
-        print_error "openclaw 命令未找到，无法重启 Gateway"
+        print_error "$(get_msg OPENCLAW_NOT_FOUND)，$(get_msg GATEWAY_RESTART_FAILED)"
         return 1
     fi
     
-    print_info "正在重启 Gateway..."
+    print_info "$(get_msg GATEWAY_RESTARTING)..."
     if openclaw gateway restart; then
-        print_success "Gateway 重启成功"
+        print_success "$(get_msg GATEWAY_RESTART_SUCCESS)"
     else
-        print_error "Gateway 重启失败"
-        print_info "您可以手动运行: openclaw gateway restart"
+        print_error "$(get_msg GATEWAY_RESTART_FAILED)"
+        print_info "$(get_msg GATEWAY_MANUAL_RESTART): openclaw gateway restart"
         return 1
     fi
 }
 
 # 验证配置
 verify_config() {
-    print_bold "\n=== 验证配置 ==="
+    print_bold "\n=== $(get_msg VERIFY_CONFIG) ==="
     
-    print_info "检查 Gateway 状态..."
+    print_info "$(get_msg GATEWAY_STATUS_CHECK)..."
     if openclaw gateway status &>/dev/null; then
-        print_success "Gateway 运行正常"
+        print_success "$(get_msg GATEWAY_RUNNING)"
     else
-        print_warn "Gateway 状态检查失败，请手动检查"
+        print_warn "$(get_msg GATEWAY_STATUS_FAILED)"
     fi
     
-    print_info "提示: 您可以运行以下命令测试模型:"
-    print_info "  openclaw agent --agent main --message \"你好\""
+    print_info "$(get_msg TEST_COMMAND_HINT):"
+    print_info "$(get_msg TEST_COMMAND)"
 }
 
 # 显示可用模型列表
 print_available_models() {
-    print_info "已配置的模型:"
+    print_info "$(get_msg CONFIGURED_MODELS):"
     while IFS= read -r model; do
         if [ "$model" = "$DEFAULT_MODEL" ]; then
-            echo "  - ainft/$model (默认)"
+            echo "  - ainft/$model ($(get_msg DEFAULT))"
         else
             echo "  - ainft/$model"
         fi
@@ -532,12 +671,22 @@ print_available_models() {
 
 # 主函数
 main() {
-    echo -e "${BOLD}"
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║          OpenClaw AINFT Provider 安装脚本                    ║"
-    echo "║          支持 Linux / macOS                                  ║"
-    echo "╚══════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
+    # 根据语言显示不同的标题
+    if [ "$LANG_CODE" = "zh" ]; then
+        echo -e "${BOLD}"
+        echo "╔══════════════════════════════════════════════════════════════╗"
+        echo "║          OpenClaw AINFT Provider 安装脚本                    ║"
+        echo "║          支持 Linux / macOS                                  ║"
+        echo "╚══════════════════════════════════════════════════════════════╝"
+        echo -e "${NC}"
+    else
+        echo -e "${BOLD}"
+        echo "╔══════════════════════════════════════════════════════════════╗"
+        echo "║          OpenClaw AINFT Provider Installation Script         ║"
+        echo "║          Supports Linux / macOS                              ║"
+        echo "╚══════════════════════════════════════════════════════════════╝"
+        echo -e "${NC}"
+    fi
     
     # 检查环境
     check_environment
@@ -547,7 +696,7 @@ main() {
     
     # 从 API 获取模型列表
     if ! fetch_models_from_api "$AINFT_API_KEY"; then
-        print_error "无法获取模型列表，配置中止"
+        print_error "$(get_msg CONFIG_ABORTED)"
         exit 1
     fi
     
@@ -563,16 +712,16 @@ main() {
     # 验证配置
     verify_config
     
-    print_bold "\n=== 安装完成 ==="
-    print_success "AINFT Provider 配置成功！"
+    print_bold "\n=== $(get_msg INSTALL_COMPLETE) ==="
+    print_success "$(get_msg CONFIG_SUCCESS)"
     echo ""
-    print_info "默认模型: ainft/$DEFAULT_MODEL"
-    print_info "配置文件: $OPENCLAW_CONFIG_FILE"
+    print_info "$(get_msg DEFAULT_MODEL_LABEL): ainft/$DEFAULT_MODEL"
+    print_info "$(get_msg CONFIG_FILE): $OPENCLAW_CONFIG_FILE"
     echo ""
     print_available_models
     echo ""
-    print_info "如需切换模型，请编辑 ~/.openclaw/openclaw.json"
-    print_info "或使用命令: openclaw models set ainft/<model-name>"
+    print_info "$(get_msg SWITCH_MODEL_HINT) ~/.openclaw/openclaw.json"
+    print_info "$(get_msg SWITCH_MODEL_CMD): $(get_msg SWITCH_MODEL_CMD_EXAMPLE)"
 }
 
 # 运行主函数
