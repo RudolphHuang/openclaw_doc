@@ -19,6 +19,11 @@ OPENCLAW_CONFIG_FILE="${OPENCLAW_CONFIG_DIR}/openclaw.json"
 # AINFT Provider 配置
 AINFT_BASE_URL="https://chat.ainft.com/webapi/"
 AINFT_API="openai-completions"
+AINFT_MODELS_API="https://chat.ainft.com/v1/models"
+
+# 存储获取到的模型列表
+AVAILABLE_MODELS=""
+DEFAULT_MODEL=""
 
 # 打印带颜色的消息
 print_info() {
@@ -107,6 +112,15 @@ check_jq() {
     return 0
 }
 
+# 检查 curl 是否安装
+check_curl() {
+    if ! check_command curl; then
+        print_error "curl 未安装，请先安装 curl"
+        return 1
+    fi
+    return 0
+}
+
 # 环境检查
 check_environment() {
     print_bold "\n=== 检查系统环境 ==="
@@ -125,6 +139,11 @@ check_environment() {
     
     # 检查配置目录
     if ! check_config_dir; then
+        all_passed=false
+    fi
+    
+    # 检查 curl
+    if ! check_curl; then
         all_passed=false
     fi
     
@@ -151,7 +170,7 @@ ask_api_key() {
             continue
         fi
         
-        # 简单的格式检查（通常 API key 以 sk- 开头）
+        # 简单的格式检查
         if [[ ! "$api_key" =~ ^[a-zA-Z0-9_-]+$ ]]; then
             print_warn "API Key 格式看起来不太常见，请确认是否正确"
             read -rp "是否继续使用此 API Key? (y/N): " confirm
@@ -167,6 +186,117 @@ ask_api_key() {
     print_success "API Key 已接收"
 }
 
+# 从 API 获取模型列表
+fetch_models_from_api() {
+    local api_key="$1"
+    local response
+    local http_code
+    
+    print_info "正在从 AINFT API 获取可用模型列表..."
+    
+    # 使用 curl 获取模型列表
+    response=$(curl -s -w "\n%{http_code}" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer ${api_key}" \
+        "${AINFT_MODELS_API}" 2>/dev/null || echo -e "\n000")
+    
+    http_code=$(echo "$response" | tail -n1)
+    body=$(echo "$response" | sed '$d')
+    
+    if [ "$http_code" != "200" ]; then
+        print_error "获取模型列表失败 (HTTP $http_code)"
+        print_info "请检查您的 API Key 是否正确"
+        return 1
+    fi
+    
+    # 检查响应是否包含有效的模型数据
+    if ! echo "$body" | jq -e '.data' &>/dev/null; then
+        print_error "API 返回数据格式异常"
+        return 1
+    fi
+    
+    # 提取模型 ID 列表
+    AVAILABLE_MODELS=$(echo "$body" | jq -r '.data[].id' 2>/dev/null)
+    
+    if [ -z "$AVAILABLE_MODELS" ]; then
+        print_error "未获取到任何模型"
+        return 1
+    fi
+    
+    print_success "成功获取 $(echo "$AVAILABLE_MODELS" | wc -l) 个模型"
+    return 0
+}
+
+# 选择默认模型
+select_default_model() {
+    print_bold "\n=== 选择默认模型 ==="
+    
+    # 将模型列表转换为数组
+    local models_array=()
+    while IFS= read -r model; do
+        models_array+=("$model")
+    done <<< "$AVAILABLE_MODELS"
+    
+    # 显示可用模型
+    print_info "可用模型列表:"
+    local i=1
+    for model in "${models_array[@]}"; do
+        echo "  $i) $model"
+        ((i++))
+    done
+    
+    # 推荐优先级：gpt-5-nano > gpt-5-mini > 第一个可用模型
+    local recommended=""
+    if echo "$AVAILABLE_MODELS" | grep -q "^gpt-5-nano$"; then
+        recommended="gpt-5-nano"
+    elif echo "$AVAILABLE_MODELS" | grep -q "^gpt-5-mini$"; then
+        recommended="gpt-5-mini"
+    else
+        recommended="${models_array[0]}"
+    fi
+    
+    echo ""
+    print_info "推荐默认模型: $recommended"
+    
+    # 询问用户是否使用推荐模型
+    local use_recommended
+    read -rp "是否使用推荐模型作为默认? (Y/n): " use_recommended
+    
+    if [[ ! "$use_recommended" =~ ^[Nn]$ ]]; then
+        DEFAULT_MODEL="$recommended"
+    else
+        # 让用户手动选择
+        while true; do
+            local selection
+            read -rp "请输入模型编号 (1-${#models_array[@]}): " selection
+            
+            if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#models_array[@]}" ]; then
+                DEFAULT_MODEL="${models_array[$((selection-1))]}"
+                break
+            else
+                print_error "无效的选择，请重新输入"
+            fi
+        done
+    fi
+    
+    print_success "默认模型设置为: $DEFAULT_MODEL"
+}
+
+# 将模型列表转换为 JSON 格式
+models_to_json() {
+    local models="$1"
+    local json_array=""
+    
+    while IFS= read -r model; do
+        if [ -n "$json_array" ]; then
+            json_array="${json_array},"
+        fi
+        json_array="${json_array}{\"id\": \"${model}\", \"name\": \"${model}\"}"
+    done <<< "$models"
+    
+    echo "[$json_array]"
+}
+
 # 使用 jq 更新配置文件
 update_config_with_jq() {
     local config_file="$1"
@@ -180,6 +310,10 @@ update_config_with_jq() {
         config="{}"
     fi
     
+    # 将模型列表转换为 JSON 数组
+    local models_json
+    models_json=$(models_to_json "$AVAILABLE_MODELS")
+    
     # 创建 AINFT provider 配置
     local ainft_config
     ainft_config=$(cat <<EOF
@@ -191,20 +325,14 @@ update_config_with_jq() {
         "baseUrl": "${AINFT_BASE_URL}",
         "apiKey": "${api_key}",
         "api": "${AINFT_API}",
-        "models": [
-          {"id": "gpt-5-nano", "name": "gpt-5-nano"},
-          {"id": "gpt-5-mini", "name": "gpt-5-mini"},
-          {"id": "qwen/qwen3-30b-a3b", "name": "qwen/qwen3-30b-a3b"},
-          {"id": "gemini-3-flash-preview", "name": "gemini-3-flash-preview"},
-          {"id": "claude-haiku-4-5-20251001", "name": "claude-haiku-4-5-20251001"}
-        ]
+        "models": ${models_json}
       }
     }
   },
   "agents": {
     "defaults": {
       "model": {
-        "primary": "ainft/gpt-5-nano"
+        "primary": "ainft/${DEFAULT_MODEL}"
       }
     }
   }
@@ -214,10 +342,10 @@ EOF
     
     # 合并配置
     local merged_config
-    merged_config=$(echo "$config" | jq --argjson ainft "$ainft_config" '
+    merged_config=$(echo "$config" | jq --argjson ainft "$ainft_config" --arg default_model "ainft/${DEFAULT_MODEL}" '
         .models.mode = "merge" |
         .models.providers.ainft = $ainft.models.providers.ainft |
-        .agents.defaults.model.primary = "ainft/gpt-5-nano"
+        .agents.defaults.model.primary = $default_model
     ')
     
     # 写入文件
@@ -249,40 +377,20 @@ EOF
     # 备份原配置
     cp "$config_file" "${config_file}.backup.$(date +%Y%m%d%H%M%S)"
     
-    # 创建临时文件存储 AINFT 配置
-    local temp_file
-    temp_file=$(mktemp)
+    # 构建模型列表 JSON
+    local models_json=""
+    local first=true
+    while IFS= read -r model; do
+        if [ "$first" = true ]; then
+            first=false
+        else
+            models_json="${models_json},"
+        fi
+        models_json="${models_json}
+          {\"id\": \"${model}\", \"name\": \"${model}\"}"
+    done <<< "$AVAILABLE_MODELS"
     
-    cat > "$temp_file" <<EOF
-{
-  "models": {
-    "mode": "merge",
-    "providers": {
-      "ainft": {
-        "baseUrl": "${AINFT_BASE_URL}",
-        "apiKey": "${api_key}",
-        "api": "${AINFT_API}",
-        "models": [
-          {"id": "gpt-5-nano", "name": "gpt-5-nano"},
-          {"id": "gpt-5-mini", "name": "gpt-5-mini"},
-          {"id": "qwen/qwen3-30b-a3b", "name": "qwen/qwen3-30b-a3b"},
-          {"id": "gemini-3-flash-preview", "name": "gemini-3-flash-preview"},
-          {"id": "claude-haiku-4-5-20251001", "name": "claude-haiku-4-5-20251001"}
-        ]
-      }
-    }
-  },
-  "agents": {
-    "defaults": {
-      "model": {
-        "primary": "ainft/gpt-5-nano"
-      }
-    }
-  }
-}
-EOF
-    
-    # 使用简单的替换方式（这里我们直接覆盖，因为 sed 处理 JSON 比较复杂）
+    # 写入新配置
     cat > "$config_file" <<EOF
 {
   "models": {
@@ -293,11 +401,7 @@ EOF
         "apiKey": "${api_key}",
         "api": "${AINFT_API}",
         "models": [
-          {"id": "gpt-5-nano", "name": "gpt-5-nano"},
-          {"id": "gpt-5-mini", "name": "gpt-5-mini"},
-          {"id": "qwen/qwen3-30b-a3b", "name": "qwen/qwen3-30b-a3b"},
-          {"id": "gemini-3-flash-preview", "name": "gemini-3-flash-preview"},
-          {"id": "claude-haiku-4-5-20251001", "name": "claude-haiku-4-5-20251001"}
+${models_json}
         ]
       }
     }
@@ -305,14 +409,12 @@ EOF
   "agents": {
     "defaults": {
       "model": {
-        "primary": "ainft/gpt-5-nano"
+        "primary": "ainft/${DEFAULT_MODEL}"
       }
     }
   }
 }
 EOF
-    
-    rm -f "$temp_file"
 }
 
 # 更新配置文件
@@ -370,6 +472,18 @@ verify_config() {
     print_info "  openclaw agent --agent main --message \"你好\""
 }
 
+# 显示可用模型列表
+print_available_models() {
+    print_info "已配置的模型:"
+    while IFS= read -r model; do
+        if [ "$model" = "$DEFAULT_MODEL" ]; then
+            echo "  - ainft/$model (默认)"
+        else
+            echo "  - ainft/$model"
+        fi
+    done <<< "$AVAILABLE_MODELS"
+}
+
 # 主函数
 main() {
     echo -e "${BOLD}"
@@ -385,6 +499,15 @@ main() {
     # 询问 API Key
     ask_api_key
     
+    # 从 API 获取模型列表
+    if ! fetch_models_from_api "$AINFT_API_KEY"; then
+        print_error "无法获取模型列表，配置中止"
+        exit 1
+    fi
+    
+    # 选择默认模型
+    select_default_model
+    
     # 更新配置
     update_config
     
@@ -396,15 +519,11 @@ main() {
     
     print_bold "\n=== 安装完成 ==="
     print_success "AINFT Provider 配置成功！"
-    print_info "默认模型已设置为: ainft/gpt-5-nano"
-    print_info "配置文件位置: $OPENCLAW_CONFIG_FILE"
     echo ""
-    print_info "可用模型:"
-    print_info "  - ainft/gpt-5-nano"
-    print_info "  - ainft/gpt-5-mini"
-    print_info "  - ainft/qwen/qwen3-30b-a3b"
-    print_info "  - ainft/gemini-3-flash-preview"
-    print_info "  - ainft/claude-haiku-4-5-20251001"
+    print_info "默认模型: ainft/$DEFAULT_MODEL"
+    print_info "配置文件: $OPENCLAW_CONFIG_FILE"
+    echo ""
+    print_available_models
     echo ""
     print_info "如需切换模型，请编辑 ~/.openclaw/openclaw.json"
     print_info "或使用命令: openclaw models set ainft/<model-name>"
