@@ -346,23 +346,23 @@ graph TD
 
 ```mermaid
 graph TB
-    subgraph "源码仓库"
+    subgraph 源码仓库
         A[scripts/install-ainft-provider.sh]
         B[scripts/install-ainft-provider.ps1]
     end
 
-    subgraph "CDN 分发"
+    subgraph CDN分发
         C[chat.ainft.com/scripts/openclaw/]
         C --> D[install-ainft-provider.sh]
         C --> E[install-ainft-provider.ps1]
     end
 
-    subgraph "用户执行"
+    subgraph 用户执行
         F[Linux/macOS 用户]
         G[Windows 用户]
 
-        F -->|curl \| bash| D
-        G -->|iwr \| iex| E
+        F -->|curl bash| D
+        G -->|iwr iex| E
     end
 
     A -.->|部署| C
