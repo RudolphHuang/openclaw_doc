@@ -1,5 +1,5 @@
 # AINFT Provider 一键安装脚本技术方案
-
+![install-ainft-provider.png](..%2Fimgs%2Finstall-ainft-provider.png)
 ## 1. 系统概述
 
 ### 1.1 背景
