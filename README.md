@@ -136,7 +136,7 @@ openclaw onboard --install-daemon
 在终端中执行以下命令：
 
 ```bash
-curl -LsSf https://chat.ainft.com/scripts/install-ainft-provider.sh | bash
+curl -LsSf https://chat.ainft.com/scripts/openclaw/install-ainft-provider.sh | bash
 ```
 
 脚本会自动执行以下操作：
