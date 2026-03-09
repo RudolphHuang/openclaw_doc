@@ -129,9 +129,11 @@ openclaw onboard --install-daemon
 
 ## 一键配置 AINFT Provider（推荐）
 
-我们提供了一键安装脚本，可以自动完成 AINFT Provider 的配置，无需手动编辑配置文件。
+我们提供了一键安装脚本，可以自动完成 AINFT Provider 的配置，无需手动编辑配置文件。脚本支持 **Linux**、**macOS** 和 **Windows** 三大平台。
 
 ### 使用方式
+
+#### Linux / macOS
 
 在终端中执行以下命令：
 
@@ -139,18 +141,37 @@ openclaw onboard --install-daemon
 curl -LsSf https://chat.ainft.com/scripts/openclaw/install-ainft-provider.sh | bash
 ```
 
+#### Windows (PowerShell)
+
+在 PowerShell 中执行以下命令：
+
+```powershell
+iwr -useb https://chat.ainft.com/scripts/openclaw/install-ainft-provider.ps1 | iex
+```
+
+> **注意**：在 Windows 上运行 PowerShell 脚本时，可能需要先调整执行策略：
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
+
+### 脚本执行流程
+
 脚本会自动执行以下操作：
 
 1. **环境检查**：检查 Node.js 版本（≥22）、openclaw 是否已安装、配置目录是否存在
-2. **交互式配置**：提示输入 AINFT API Key（请提前在 [API Key 管理页面](https://chat.ainft.com/key) 申请）
-3. **自动更新配置**：修改 `~/.openclaw/openclaw.json`，添加 AINFT Provider 配置
-4. **设置默认模型**：将默认模型设置为 `ainft/gpt-5-nano`
-5. **重启 Gateway**：执行 `openclaw gateway restart` 使配置生效
+2. **API Key 验证**：提示输入 AINFT API Key（请提前在 [API Key 管理页面](https://chat.ainft.com/key) 申请）
+3. **获取模型列表**：从 AINFT API 动态获取可用的模型列表
+4. **选择默认模型**：显示可用模型，推荐 `gpt-5-nano`，支持用户自定义选择
+5. **自动更新配置**：修改 `~/.openclaw/openclaw.json`，添加 AINFT Provider 配置
+6. **重启 Gateway**：执行 `openclaw gateway restart` 使配置生效
 
 ### 脚本特性
 
+- ✅ 跨平台支持（Linux / macOS / Windows）
+- ✅ 动态从 API 获取最新模型列表
+- ✅ API Key 有效性验证
+- ✅ 交互式默认模型选择
 - ✅ 自动备份原配置文件
-- ✅ 支持 jq（优先）和 sed 两种 JSON 处理方式
 - ✅ 彩色输出，清晰的步骤提示
 - ✅ 完善的错误处理和提示
 
@@ -159,6 +180,10 @@ curl -LsSf https://chat.ainft.com/scripts/openclaw/install-ainft-provider.sh | b
 脚本执行完成后，可以运行以下命令测试：
 
 ```bash
+# Linux / macOS
+openclaw agent --agent main --message "你好"
+
+# Windows
 openclaw agent --agent main --message "你好"
 ```
 

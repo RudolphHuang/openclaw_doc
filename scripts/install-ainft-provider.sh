@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # OpenClaw AINFT Provider 安装脚本
-# 用于自动配置 AINFT 作为 OpenClaw 的模型提供商
+# 支持 Linux 和 macOS
 
 # 颜色定义
 BOLD='\033[1m'
@@ -24,6 +24,20 @@ AINFT_MODELS_API="https://chat.ainft.com/v1/models"
 # 存储获取到的模型列表
 AVAILABLE_MODELS=""
 DEFAULT_MODEL=""
+
+# 检测操作系统
+detect_os() {
+    case "$(uname -s)" in
+        Linux*)     echo "Linux";;
+        Darwin*)    echo "macOS";;
+        CYGWIN*)    echo "Windows";;
+        MINGW*)     echo "Windows";;
+        MSYS*)      echo "Windows";;
+        *)          echo "Unknown";;
+    esac
+}
+
+OS=$(detect_os)
 
 # 打印带颜色的消息
 print_info() {
@@ -61,6 +75,7 @@ check_node_version() {
     
     if ! check_command node; then
         print_error "Node.js 未安装"
+        print_info "请前往 https://nodejs.org/ 安装 Node.js >= 22"
         return 1
     fi
     
@@ -69,6 +84,7 @@ check_node_version() {
     
     if [ "$major_version" -lt 22 ]; then
         print_error "Node.js 版本需要 >= 22，当前版本: $node_version"
+        print_info "请升级 Node.js: https://nodejs.org/"
         return 1
     fi
     
@@ -105,7 +121,7 @@ check_config_dir() {
 # 检查 jq 是否安装（用于处理 JSON）
 check_jq() {
     if ! check_command jq; then
-        print_warn "jq 未安装，将尝试使用 sed 进行配置修改"
+        print_warn "jq 未安装，将使用内置方式处理 JSON"
         return 1
     fi
     print_success "jq 已安装"
@@ -116,6 +132,12 @@ check_jq() {
 check_curl() {
     if ! check_command curl; then
         print_error "curl 未安装，请先安装 curl"
+        if [ "$OS" = "macOS" ]; then
+            print_info "macOS 用户可以使用: brew install curl"
+        elif [ "$OS" = "Linux" ]; then
+            print_info "Ubuntu/Debian: sudo apt-get install curl"
+            print_info "CentOS/RHEL: sudo yum install curl"
+        fi
         return 1
     fi
     return 0
@@ -124,6 +146,7 @@ check_curl() {
 # 环境检查
 check_environment() {
     print_bold "\n=== 检查系统环境 ==="
+    print_info "检测到操作系统: $OS"
     
     local all_passed=true
     
@@ -163,7 +186,15 @@ ask_api_key() {
     
     local api_key
     while true; do
-        read -rp "请输入您的 AINFT API Key: " api_key
+        # 在 macOS 和 Linux 上都兼容的方式读取输入
+        if [ -t 0 ]; then
+            # 交互式终端
+            printf "请输入您的 AINFT API Key: "
+            read -r api_key
+        else
+            # 非交互式（管道输入）
+            read -r api_key
+        fi
         
         if [ -z "$api_key" ]; then
             print_error "API Key 不能为空"
@@ -173,7 +204,8 @@ ask_api_key() {
         # 简单的格式检查
         if [[ ! "$api_key" =~ ^[a-zA-Z0-9_-]+$ ]]; then
             print_warn "API Key 格式看起来不太常见，请确认是否正确"
-            read -rp "是否继续使用此 API Key? (y/N): " confirm
+            printf "是否继续使用此 API Key? (y/N): "
+            read -r confirm
             if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
                 continue
             fi
@@ -191,6 +223,7 @@ fetch_models_from_api() {
     local api_key="$1"
     local response
     local http_code
+    local body
     
     print_info "正在从 AINFT API 获取可用模型列表..."
     
@@ -206,24 +239,35 @@ fetch_models_from_api() {
     if [ "$http_code" != "200" ]; then
         print_error "获取模型列表失败 (HTTP $http_code)"
         print_info "请检查您的 API Key 是否正确"
+        if [ "$http_code" = "401" ]; then
+            print_info "提示: HTTP 401 表示认证失败，请检查 API Key 是否有效"
+        elif [ "$http_code" = "000" ]; then
+            print_info "提示: 无法连接到服务器，请检查网络连接"
+        fi
         return 1
     fi
     
     # 检查响应是否包含有效的模型数据
-    if ! echo "$body" | jq -e '.data' &>/dev/null; then
-        print_error "API 返回数据格式异常"
-        return 1
+    if check_jq; then
+        if ! echo "$body" | jq -e '.data' &>/dev/null; then
+            print_error "API 返回数据格式异常"
+            return 1
+        fi
+        # 提取模型 ID 列表
+        AVAILABLE_MODELS=$(echo "$body" | jq -r '.data[].id' 2>/dev/null)
+    else
+        # 使用 grep/sed 作为备选方案
+        AVAILABLE_MODELS=$(echo "$body" | grep -o '"id": "[^"]*"' | sed 's/"id": "//;s/"$//')
     fi
-    
-    # 提取模型 ID 列表
-    AVAILABLE_MODELS=$(echo "$body" | jq -r '.data[].id' 2>/dev/null)
     
     if [ -z "$AVAILABLE_MODELS" ]; then
         print_error "未获取到任何模型"
         return 1
     fi
     
-    print_success "成功获取 $(echo "$AVAILABLE_MODELS" | wc -l) 个模型"
+    local model_count
+    model_count=$(echo "$AVAILABLE_MODELS" | wc -l | tr -d ' ')
+    print_success "成功获取 $model_count 个模型"
     return 0
 }
 
@@ -260,7 +304,8 @@ select_default_model() {
     
     # 询问用户是否使用推荐模型
     local use_recommended
-    read -rp "是否使用推荐模型作为默认? (Y/n): " use_recommended
+    printf "是否使用推荐模型作为默认? (Y/n): "
+    read -r use_recommended
     
     if [[ ! "$use_recommended" =~ ^[Nn]$ ]]; then
         DEFAULT_MODEL="$recommended"
@@ -268,7 +313,8 @@ select_default_model() {
         # 让用户手动选择
         while true; do
             local selection
-            read -rp "请输入模型编号 (1-${#models_array[@]}): " selection
+            printf "请输入模型编号 (1-${#models_array[@]}): "
+            read -r selection
             
             if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#models_array[@]}" ]; then
                 DEFAULT_MODEL="${models_array[$((selection-1))]}"
@@ -489,7 +535,7 @@ main() {
     echo -e "${BOLD}"
     echo "╔══════════════════════════════════════════════════════════════╗"
     echo "║          OpenClaw AINFT Provider 安装脚本                    ║"
-    echo "║          用于配置 AINFT 作为 OpenClaw 的模型提供商           ║"
+    echo "║          支持 Linux / macOS                                  ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     
