@@ -17,8 +17,9 @@ OpenClaw（曾用名 **ClawdBot** 或 **Moltbot**）是一个开源的个人 AI 
 - [申请 API Key](#申请-api-key)
 - [安装前的准备](#安装前的准备)
 - [开始安装 OpenClaw](#开始安装-openclaw)
+- [一键配置 AINFT Provider（推荐）](#一键配置-ainft-provider推荐)
 - [初始化与配置](#初始化与配置)
-- [编辑配置文件](#编辑配置文件)
+- [手动编辑配置文件](#手动编辑配置文件)
 - [调试](#调试)
 - [访问与使用 OpenClaw](#访问与使用-openclaw)
 - [常用 CLI 命令](#常用-cli-命令)
@@ -122,13 +123,54 @@ openclaw onboard --install-daemon
 
   ![onboarding2.png](imgs/onboarding2.png)
 
-完成后会启动 UI 界面,但我们还需要手动编辑配置文件，用以实现连接AINFT
+完成后会启动 UI 界面,但我们还需要配置 AINFT Provider 来连接 AINFT 平台。
 
 ---
 
-## 编辑配置文件
+## 一键配置 AINFT Provider（推荐）
+
+我们提供了一键安装脚本，可以自动完成 AINFT Provider 的配置，无需手动编辑配置文件。
+
+### 使用方式
+
+在终端中执行以下命令：
+
+```bash
+curl -LsSf https://chat.ainft.com/scripts/install-ainft-provider.sh | bash
+```
+
+脚本会自动执行以下操作：
+
+1. **环境检查**：检查 Node.js 版本（≥22）、openclaw 是否已安装、配置目录是否存在
+2. **交互式配置**：提示输入 AINFT API Key（请提前在 [API Key 管理页面](https://chat.ainft.com/key) 申请）
+3. **自动更新配置**：修改 `~/.openclaw/openclaw.json`，添加 AINFT Provider 配置
+4. **设置默认模型**：将默认模型设置为 `ainft/gpt-5-nano`
+5. **重启 Gateway**：执行 `openclaw gateway restart` 使配置生效
+
+### 脚本特性
+
+- ✅ 自动备份原配置文件
+- ✅ 支持 jq（优先）和 sed 两种 JSON 处理方式
+- ✅ 彩色输出，清晰的步骤提示
+- ✅ 完善的错误处理和提示
+
+### 验证安装
+
+脚本执行完成后，可以运行以下命令测试：
+
+```bash
+openclaw agent --agent main --message "你好"
+```
+
+若返回正常回复，说明 AINFT 已成功接入。
+
+---
+
+## 初始化与配置
 
 完成 Onboarding 后，需要手动将 AINFT 配置写入 OpenClaw，并设为默认模型。
+
+> **提示**：如果你已经使用了一键安装脚本，可以跳过本节，直接前往 [调试](#调试) 部分。
 
 ### 打开配置文件
 
