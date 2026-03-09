@@ -254,10 +254,10 @@ graph LR
     B[AINFT 配置] --> C
     C --> D[合并后配置]
 
-    subgraph "合并规则"
-        R1[models.mode = "merge"]
-        R2[models.providers.ainft = 新配置]
-        R3[agents.defaults.model.primary = ainft/默认模型]
+    subgraph 合并规则
+        R1["models.mode = merge"]
+        R2["models.providers.ainft = 新配置"]
+        R3["agents.defaults.model.primary = ainft/默认模型"]
     end
 
     C -.-> R1
