@@ -39,7 +39,7 @@ source ~/.bashrc
 
 ```bash
 echo 'export ANTHROPIC_BASE_URL=https://api.ainft.com/v1/' >> ~/.zshrc
-echo 'export ANTHROPIC_AUTH_TOKEN="sk-kimi-MzpOtWIhQP3hydhkk4gohMdS9gXkSfSKmfpYGYK0d5du0OlbWbQtepHaMCdJPW9A"' >> ~/.zshrc
+echo 'export ANTHROPIC_AUTH_TOKEN="sk-..."' >> ~/.zshrc
 echo 'export ANTHROPIC_MODEL=gpt5-nano' >> ~/.zshrc
 source ~/.zshrc
 ```
@@ -56,6 +56,6 @@ claude
 
 ## 注意事项
 
-1. **Token 安全**：`ANTHROPIC_AUTH_TOKEN` 是你的私密凭证，请勿将其提交到代码仓库
-2. **网络环境**：确保能够访问 `api.kimi.com` 域名
+1. **Token 安全**：`ANTHROPIC_AUTH_TOKEN` 是你的私密凭证
+2. **网络环境**：确保能够访问 `api.ainft.com` 域名
 3. **模型选择**：根据实际需求选择合适的模型，不同模型可能有不同的能力和限制
