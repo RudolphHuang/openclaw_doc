@@ -39,6 +39,7 @@ source ~/.bashrc
 将上述 `export` 命令添加到 `~/.zshrc`：
 
 ```bash
+echo 'export # Claude CLI - Use AiNFT' >> ~/.zshrc
 echo 'export ANTHROPIC_BASE_URL=https://api.ainft.com/' >> ~/.zshrc
 echo 'export ANTHROPIC_AUTH_TOKEN="sk-..."' >> ~/.zshrc
 echo 'export ANTHROPIC_MODEL=gpt-5-nano' >> ~/.zshrc
