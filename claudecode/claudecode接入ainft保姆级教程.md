@@ -27,6 +27,7 @@ export ANTHROPIC_MODEL=gpt-5-nano
 将上述 `export` 命令添加到 `~/.bashrc`：
 
 ```bash
+echo 'export # Claude CLI - Use AiNFT' >> ~/.bashrc
 echo 'export ANTHROPIC_BASE_URL=https://api.ainft.com/v1/' >> ~/.bashrc
 echo 'export ANTHROPIC_AUTH_TOKEN="sk-..."' >> ~/.bashrc
 echo 'export ANTHROPIC_MODEL=gpt-5-nano' >> ~/.bashrc
