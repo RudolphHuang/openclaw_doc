@@ -1,0 +1,168 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.8",
+    "lastTouchedAt": "2026-03-10T09:23:29.364Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-03-09T08:43:31.790Z",
+    "lastRunVersion": "2026.3.8",
+    "lastRunCommand": "doctor",
+    "lastRunMode": "local"
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "ainft": {
+        "baseUrl": "https://api.ainft.com/v1/",
+        "apiKey": "sk-...",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "gpt-5-mini",
+            "name": "gpt-5-mini"
+          },
+          {
+            "id": "gpt-5-nano",
+            "name": "gpt-5-nano"
+          },
+          {
+            "id": "gpt-5.2",
+            "name": "gpt-5.2"
+          },
+          {
+            "id": "claude-opus-4.6",
+            "name": "claude-opus-4.6"
+          },
+          {
+            "id": "claude-sonnet-4.6",
+            "name": "claude-sonnet-4.6"
+          },
+          {
+            "id": "claude-sonnet-4.5",
+            "name": "claude-sonnet-4.5"
+          },
+          {
+            "id": "claude-haiku-4.5",
+            "name": "claude-haiku-4.5"
+          },
+          {
+            "id": "claude-opus-4.5",
+            "name": "claude-opus-4.5"
+          },
+          {
+            "id": "gemini-3.1-pro",
+            "name": "gemini-3.1-pro"
+          },
+          {
+            "id": "gemini-3-flash",
+            "name": "gemini-3-flash"
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "ainft/gpt-5.2"
+      },
+      "models": {
+        "ainft/claude-sonnet-4.5": {
+          "alias": "claude-sonnet-4.5"
+        },
+        "ainft/gpt-5-mini": {
+          "alias": "gpt-5-mini"
+        },
+        "ainft/gpt-5-nano": {
+          "alias": "gpt-5-nano"
+        },
+        "ainft/gpt-5.2": {
+          "alias": "gpt-5.2"
+        },
+        "ainft/claude-opus-4.6": {
+          "alias": "claude-opus-4.6"
+        },
+        "ainft/claude-sonnet-4.6": {
+          "alias": "claude-sonnet-4.6"
+        },
+        "ainft/claude-haiku-4.5": {
+          "alias": "claude-haiku-4.5"
+        },
+        "ainft/claude-opus-4.5": {
+          "alias": "claude-opus-4.5"
+        },
+        "ainft/gemini-3.1-pro": {
+          "alias": "gemini-3.1-pro"
+        },
+        "ainft/gemini-3-flash": {
+          "alias": "gemini-3-flash"
+        }
+      },
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    },
+    "list": [
+      {
+        "id": "gpt-5.2",
+        "model": "ainft/gpt-5.2"
+      },
+      {
+        "id": "claude-haiku-4.5",
+        "model": "ainft/claude-haiku-4.5"
+      },
+      {
+        "id": "claude-opus-4.5",
+        "model": "ainft/claude-opus-4.5"
+      },
+      {
+        "id": "gemini-3.1-pro",
+        "model": "ainft/gemini-3.1-pro"
+      },
+      {
+        "id": "gemini-3-flash",
+        "model": "ainft/gemini-3-flash"
+      },
+      {
+        "id": "claude-sonnet-4.5",
+        "model": "ainft/claude-sonnet-4.5"
+      },
+      {
+        "id": "claude-opus-4.6",
+        "model": "ainft/claude-opus-4.6"
+      },
+      {
+        "id": "claude-sonnet-4.6",
+        "model": "ainft/claude-sonnet-4.6"
+      },
+      {
+        "id": "gpt-5-mini",
+        "model": "ainft/gpt-5-mini"
+      },
+      {
+        "id": "gpt-5-nano",
+        "model": "ainft/gpt-5-nano"
+      }
+    ]
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "gateway": {
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": "....."
+    }
+  }
+}
