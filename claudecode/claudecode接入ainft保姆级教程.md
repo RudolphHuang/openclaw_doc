@@ -7,7 +7,7 @@
 在使用 Claude Code 之前，需要设置以下环境变量：
 
 ```bash
-export ANTHROPIC_BASE_URL=https://api.ainft.com/v1/
+export ANTHROPIC_BASE_URL=https://api.ainft.com/
 export ANTHROPIC_AUTH_TOKEN=""
 export ANTHROPIC_MODEL=gpt-5-nano
 ```
@@ -16,7 +16,7 @@ export ANTHROPIC_MODEL=gpt-5-nano
 
 | 变量名 | 说明 | 示例值 |
 |--------|------|--------|
-| `ANTHROPIC_BASE_URL` | AiNFT API 的代理地址 | `https://api.ainft.com/v1/` |
+| `ANTHROPIC_BASE_URL` | AiNFT API 的代理地址 | `https://api.ainft.com/` |
 | `ANTHROPIC_AUTH_TOKEN` | 你的 AiNFT API Token | `sk-...` |
 | `ANTHROPIC_MODEL` | 使用的模型名称 | `gpt-5-nano` |
 
@@ -28,7 +28,7 @@ export ANTHROPIC_MODEL=gpt-5-nano
 
 ```bash
 echo 'export # Claude CLI - Use AiNFT' >> ~/.bashrc
-echo 'export ANTHROPIC_BASE_URL=https://api.ainft.com/v1/' >> ~/.bashrc
+echo 'export ANTHROPIC_BASE_URL=https://api.ainft.com/' >> ~/.bashrc
 echo 'export ANTHROPIC_AUTH_TOKEN="sk-..."' >> ~/.bashrc
 echo 'export ANTHROPIC_MODEL=gpt-5-nano' >> ~/.bashrc
 source ~/.bashrc
@@ -39,7 +39,7 @@ source ~/.bashrc
 将上述 `export` 命令添加到 `~/.zshrc`：
 
 ```bash
-echo 'export ANTHROPIC_BASE_URL=https://api.ainft.com/v1/' >> ~/.zshrc
+echo 'export ANTHROPIC_BASE_URL=https://api.ainft.com/' >> ~/.zshrc
 echo 'export ANTHROPIC_AUTH_TOKEN="sk-..."' >> ~/.zshrc
 echo 'export ANTHROPIC_MODEL=gpt-5-nano' >> ~/.zshrc
 source ~/.zshrc
