@@ -9,7 +9,7 @@
 ```bash
 export ANTHROPIC_BASE_URL=https://api.ainft.com/v1/
 export ANTHROPIC_AUTH_TOKEN=""
-export ANTHROPIC_MODEL=gpt5-nano
+export ANTHROPIC_MODEL=gpt-5-nano
 ```
 
 ### 变量说明
@@ -18,7 +18,7 @@ export ANTHROPIC_MODEL=gpt5-nano
 |--------|------|--------|
 | `ANTHROPIC_BASE_URL` | AiNFT API 的代理地址 | `https://api.ainft.com/v1/` |
 | `ANTHROPIC_AUTH_TOKEN` | 你的 AiNFT API Token | `sk-...` |
-| `ANTHROPIC_MODEL` | 使用的模型名称 | `gpt5-nano` |
+| `ANTHROPIC_MODEL` | 使用的模型名称 | `gpt-5-nano` |
 
 ### 持久化配置
 
@@ -29,7 +29,7 @@ export ANTHROPIC_MODEL=gpt5-nano
 ```bash
 echo 'export ANTHROPIC_BASE_URL=https://api.ainft.com/v1/' >> ~/.bashrc
 echo 'export ANTHROPIC_AUTH_TOKEN="sk-..."' >> ~/.bashrc
-echo 'export ANTHROPIC_MODEL=gpt5-nano' >> ~/.bashrc
+echo 'export ANTHROPIC_MODEL=gpt-5-nano' >> ~/.bashrc
 source ~/.bashrc
 ```
 
@@ -40,7 +40,7 @@ source ~/.bashrc
 ```bash
 echo 'export ANTHROPIC_BASE_URL=https://api.ainft.com/v1/' >> ~/.zshrc
 echo 'export ANTHROPIC_AUTH_TOKEN="sk-..."' >> ~/.zshrc
-echo 'export ANTHROPIC_MODEL=gpt5-nano' >> ~/.zshrc
+echo 'export ANTHROPIC_MODEL=gpt-5-nano' >> ~/.zshrc
 source ~/.zshrc
 ```
 
