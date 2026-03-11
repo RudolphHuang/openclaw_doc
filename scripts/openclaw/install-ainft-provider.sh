@@ -309,6 +309,22 @@ check_environment() {
     print_success "$(get_msg ENV_CHECK_PASSED)"
 }
 
+# 从终端读取输入（即使脚本通过管道执行）
+read_from_terminal() {
+    local var_name="$1"
+    local prompt="$2"
+    
+    # 使用 /dev/tty 强制从终端读取
+    if [ -e /dev/tty ]; then
+        printf "%s" "$prompt" > /dev/tty
+        read -r "$var_name" < /dev/tty
+    else
+        # 回退到普通读取
+        printf "%s" "$prompt"
+        read -r "$var_name"
+    fi
+}
+
 # 询问用户输入 API Key
 ask_api_key() {
     print_bold "\n=== $(get_msg CONFIG_API_KEY) ==="
@@ -317,15 +333,8 @@ ask_api_key() {
 
     local api_key
     while true; do
-        # 在 macOS 和 Linux 上都兼容的方式读取输入
-        if [ -t 0 ]; then
-            # 交互式终端
-            printf "$(get_msg ENTER_API_KEY): "
-            read -r api_key
-        else
-            # 非交互式（管道输入）
-            read -r api_key
-        fi
+        # 使用 /dev/tty 强制从终端读取输入
+        read_from_terminal api_key "$(get_msg ENTER_API_KEY): "
 
         if [ -z "$api_key" ]; then
             print_error "$(get_msg API_KEY_EMPTY)"
@@ -335,8 +344,8 @@ ask_api_key() {
         # 简单的格式检查
         if [[ ! "$api_key" =~ ^[a-zA-Z0-9_-]+$ ]]; then
             print_warn "$(get_msg API_KEY_FORMAT_WARN)"
-            printf "$(get_msg API_KEY_CONFIRM) (y/N): "
-            read -r confirm
+            local confirm
+            read_from_terminal confirm "$(get_msg API_KEY_CONFIRM) (y/N): "
             if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
                 continue
             fi
@@ -408,21 +417,20 @@ select_default_model() {
         models_array+=("$model")
     done <<< "$AVAILABLE_MODELS"
 
-    # 显示可用模型
+    # 显示可用模型（输出到 stderr，避免影响管道）
     print_info "$(get_msg AVAILABLE_MODELS_LIST):"
     local i=1
     for model in "${models_array[@]}"; do
-        echo "  $i) $model"
+        echo "  $i) $model" >&2
         ((i++))
     done
 
-    echo ""
+    echo "" >&2
 
     # 让用户手动选择
     while true; do
         local selection
-        printf "$(get_msg ENTER_MODEL_NUMBER) (1-${#models_array[@]}): "
-        read -r selection
+        read_from_terminal selection "$(get_msg ENTER_MODEL_NUMBER) (1-${#models_array[@]}): "
 
         if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#models_array[@]}" ]; then
             DEFAULT_MODEL="${models_array[$((selection-1))]}"
