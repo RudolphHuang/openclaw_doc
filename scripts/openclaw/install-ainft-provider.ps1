@@ -321,8 +321,8 @@ req.end();
         }
 
         # Parse the JSON array from Node.js
-        $modelsArray = Invoke-NodeJson "const arr = $result; console.log(arr.join(String.fromCharCode(10)))"
-        $script:AvailableModels = $modelsArray -split "`n" | Where-Object { $_ }
+        $modelsArray = Invoke-NodeJson "const arr = $result; console.log(arr.map(m => JSON.stringify(m)).join(String.fromCharCode(10)))"
+        $script:AvailableModels = $modelsArray -split "`n" | Where-Object { $_ } | ForEach-Object { Invoke-NodeJson "console.log(JSON.parse('$_'))" }
 
         if ($script:AvailableModels.Count -eq 0) {
             Write-Error (Get-Message "NO_MODELS")
@@ -367,7 +367,7 @@ function Select-DefaultModel {
 
 # Convert models to JSON using Node.js
 function Convert-ModelsToJson {
-    $modelsQuoted = ($script:AvailableModels | ForEach-Object { "'$_'" }) -join ','
+    $modelsQuoted = ($script:AvailableModels | ForEach-Object { Invoke-NodeJson "console.log(JSON.stringify('$_'))" }) -join ','
     $jsCode = "const models = [$modelsQuoted]; console.log(JSON.stringify(models.map(m => ({ id: m, name: m }))));"
     return Invoke-NodeJson $jsCode
 }
