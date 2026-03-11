@@ -151,6 +151,11 @@ function Invoke-NodeJson($JsCode) {
     return node -e $JsCode
 }
 
+# Run Node.js code with stdin input
+function Invoke-NodeJsonWithInput($JsCode, $InputData) {
+    $InputData | node -e $JsCode
+}
+
 # Check if command exists
 function Test-Command($Command) {
     return [bool](Get-Command -Name $Command -ErrorAction SilentlyContinue)
@@ -320,9 +325,40 @@ req.end();
             return $false
         }
 
-        # Parse the JSON array from Node.js
-        $modelsArray = Invoke-NodeJson "const arr = JSON.parse('$result'); console.log(arr.map(m => JSON.stringify(m)).join(String.fromCharCode(10)))"
-        $script:AvailableModels = $modelsArray -split "`n" | Where-Object { $_ } | ForEach-Object { Invoke-NodeJson "console.log(JSON.parse('$_'))" }
+        # Parse the JSON array from Node.js using stdin to avoid quoting issues
+        $jsParseCode = @'
+let data = '';
+process.stdin.on('data', chunk => { data += chunk; });
+process.stdin.on('end', () => {
+    try {
+        const arr = JSON.parse(data);
+        console.log(arr.map(m => JSON.stringify(m)).join(String.fromCharCode(10)));
+    } catch (e) {
+        console.error('PARSE_ERROR:', e.message);
+        process.exit(1);
+    }
+});
+'@
+        $modelsArray = Invoke-NodeJsonWithInput $jsParseCode $result
+        
+        # Parse each model name
+        $jsParseLine = @'
+let data = '';
+process.stdin.on('data', chunk => { data += chunk; });
+process.stdin.on('end', () => {
+    data.split(String.fromCharCode(10)).forEach(line => {
+        line = line.trim();
+        if (line) {
+            try {
+                console.log(JSON.parse(line));
+            } catch (e) {
+                // skip invalid lines
+            }
+        }
+    });
+});
+'@
+        $script:AvailableModels = Invoke-NodeJsonWithInput $jsParseLine ($modelsArray -join "`n") -split "`n" | Where-Object { $_ }
 
         if ($script:AvailableModels.Count -eq 0) {
             Write-Error (Get-Message "NO_MODELS")
@@ -367,9 +403,21 @@ function Select-DefaultModel {
 
 # Convert models to JSON using Node.js
 function Convert-ModelsToJson {
-    $modelsQuoted = ($script:AvailableModels | ForEach-Object { Invoke-NodeJson "console.log(JSON.stringify('$_'))" }) -join ','
-    $jsCode = "const models = [$modelsQuoted]; console.log(JSON.stringify(models.map(m => ({ id: m, name: m }))));"
-    return Invoke-NodeJson $jsCode
+    $modelsJson = $script:AvailableModels | ConvertTo-Json
+    $jsCode = @'
+let data = '';
+process.stdin.on('data', chunk => { data += chunk; });
+process.stdin.on('end', () => {
+    try {
+        const models = JSON.parse(data);
+        console.log(JSON.stringify(models.map(m => ({ id: m, name: m }))));
+    } catch (e) {
+        console.error('PARSE_ERROR:', e.message);
+        process.exit(1);
+    }
+});
+'@
+    return Invoke-NodeJsonWithInput $jsCode ($modelsJson -join "`n")
 }
 
 # Update config file using Node.js
