@@ -164,8 +164,8 @@ function Test-NodeVersion {
         return $false
     }
 
-    $nodeVersion = Invoke-NodeJson 'console.log(process.version.replace(/^v/, String.fromCharCode(34,34)))'
-    $majorVersion = [int](Invoke-NodeJson 'console.log(process.version.replace(/^v/, String.fromCharCode(34,34)).split(String.fromCharCode(46))[0])')
+    $nodeVersion = Invoke-NodeJson 'console.log(process.version.substring(1))'
+    $majorVersion = [int](Invoke-NodeJson 'console.log(process.version.substring(1).split(String.fromCharCode(46))[0])')
 
     if ($majorVersion -lt 22) {
         Write-Error "$(Get-Message "NODE_VERSION_LOW"): $nodeVersion"
@@ -321,7 +321,8 @@ req.end();
         }
 
         # Parse the JSON array from Node.js
-        $script:AvailableModels = Invoke-NodeJson "console.log(JSON.parse('$result').join('\n'))" -split "`n" | Where-Object { $_ }
+        $modelsArray = Invoke-NodeJson "const arr = $result; console.log(arr.join(String.fromCharCode(10)))"
+        $script:AvailableModels = $modelsArray -split "`n" | Where-Object { $_ }
 
         if ($script:AvailableModels.Count -eq 0) {
             Write-Error (Get-Message "NO_MODELS")
@@ -366,11 +367,8 @@ function Select-DefaultModel {
 
 # Convert models to JSON using Node.js
 function Convert-ModelsToJson {
-    $modelsList = $script:AvailableModels -join ','
-    $jsCode = @"
-const models = '$modelsList'.split(',');
-console.log(JSON.stringify(models.map(m => ({ id: m, name: m }))));
-"@
+    $modelsQuoted = ($script:AvailableModels | ForEach-Object { "'$_'" }) -join ','
+    $jsCode = "const models = [$modelsQuoted]; console.log(JSON.stringify(models.map(m => ({ id: m, name: m }))));"
     return Invoke-NodeJson $jsCode
 }
 
@@ -398,12 +396,18 @@ function Update-Config {
     # Build models JSON array
     $modelsJsonArray = Convert-ModelsToJson
 
+    $configPath = $script:OpenClawConfigFile.Replace('\', '\\')
+    $baseUrl = $script:AinftBaseUrl
+    $apiKey = $script:AinftApiKey
+    $api = $script:AinftApi
+    $defaultModel = $script:DefaultModel
+    
     $jsCode = @"
 const fs = require('fs');
-const path = '$($script:OpenClawConfigFile.Replace('\', '\\'))';
+const path = '$configPath';
 let config;
 try {
-    config = JSON.parse(`$configContent`);
+    config = $configContent;
 } catch (e) {
     config = {};
 }
@@ -412,15 +416,15 @@ if (!config.models) config.models = {};
 if (!config.models.providers) config.models.providers = {};
 config.models.mode = 'merge';
 config.models.providers.ainft = {
-    baseUrl: '$script:AinftBaseUrl',
-    apiKey: '$script:AinftApiKey',
-    api: '$script:AinftApi',
+    baseUrl: '$baseUrl',
+    apiKey: '$apiKey',
+    api: '$api',
     models: $modelsJsonArray
 };
 if (!config.agents) config.agents = {};
 if (!config.agents.defaults) config.agents.defaults = {};
 if (!config.agents.defaults.model) config.agents.defaults.model = {};
-config.agents.defaults.model.primary = 'ainft/$script:DefaultModel';
+config.agents.defaults.model.primary = 'ainft/$defaultModel';
 fs.writeFileSync(path, JSON.stringify(config, null, 2));
 console.log('Configuration updated successfully');
 "@
