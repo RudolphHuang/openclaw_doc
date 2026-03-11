@@ -64,7 +64,7 @@ MESSAGES[CHECK_NODE]="检查 Node.js 版本|Checking Node.js version"
 MESSAGES[CHECK_OPENCLAW]="检查 OpenClaw 安装|Checking OpenClaw installation"
 MESSAGES[CHECK_CONFIG_DIR]="检查配置目录|Checking configuration directory"
 MESSAGES[CHECK_CURL]="检查 curl 安装|Checking curl installation"
-MESSAGES[CHECK_JQ]="检查 jq 安装|Checking jq installation"
+
 MESSAGES[ENV_CHECK_PASSED]="环境检查全部通过|Environment check passed"
 MESSAGES[ENV_CHECK_FAILED]="环境检查未通过，请先完成 OpenClaw 的安装和初始化|Environment check failed, please complete OpenClaw installation and initialization first"
 
@@ -84,13 +84,11 @@ MESSAGES[CONFIG_DIR_NOT_FOUND]="OpenClaw 配置目录不存在|OpenClaw configur
 MESSAGES[CONFIG_DIR_PROMPT]="请先运行 'openclaw onboard' 完成初始化配置|Please run 'openclaw onboard' first to complete initialization"
 MESSAGES[CONFIG_DIR_OK]="配置目录检查通过|Configuration directory check passed"
 
-# curl 和 jq
+# curl
 MESSAGES[CURL_NOT_INSTALLED]="curl 未安装，请先安装 curl|curl is not installed, please install curl first"
 MESSAGES[CURL_INSTALL_MACOS]="macOS 用户可以使用|macOS users can use"
 MESSAGES[CURL_INSTALL_LINUX_DEB]="Ubuntu/Debian|Ubuntu/Debian"
 MESSAGES[CURL_INSTALL_LINUX_RPM]="CentOS/RHEL|CentOS/RHEL"
-MESSAGES[JQ_NOT_INSTALLED]="jq 未安装，将使用内置方式处理 JSON|jq is not installed, will use built-in method to process JSON"
-MESSAGES[JQ_INSTALLED]="jq 已安装|jq is installed"
 
 # API Key
 MESSAGES[CONFIG_API_KEY]="配置 AINFT API Key|Configuring AINFT API Key"
@@ -218,8 +216,8 @@ check_node_version() {
         return 1
     fi
     
-    node_version=$(node -v | sed 's/v//')
-    major_version=$(echo "$node_version" | cut -d. -f1)
+    node_version=$(node -v | run_node_json 'const fs=require("fs"); const v=fs.readFileSync(0,"utf-8").trim(); console.log(v.replace(/^v/,""));')
+    major_version=$(echo "$node_version" | run_node_json 'const fs=require("fs"); const v=fs.readFileSync(0,"utf-8").trim(); console.log(v.split(".")[0]);')
     
     if [ "$major_version" -lt 22 ]; then
         print_error "$(get_msg NODE_VERSION_LOW): $node_version"
@@ -257,14 +255,10 @@ check_config_dir() {
     return 0
 }
 
-# 检查 jq 是否安装（用于处理 JSON）
-check_jq() {
-    if ! check_command jq; then
-        print_warn "$(get_msg JQ_NOT_INSTALLED)"
-        return 1
-    fi
-    print_success "$(get_msg JQ_INSTALLED)"
-    return 0
+# 使用 Node.js 执行 JavaScript 代码处理 JSON
+# 参数: $1 = JavaScript 代码字符串
+run_node_json() {
+    node -e "$1"
 }
 
 # 检查 curl 是否安装
@@ -372,8 +366,8 @@ fetch_models_from_api() {
         -H "Authorization: Bearer ${api_key}" \
         "${AINFT_MODELS_API}" 2>/dev/null || echo -e "\n000")
     
-    http_code=$(echo "$response" | tail -n1)
-    body=$(echo "$response" | sed '$d')
+    http_code=$(echo "$response" | run_node_json 'const fs=require("fs"); const lines=fs.readFileSync(0,"utf-8").trim().split("\n"); console.log(lines.pop());')
+    body=$(echo "$response" | run_node_json 'const fs=require("fs"); const lines=fs.readFileSync(0,"utf-8").trim().split("\n"); lines.pop(); console.log(lines.join("\n"));')
     
     if [ "$http_code" != "200" ]; then
         print_error "$(get_msg FETCH_MODELS_FAILED) (HTTP $http_code)"
@@ -386,18 +380,14 @@ fetch_models_from_api() {
         return 1
     fi
     
-    # 检查响应是否包含有效的模型数据
-    if check_jq; then
-        if ! echo "$body" | jq -e '.data' &>/dev/null; then
-            print_error "$(get_msg INVALID_RESPONSE_FORMAT)"
-            return 1
-        fi
-        # 提取模型 ID 列表
-        AVAILABLE_MODELS=$(echo "$body" | jq -r '.data[].id' 2>/dev/null)
-    else
-        # 使用 grep/sed 作为备选方案
-        AVAILABLE_MODELS=$(echo "$body" | grep -o '"id": "[^"]*"' | sed 's/"id": "//;s/"$//')
+    # 使用 Node.js 解析 JSON 响应
+    if ! echo "$body" | run_node_json 'const data=""; try { const obj=JSON.parse(require("fs").readFileSync(0,"utf-8")); if(!obj.data||!Array.isArray(obj.data)) process.exit(1); } catch(e) { process.exit(1); }'; then
+        print_error "$(get_msg INVALID_RESPONSE_FORMAT)"
+        return 1
     fi
+    
+    # 提取模型 ID 列表
+    AVAILABLE_MODELS=$(echo "$body" | run_node_json 'const fs=require("fs"); const obj=JSON.parse(fs.readFileSync(0,"utf-8")); console.log(obj.data.map(m=>m.id).join("\n"));')
     
     if [ -z "$AVAILABLE_MODELS" ]; then
         print_error "$(get_msg NO_MODELS)"
@@ -482,124 +472,60 @@ models_to_json() {
     echo "[$json_array]"
 }
 
-# 使用 jq 更新配置文件
-update_config_with_jq() {
-    local config_file="$1"
-    local api_key="$2"
-    
-    # 读取现有配置或创建新的
-    local config
-    if [ -f "$config_file" ]; then
-        config=$(cat "$config_file")
-    else
-        config="{}"
-    fi
-    
-    # 将模型列表转换为 JSON 数组
-    local models_json
-    models_json=$(models_to_json "$AVAILABLE_MODELS")
-    
-    # 创建 AINFT provider 配置
-    local ainft_config
-    ainft_config=$(cat <<EOF
-{
-  "models": {
-    "mode": "merge",
-    "providers": {
-      "ainft": {
-        "baseUrl": "${AINFT_BASE_URL}",
-        "apiKey": "${api_key}",
-        "api": "${AINFT_API}",
-        "models": ${models_json}
-      }
-    }
-  },
-  "agents": {
-    "defaults": {
-      "model": {
-        "primary": "ainft/${DEFAULT_MODEL}"
-      }
-    }
-  }
-}
-EOF
-)
-    
-    # 合并配置
-    local merged_config
-    merged_config=$(echo "$config" | jq --argjson ainft "$ainft_config" --arg default_model "ainft/${DEFAULT_MODEL}" '
-        .models.mode = "merge" |
-        .models.providers.ainft = $ainft.models.providers.ainft |
-        .agents.defaults.model.primary = $default_model
-    ')
-    
-    # 写入文件
-    echo "$merged_config" > "$config_file"
-}
-
-# 使用 sed 更新配置文件（备用方案）
-update_config_with_sed() {
+# 使用 Node.js 更新配置文件
+update_config_with_node() {
     local config_file="$1"
     local api_key="$2"
     
     # 如果文件不存在，创建基本结构
     if [ ! -f "$config_file" ]; then
-        cat > "$config_file" <<EOF
-{
-  "models": {
-    "mode": "merge",
-    "providers": {}
-  },
-  "agents": {
-    "defaults": {
-      "model": {}
-    }
-  }
-}
-EOF
+        echo '{}' > "$config_file"
     fi
     
-    # 备份原配置
-    cp "$config_file" "${config_file}.backup.$(date +%Y%m%d%H%M%S)"
+    # 读取现有配置
+    local config_content
+    config_content=$(cat "$config_file")
     
-    # 构建模型列表 JSON
+    # 将模型列表转换为数组
+    local models_array=()
+    while IFS= read -r model; do
+        models_array+=("$model")
+    done <<< "$AVAILABLE_MODELS"
+    
+    # 构建模型 JSON 数组字符串
     local models_json=""
     local first=true
-    while IFS= read -r model; do
+    for model in "${models_array[@]}"; do
         if [ "$first" = true ]; then
             first=false
         else
             models_json="${models_json},"
         fi
-        models_json="${models_json}
-          {\"id\": \"${model}\", \"name\": \"${model}\"}"
-    done <<< "$AVAILABLE_MODELS"
+        models_json="${models_json}{\"id\":\"${model}\",\"name\":\"${model}\"}"
+    done
     
-    # 写入新配置
-    cat > "$config_file" <<EOF
-{
-  "models": {
-    "mode": "merge",
-    "providers": {
-      "ainft": {
-        "baseUrl": "${AINFT_BASE_URL}",
-        "apiKey": "${api_key}",
-        "api": "${AINFT_API}",
-        "models": [
-${models_json}
-        ]
-      }
-    }
-  },
-  "agents": {
-    "defaults": {
-      "model": {
-        "primary": "ainft/${DEFAULT_MODEL}"
-      }
-    }
-  }
-}
-EOF
+    # 使用 Node.js 合并配置
+    node -e "
+const fs = require('fs');
+const path = '$config_file';
+let config = $config_content;
+if (typeof config !== 'object' || config === null) config = {};
+if (!config.models) config.models = {};
+if (!config.models.providers) config.models.providers = {};
+config.models.mode = 'merge';
+config.models.providers.ainft = {
+    baseUrl: '$AINFT_BASE_URL',
+    apiKey: '$api_key',
+    api: '$AINFT_API',
+    models: [$models_json]
+};
+if (!config.agents) config.agents = {};
+if (!config.agents.defaults) config.agents.defaults = {};
+if (!config.agents.defaults.model) config.agents.defaults.model = {};
+config.agents.defaults.model.primary = 'ainft/$DEFAULT_MODEL';
+fs.writeFileSync(path, JSON.stringify(config, null, 2));
+console.log('Configuration updated successfully');
+"
 }
 
 # 更新配置文件
@@ -613,12 +539,8 @@ update_config() {
         print_info "$(get_msg CONFIG_BACKUP): $backup_file"
     fi
     
-    # 使用 jq 或 sed 更新配置
-    if check_jq; then
-        update_config_with_jq "$OPENCLAW_CONFIG_FILE" "$AINFT_API_KEY"
-    else
-        update_config_with_sed "$OPENCLAW_CONFIG_FILE" "$AINFT_API_KEY"
-    fi
+    # 使用 Node.js 更新配置
+    update_config_with_node "$OPENCLAW_CONFIG_FILE" "$AINFT_API_KEY"
     
     print_success "$(get_msg CONFIG_UPDATED): $OPENCLAW_CONFIG_FILE"
 }
