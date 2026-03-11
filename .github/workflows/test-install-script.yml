@@ -24,6 +24,12 @@ jobs:
           echo "=== System Info ==="
           uname -a
           echo ""
+          echo "=== Install Bash 5.x ==="
+          brew install bash
+          BASH_PATH=$(brew --prefix bash)/bin/bash
+          echo "Bash installed at: $BASH_PATH"
+          $BASH_PATH --version
+          echo ""
           echo "=== Check/Install Node.js ==="
           if ! command -v node &> /dev/null; then
             brew install node@22
@@ -31,7 +37,6 @@ jobs:
           node -v
           echo ""
           echo "=== Install OpenClaw (non-interactive) ==="
-          # 使用 npm 直接安装，避免官方安装脚本的交互式提示
           npm install -g openclaw
           mkdir -p ~/.openclaw/bin
           ln -sf $(which openclaw) ~/.openclaw/bin/openclaw 2>/dev/null || true
@@ -51,10 +56,11 @@ jobs:
           echo "=== Running AINFT Install Script ==="
           echo ""
           export PATH="$HOME/.openclaw/bin:$PATH"
+          BASH_PATH=$(brew --prefix bash)/bin/bash
           
-          # 使用 printf 通过管道传递输入
+          # 使用 printf 通过管道传递输入，显式使用 bash 5
           printf '%s\n%s\n' "$INSTALL_API_KEY" "$INSTALL_DEFAULT_MODEL" | \
-            bash -c 'curl https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/scripts/openclaw/install-ainft-provider.sh | bash' 2>&1
+            $BASH_PATH -c 'curl https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/scripts/openclaw/install-ainft-provider.sh | $BASH_PATH' 2>&1
           
           exit_code=$?
           echo ""
