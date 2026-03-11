@@ -58,9 +58,13 @@ jobs:
           export PATH="$HOME/.openclaw/bin:$PATH"
           BASH_PATH=$(brew --prefix bash)/bin/bash
           
-          # 使用 printf 通过管道传递输入，显式使用 bash 5
+          # 先下载脚本，再执行，避免管道问题
+          curl -fsSL -o /tmp/install-ainft-provider.sh \
+            https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/scripts/openclaw/install-ainft-provider.sh
+          
+          # 使用 printf 通过管道传递输入
           printf '%s\n%s\n' "$INSTALL_API_KEY" "$INSTALL_DEFAULT_MODEL" | \
-            $BASH_PATH -c 'curl https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/scripts/openclaw/install-ainft-provider.sh | $BASH_PATH' 2>&1
+            $BASH_PATH /tmp/install-ainft-provider.sh 2>&1
           
           exit_code=$?
           echo ""
