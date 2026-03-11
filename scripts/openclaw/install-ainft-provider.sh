@@ -17,9 +17,9 @@ OPENCLAW_CONFIG_DIR="${HOME}/.openclaw"
 OPENCLAW_CONFIG_FILE="${OPENCLAW_CONFIG_DIR}/openclaw.json"
 
 # AINFT Provider 配置
-AINFT_BASE_URL="https://chat.ainft.com/webapi/"
+AINFT_BASE_URL="https://api.ainft.com/v1/"
 AINFT_API="openai-completions"
-AINFT_MODELS_API="https://chat.ainft.com/v1/models"
+AINFT_MODELS_API="https://api.ainft.com/v1/models"
 
 # 存储获取到的模型列表
 AVAILABLE_MODELS=""
@@ -30,10 +30,10 @@ detect_language() {
     local lang="${LANG:-}"
     local lc_all="${LC_ALL:-}"
     local lc_messages="${LC_MESSAGES:-}"
-    
+
     # 优先检查 LC_ALL，然后是 LC_MESSAGES，最后是 LANG
     local check_lang="${lc_all:-${lc_messages:-${lang:-}}}"
-    
+
     # 检查是否包含中文语言代码
     if [[ "$check_lang" =~ ^(zh|zh_CN|zh_TW|zh_HK|zh_SG) ]]; then
         echo "zh"
@@ -114,8 +114,6 @@ MESSAGES[CONFIG_ABORTED]="无法获取模型列表，配置中止|Cannot fetch m
 # 选择模型
 MESSAGES[SELECT_DEFAULT_MODEL]="选择默认模型|Select Default Model"
 MESSAGES[AVAILABLE_MODELS_LIST]="可用模型列表|Available Models"
-MESSAGES[RECOMMENDED_MODEL]="推荐默认模型|Recommended default model"
-MESSAGES[USE_RECOMMENDED]="是否使用推荐模型作为默认?|Use recommended model as default?"
 MESSAGES[ENTER_MODEL_NUMBER]="请输入模型编号|Please enter model number"
 MESSAGES[INVALID_SELECTION]="无效的选择，请重新输入|Invalid selection, please try again"
 MESSAGES[DEFAULT_MODEL_SET]="默认模型设置为|Default model set to"
@@ -209,22 +207,22 @@ check_command() {
 check_node_version() {
     local node_version
     local major_version
-    
+
     if ! check_command node; then
         print_error "$(get_msg NODE_NOT_INSTALLED)"
         print_info "$(get_msg NODE_INSTALL_PROMPT)"
         return 1
     fi
-    
+
     node_version=$(node -v | run_node_json 'const fs=require("fs"); const v=fs.readFileSync(0,"utf-8").trim(); console.log(v.replace(/^v/,""));')
     major_version=$(echo "$node_version" | run_node_json 'const fs=require("fs"); const v=fs.readFileSync(0,"utf-8").trim(); console.log(v.split(".")[0]);')
-    
+
     if [ "$major_version" -lt 22 ]; then
         print_error "$(get_msg NODE_VERSION_LOW): $node_version"
         print_info "$(get_msg NODE_UPGRADE): https://nodejs.org/"
         return 1
     fi
-    
+
     print_success "$(get_msg NODE_VERSION_OK): v$node_version"
     return 0
 }
@@ -237,7 +235,7 @@ check_openclaw_installed() {
         print_info "$(get_msg OPENCLAW_INSTALL_CMD)"
         return 1
     fi
-    
+
     local version
     version=$(openclaw --version 2>/dev/null || echo "unknown")
     print_success "$(get_msg OPENCLAW_INSTALLED): $version"
@@ -280,34 +278,34 @@ check_curl() {
 check_environment() {
     print_bold "\n=== $(get_msg CHECK_ENV) ==="
     print_info "$(get_msg DETECTED_OS): $OS"
-    
+
     local all_passed=true
-    
+
     # 检查 Node.js
     if ! check_node_version; then
         all_passed=false
     fi
-    
+
     # 检查 openclaw
     if ! check_openclaw_installed; then
         all_passed=false
     fi
-    
+
     # 检查配置目录
     if ! check_config_dir; then
         all_passed=false
     fi
-    
+
     # 检查 curl
     if ! check_curl; then
         all_passed=false
     fi
-    
+
     if [ "$all_passed" = false ]; then
         print_error "$(get_msg ENV_CHECK_FAILED)"
         exit 1
     fi
-    
+
     print_success "$(get_msg ENV_CHECK_PASSED)"
 }
 
@@ -316,7 +314,7 @@ ask_api_key() {
     print_bold "\n=== $(get_msg CONFIG_API_KEY) ==="
     print_info "$(get_msg API_KEY_PROMPT)"
     echo ""
-    
+
     local api_key
     while true; do
         # 在 macOS 和 Linux 上都兼容的方式读取输入
@@ -328,12 +326,12 @@ ask_api_key() {
             # 非交互式（管道输入）
             read -r api_key
         fi
-        
+
         if [ -z "$api_key" ]; then
             print_error "$(get_msg API_KEY_EMPTY)"
             continue
         fi
-        
+
         # 简单的格式检查
         if [[ ! "$api_key" =~ ^[a-zA-Z0-9_-]+$ ]]; then
             print_warn "$(get_msg API_KEY_FORMAT_WARN)"
@@ -343,10 +341,10 @@ ask_api_key() {
                 continue
             fi
         fi
-        
+
         break
     done
-    
+
     AINFT_API_KEY="$api_key"
     print_success "$(get_msg API_KEY_RECEIVED)"
 }
@@ -357,18 +355,18 @@ fetch_models_from_api() {
     local response
     local http_code
     local body
-    
+
     print_info "$(get_msg FETCHING_MODELS)..."
-    
+
     # 使用 curl 获取模型列表
     response=$(curl -s -w "\n%{http_code}" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${api_key}" \
         "${AINFT_MODELS_API}" 2>/dev/null || echo -e "\n000")
-    
+
     http_code=$(echo "$response" | run_node_json 'const fs=require("fs"); const lines=fs.readFileSync(0,"utf-8").trim().split("\n"); console.log(lines.pop());')
     body=$(echo "$response" | run_node_json 'const fs=require("fs"); const lines=fs.readFileSync(0,"utf-8").trim().split("\n"); lines.pop(); console.log(lines.join("\n"));')
-    
+
     if [ "$http_code" != "200" ]; then
         print_error "$(get_msg FETCH_MODELS_FAILED) (HTTP $http_code)"
         print_info "$(get_msg CHECK_API_KEY)"
@@ -379,21 +377,21 @@ fetch_models_from_api() {
         fi
         return 1
     fi
-    
+
     # 使用 Node.js 解析 JSON 响应
     if ! echo "$body" | run_node_json 'const data=""; try { const obj=JSON.parse(require("fs").readFileSync(0,"utf-8")); if(!obj.data||!Array.isArray(obj.data)) process.exit(1); } catch(e) { process.exit(1); }'; then
         print_error "$(get_msg INVALID_RESPONSE_FORMAT)"
         return 1
     fi
-    
+
     # 提取模型 ID 列表
     AVAILABLE_MODELS=$(echo "$body" | run_node_json 'const fs=require("fs"); const obj=JSON.parse(fs.readFileSync(0,"utf-8")); console.log(obj.data.map(m=>m.id).join("\n"));')
-    
+
     if [ -z "$AVAILABLE_MODELS" ]; then
         print_error "$(get_msg NO_MODELS)"
         return 1
     fi
-    
+
     local model_count
     model_count=$(echo "$AVAILABLE_MODELS" | wc -l | tr -d ' ')
     print_success "$(get_msg MODELS_FETCHED) $model_count $(get_msg MODELS_COUNT)"
@@ -403,13 +401,13 @@ fetch_models_from_api() {
 # 选择默认模型
 select_default_model() {
     print_bold "\n=== $(get_msg SELECT_DEFAULT_MODEL) ==="
-    
+
     # 将模型列表转换为数组
     local models_array=()
     while IFS= read -r model; do
         models_array+=("$model")
     done <<< "$AVAILABLE_MODELS"
-    
+
     # 显示可用模型
     print_info "$(get_msg AVAILABLE_MODELS_LIST):"
     local i=1
@@ -417,43 +415,23 @@ select_default_model() {
         echo "  $i) $model"
         ((i++))
     done
-    
-    # 推荐优先级：gpt-5-nano > gpt-5-mini > 第一个可用模型
-    local recommended=""
-    if echo "$AVAILABLE_MODELS" | grep -q "^gpt-5-nano$"; then
-        recommended="gpt-5-nano"
-    elif echo "$AVAILABLE_MODELS" | grep -q "^gpt-5-mini$"; then
-        recommended="gpt-5-mini"
-    else
-        recommended="${models_array[0]}"
-    fi
-    
+
     echo ""
-    print_info "$(get_msg RECOMMENDED_MODEL): $recommended"
-    
-    # 询问用户是否使用推荐模型
-    local use_recommended
-    printf "$(get_msg USE_RECOMMENDED) (Y/n): "
-    read -r use_recommended
-    
-    if [[ ! "$use_recommended" =~ ^[Nn]$ ]]; then
-        DEFAULT_MODEL="$recommended"
-    else
-        # 让用户手动选择
-        while true; do
-            local selection
-            printf "$(get_msg ENTER_MODEL_NUMBER) (1-${#models_array[@]}): "
-            read -r selection
-            
-            if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#models_array[@]}" ]; then
-                DEFAULT_MODEL="${models_array[$((selection-1))]}"
-                break
-            else
-                print_error "$(get_msg INVALID_SELECTION)"
-            fi
-        done
-    fi
-    
+
+    # 让用户手动选择
+    while true; do
+        local selection
+        printf "$(get_msg ENTER_MODEL_NUMBER) (1-${#models_array[@]}): "
+        read -r selection
+
+        if [[ "$selection" =~ ^[0-9]+$ ]] && [ "$selection" -ge 1 ] && [ "$selection" -le "${#models_array[@]}" ]; then
+            DEFAULT_MODEL="${models_array[$((selection-1))]}"
+            break
+        else
+            print_error "$(get_msg INVALID_SELECTION)"
+        fi
+    done
+
     print_success "$(get_msg DEFAULT_MODEL_SET): $DEFAULT_MODEL"
 }
 
@@ -461,14 +439,14 @@ select_default_model() {
 models_to_json() {
     local models="$1"
     local json_array=""
-    
+
     while IFS= read -r model; do
         if [ -n "$json_array" ]; then
             json_array="${json_array},"
         fi
         json_array="${json_array}{\"id\": \"${model}\", \"name\": \"${model}\"}"
     done <<< "$models"
-    
+
     echo "[$json_array]"
 }
 
@@ -476,22 +454,22 @@ models_to_json() {
 update_config_with_node() {
     local config_file="$1"
     local api_key="$2"
-    
+
     # 如果文件不存在，创建基本结构
     if [ ! -f "$config_file" ]; then
         echo '{}' > "$config_file"
     fi
-    
+
     # 读取现有配置
     local config_content
     config_content=$(cat "$config_file")
-    
+
     # 将模型列表转换为数组
     local models_array=()
     while IFS= read -r model; do
         models_array+=("$model")
     done <<< "$AVAILABLE_MODELS"
-    
+
     # 构建模型 JSON 数组字符串
     local models_json=""
     local first=true
@@ -503,7 +481,7 @@ update_config_with_node() {
         fi
         models_json="${models_json}{\"id\":\"${model}\",\"name\":\"${model}\"}"
     done
-    
+
     # 使用 Node.js 合并配置
     node -e "
 const fs = require('fs');
@@ -531,29 +509,29 @@ console.log('Configuration updated successfully');
 # 更新配置文件
 update_config() {
     print_bold "\n=== $(get_msg UPDATE_CONFIG) ==="
-    
+
     # 备份原配置
     if [ -f "$OPENCLAW_CONFIG_FILE" ]; then
         local backup_file="${OPENCLAW_CONFIG_FILE}.backup.$(date +%Y%m%d%H%M%S)"
         cp "$OPENCLAW_CONFIG_FILE" "$backup_file"
         print_info "$(get_msg CONFIG_BACKUP): $backup_file"
     fi
-    
+
     # 使用 Node.js 更新配置
     update_config_with_node "$OPENCLAW_CONFIG_FILE" "$AINFT_API_KEY"
-    
+
     print_success "$(get_msg CONFIG_UPDATED): $OPENCLAW_CONFIG_FILE"
 }
 
 # 重启 Gateway
 restart_gateway() {
     print_bold "\n=== $(get_msg RESTART_GATEWAY) ==="
-    
+
     if ! check_command openclaw; then
         print_error "$(get_msg OPENCLAW_NOT_FOUND)，$(get_msg GATEWAY_RESTART_FAILED)"
         return 1
     fi
-    
+
     print_info "$(get_msg GATEWAY_RESTARTING)..."
     if openclaw gateway restart; then
         print_success "$(get_msg GATEWAY_RESTART_SUCCESS)"
@@ -567,14 +545,14 @@ restart_gateway() {
 # 验证配置
 verify_config() {
     print_bold "\n=== $(get_msg VERIFY_CONFIG) ==="
-    
+
     print_info "$(get_msg GATEWAY_STATUS_CHECK)..."
     if openclaw gateway status &>/dev/null; then
         print_success "$(get_msg GATEWAY_RUNNING)"
     else
         print_warn "$(get_msg GATEWAY_STATUS_FAILED)"
     fi
-    
+
     print_info "$(get_msg TEST_COMMAND_HINT):"
     print_info "$(get_msg TEST_COMMAND)"
 }
@@ -609,31 +587,31 @@ main() {
         echo "╚══════════════════════════════════════════════════════════════╝"
         echo -e "${NC}"
     fi
-    
+
     # 检查环境
     check_environment
-    
+
     # 询问 API Key
     ask_api_key
-    
+
     # 从 API 获取模型列表
     if ! fetch_models_from_api "$AINFT_API_KEY"; then
         print_error "$(get_msg CONFIG_ABORTED)"
         exit 1
     fi
-    
+
     # 选择默认模型
     select_default_model
-    
+
     # 更新配置
     update_config
-    
+
     # 重启 Gateway
     restart_gateway
-    
+
     # 验证配置
     verify_config
-    
+
     print_bold "\n=== $(get_msg INSTALL_COMPLETE) ==="
     print_success "$(get_msg CONFIG_SUCCESS)"
     echo ""

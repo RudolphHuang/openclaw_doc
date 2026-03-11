@@ -2,13 +2,13 @@
 <#
 .SYNOPSIS
     OpenClaw AINFT Provider 安装脚本 (Windows PowerShell)
-    
+
 .DESCRIPTION
     用于在 Windows 上自动配置 AINFT 作为 OpenClaw 的模型提供商
-    
+
 .EXAMPLE
     iwr -useb https://chat.ainft.com/scripts/install-ainft-provider.ps1 | iex
-    
+
     或者下载后执行:
     .\install-ainft-provider.ps1
 #>
@@ -24,9 +24,9 @@ $script:OpenClawConfigDir = Join-Path $env:USERPROFILE ".openclaw"
 $script:OpenClawConfigFile = Join-Path $script:OpenClawConfigDir "openclaw.json"
 
 # AINFT Provider 配置
-$script:AinftBaseUrl = "https://chat.ainft.com/webapi/"
+$script:AinftBaseUrl = "https://api.ainft.com/v1/"
 $script:AinftApi = "openai-completions"
-$script:AinftModelsApi = "https://chat.ainft.com/v1/models"
+$script:AinftModelsApi = "https://api.ainft.com/v1/models"
 
 # 存储获取到的模型列表
 $script:AvailableModels = @()
@@ -36,7 +36,7 @@ $script:DefaultModel = ""
 function Get-SystemLanguage {
     $culture = [System.Globalization.CultureInfo]::CurrentUICulture
     $langCode = $culture.Name
-    
+
     # 检查是否为中文语言代码
     if ($langCode -match '^(zh|zh-CN|zh-TW|zh-HK|zh-SG)') {
         return "zh"
@@ -54,20 +54,20 @@ $script:Messages = @{
     SUCCESS_PREFIX = @("[SUCCESS]", "[SUCCESS]")
     WARN_PREFIX = @("[WARN]", "[WARN]")
     ERROR_PREFIX = @("[ERROR]", "[ERROR]")
-    
+
     # 环境检查
     CHECK_ENV = @("检查系统环境", "Checking System Environment")
     DETECTED_OS = @("检测到操作系统", "Detected Operating System")
     ENV_CHECK_PASSED = @("环境检查全部通过", "Environment check passed")
     ENV_CHECK_FAILED = @("环境检查未通过，请先完成 OpenClaw 的安装和初始化", "Environment check failed, please complete OpenClaw installation and initialization first")
-    
+
     # Node.js 相关
     NODE_NOT_INSTALLED = @("Node.js 未安装", "Node.js is not installed")
     NODE_INSTALL_PROMPT = @("请前往 https://nodejs.org/ 安装 Node.js >= 22", "Please visit https://nodejs.org/ to install Node.js >= 22")
     NODE_VERSION_LOW = @("Node.js 版本需要 >= 22，当前版本", "Node.js version >= 22 is required, current version")
     NODE_VERSION_OK = @("Node.js 版本检查通过", "Node.js version check passed")
     NODE_UPGRADE = @("请升级 Node.js", "Please upgrade Node.js")
-    
+
     # OpenClaw 相关
     OPENCLAW_NOT_FOUND = @("openclaw 命令未找到", "openclaw command not found")
     OPENCLAW_INSTALL_PROMPT = @("请先安装 OpenClaw", "Please install OpenClaw first")
@@ -76,7 +76,7 @@ $script:Messages = @{
     CONFIG_DIR_NOT_FOUND = @("OpenClaw 配置目录不存在", "OpenClaw configuration directory does not exist")
     CONFIG_DIR_PROMPT = @("请先运行 'openclaw onboard' 完成初始化配置", "Please run 'openclaw onboard' first to complete initialization")
     CONFIG_DIR_OK = @("配置目录检查通过", "Configuration directory check passed")
-    
+
     # API Key
     CONFIG_API_KEY = @("配置 AINFT API Key", "Configuring AINFT API Key")
     API_KEY_PROMPT = @("请前往 https://chat.ainft.com/key 申请 API Key", "Please visit https://chat.ainft.com/key to apply for an API Key")
@@ -85,7 +85,7 @@ $script:Messages = @{
     API_KEY_FORMAT_WARN = @("API Key 格式看起来不太常见，请确认是否正确", "API Key format looks unusual, please verify")
     API_KEY_CONFIRM = @("是否继续使用此 API Key?", "Continue with this API Key?")
     API_KEY_RECEIVED = @("API Key 已接收", "API Key received")
-    
+
     # 模型相关
     FETCHING_MODELS = @("正在从 AINFT API 获取可用模型列表", "Fetching available model list from AINFT API")
     FETCH_MODELS_FAILED = @("获取模型列表失败", "Failed to fetch model list")
@@ -95,22 +95,20 @@ $script:Messages = @{
     MODELS_FETCHED = @("成功获取", "Successfully fetched")
     MODELS_COUNT = @("个模型", "models")
     CONFIG_ABORTED = @("无法获取模型列表，配置中止", "Cannot fetch model list, configuration aborted")
-    
+
     # 选择模型
     SELECT_DEFAULT_MODEL = @("选择默认模型", "Select Default Model")
     AVAILABLE_MODELS_LIST = @("可用模型列表", "Available Models")
-    RECOMMENDED_MODEL = @("推荐默认模型", "Recommended default model")
-    USE_RECOMMENDED = @("是否使用推荐模型作为默认?", "Use recommended model as default?")
     ENTER_MODEL_NUMBER = @("请输入模型编号", "Please enter model number")
     INVALID_SELECTION = @("无效的选择，请重新输入", "Invalid selection, please try again")
     DEFAULT_MODEL_SET = @("默认模型设置为", "Default model set to")
-    
+
     # 配置文件
     UPDATE_CONFIG = @("更新 OpenClaw 配置文件", "Updating OpenClaw Configuration File")
     CONFIG_BACKUP = @("原配置已备份到", "Original configuration backed up to")
     CONFIG_UPDATED = @("配置文件已更新", "Configuration file updated")
     CONFIG_FILE = @("配置文件", "Configuration file")
-    
+
     # Gateway
     RESTART_GATEWAY = @("重启 OpenClaw Gateway", "Restarting OpenClaw Gateway")
     GATEWAY_RESTARTING = @("正在重启 Gateway...", "Restarting Gateway...")
@@ -120,7 +118,7 @@ $script:Messages = @{
     GATEWAY_STATUS_CHECK = @("检查 Gateway 状态", "Checking Gateway status")
     GATEWAY_RUNNING = @("Gateway 运行正常", "Gateway is running normally")
     GATEWAY_STATUS_FAILED = @("Gateway 状态检查失败，请手动检查", "Gateway status check failed, please check manually")
-    
+
     # 验证和测试
     VERIFY_CONFIG = @("验证配置", "Verifying Configuration")
     TEST_COMMAND_HINT = @("提示: 您可以运行以下命令测试模型", "Hint: You can run the following command to test the model")
@@ -130,12 +128,12 @@ $script:Messages = @{
     SWITCH_MODEL_HINT = @("如需切换模型，请编辑", "To switch models, please edit")
     SWITCH_MODEL_CMD = @("或使用命令", "Or use command")
     SWITCH_MODEL_CMD_EXAMPLE = @("openclaw models set ainft/<model-name>", "openclaw models set ainft/<model-name>")
-    
+
     # 完成
     INSTALL_COMPLETE = @("安装完成", "Installation Complete")
     CONFIG_SUCCESS = @("AINFT Provider 配置成功！", "AINFT Provider configured successfully!")
     DEFAULT_MODEL_LABEL = @("默认模型", "Default Model")
-    
+
     # 标题
     TITLE = @("OpenClaw AINFT Provider 安装脚本", "OpenClaw AINFT Provider Installation Script")
     SUPPORT = @("支持 Windows PowerShell", "Supports Windows PowerShell")
@@ -190,16 +188,16 @@ function Test-NodeVersion {
         Write-Info (Get-Message "NODE_INSTALL_PROMPT")
         return $false
     }
-    
+
     $nodeVersion = (node -v) -replace 'v', ''
     $majorVersion = [int]($nodeVersion -split '\.')[0]
-    
+
     if ($majorVersion -lt 22) {
         Write-Error "$(Get-Message "NODE_VERSION_LOW"): $nodeVersion"
         Write-Info "$(Get-Message "NODE_UPGRADE"): https://nodejs.org/"
         return $false
     }
-    
+
     Write-Success "$(Get-Message "NODE_VERSION_OK"): v$nodeVersion"
     return $true
 }
@@ -212,7 +210,7 @@ function Test-OpenClawInstalled {
         Write-Info (Get-Message "OPENCLAW_INSTALL_CMD")
         return $false
     }
-    
+
     try {
         $version = openclaw --version 2>$null
         if (-not $version) { $version = "unknown" }
@@ -220,7 +218,7 @@ function Test-OpenClawInstalled {
     catch {
         $version = "unknown"
     }
-    
+
     Write-Success "$(Get-Message "OPENCLAW_INSTALLED"): $version"
     return $true
 }
@@ -240,29 +238,29 @@ function Test-ConfigDir {
 function Test-Environment {
     Write-Bold "`n=== $(Get-Message "CHECK_ENV") ==="
     Write-Info "$(Get-Message "DETECTED_OS"): Windows"
-    
+
     $allPassed = $true
-    
+
     # 检查 Node.js
     if (-not (Test-NodeVersion)) {
         $allPassed = $false
     }
-    
+
     # 检查 openclaw
     if (-not (Test-OpenClawInstalled)) {
         $allPassed = $false
     }
-    
+
     # 检查配置目录
     if (-not (Test-ConfigDir)) {
         $allPassed = $false
     }
-    
+
     if (-not $allPassed) {
         Write-Error (Get-Message "ENV_CHECK_FAILED")
         exit 1
     }
-    
+
     Write-Success (Get-Message "ENV_CHECK_PASSED")
 }
 
@@ -271,15 +269,15 @@ function Read-ApiKey {
     Write-Bold "`n=== $(Get-Message "CONFIG_API_KEY") ==="
     Write-Info (Get-Message "API_KEY_PROMPT")
     Write-Host ""
-    
+
     while ($true) {
         $apiKey = Read-Host (Get-Message "ENTER_API_KEY")
-        
+
         if ([string]::IsNullOrWhiteSpace($apiKey)) {
             Write-Error (Get-Message "API_KEY_EMPTY")
             continue
         }
-        
+
         # 简单的格式检查
         if ($apiKey -notmatch '^[a-zA-Z0-9_-]+$') {
             Write-Warn (Get-Message "API_KEY_FORMAT_WARN")
@@ -288,10 +286,10 @@ function Read-ApiKey {
                 continue
             }
         }
-        
+
         break
     }
-    
+
     $script:AinftApiKey = $apiKey
     Write-Success (Get-Message "API_KEY_RECEIVED")
 }
@@ -299,34 +297,34 @@ function Read-ApiKey {
 # 从 API 获取模型列表
 function Get-ModelsFromApi {
     Write-Info "$(Get-Message "FETCHING_MODELS")..."
-    
+
     $headers = @{
         "Content-Type" = "application/json"
         "Authorization" = "Bearer $script:AinftApiKey"
     }
-    
+
     try {
         $response = Invoke-RestMethod -Uri $script:AinftModelsApi -Headers $headers -Method GET -ErrorAction Stop
-        
+
         if (-not $response.data) {
             Write-Error (Get-Message "INVALID_RESPONSE_FORMAT")
             return $false
         }
-        
+
         $script:AvailableModels = $response.data | ForEach-Object { $_.id }
-        
+
         if ($script:AvailableModels.Count -eq 0) {
             Write-Error (Get-Message "NO_MODELS")
             return $false
         }
-        
+
         Write-Success "$(Get-Message "MODELS_FETCHED") $($script:AvailableModels.Count) $(Get-Message "MODELS_COUNT")"
         return $true
     }
     catch [System.Net.WebException] {
         $statusCode = $_.Exception.Response.StatusCode.value__
         Write-Error "$(Get-Message "FETCH_MODELS_FAILED") (HTTP $statusCode)"
-        
+
         if ($statusCode -eq 401) {
             Write-Info (Get-Message "HTTP_401_HINT")
         }
@@ -341,50 +339,29 @@ function Get-ModelsFromApi {
 # 选择默认模型
 function Select-DefaultModel {
     Write-Bold "`n=== $(Get-Message "SELECT_DEFAULT_MODEL") ==="
-    
+
     # 显示可用模型
     Write-Info "$(Get-Message "AVAILABLE_MODELS_LIST"):"
     for ($i = 0; $i -lt $script:AvailableModels.Count; $i++) {
         Write-Host "  $($i + 1)) $($script:AvailableModels[$i])"
     }
-    
-    # 推荐优先级：gpt-5-nano > gpt-5-mini > 第一个可用模型
-    $recommended = ""
-    if ($script:AvailableModels -contains "gpt-5-nano") {
-        $recommended = "gpt-5-nano"
-    }
-    elseif ($script:AvailableModels -contains "gpt-5-mini") {
-        $recommended = "gpt-5-mini"
-    }
-    else {
-        $recommended = $script:AvailableModels[0]
-    }
-    
+
     Write-Host ""
-    Write-Info "$(Get-Message "RECOMMENDED_MODEL"): $recommended"
-    
-    # 询问用户是否使用推荐模型
-    $useRecommended = Read-Host "$(Get-Message "USE_RECOMMENDED") (Y/n)"
-    
-    if ($useRecommended -notmatch '^[Nn]$') {
-        $script:DefaultModel = $recommended
-    }
-    else {
-        # 让用户手动选择
-        while ($true) {
-            $selection = Read-Host "$(Get-Message "ENTER_MODEL_NUMBER") (1-$($script:AvailableModels.Count))"
-            
-            if ($selection -match '^\d+$') {
-                $index = [int]$selection - 1
-                if ($index -ge 0 -and $index -lt $script:AvailableModels.Count) {
-                    $script:DefaultModel = $script:AvailableModels[$index]
-                    break
-                }
+
+    # 让用户手动选择
+    while ($true) {
+        $selection = Read-Host "$(Get-Message "ENTER_MODEL_NUMBER") (1-$($script:AvailableModels.Count))"
+
+        if ($selection -match '^\d+$') {
+            $index = [int]$selection - 1
+            if ($index -ge 0 -and $index -lt $script:AvailableModels.Count) {
+                $script:DefaultModel = $script:AvailableModels[$index]
+                break
             }
-            Write-Error (Get-Message "INVALID_SELECTION")
         }
+        Write-Error (Get-Message "INVALID_SELECTION")
     }
-    
+
     Write-Success "$(Get-Message "DEFAULT_MODEL_SET"): $script:DefaultModel"
 }
 
@@ -400,7 +377,7 @@ function Convert-ModelsToJson {
 # 更新配置文件
 function Update-Config {
     Write-Bold "`n=== $(Get-Message "UPDATE_CONFIG") ==="
-    
+
     # 备份原配置
     if (Test-Path $script:OpenClawConfigFile) {
         $timestamp = Get-Date -Format "yyyyMMddHHmmss"
@@ -408,7 +385,7 @@ function Update-Config {
         Copy-Item $script:OpenClawConfigFile $backupFile
         Write-Info "$(Get-Message "CONFIG_BACKUP"): $backupFile"
     }
-    
+
     # 读取现有配置或创建新的
     $config = @{}
     if (Test-Path $script:OpenClawConfigFile) {
@@ -419,7 +396,7 @@ function Update-Config {
             $config = @{}
         }
     }
-    
+
     # 确保基本结构存在
     if (-not $config.models) {
         $config.models = @{}
@@ -433,7 +410,7 @@ function Update-Config {
     if (-not $config.agents.defaults.model) {
         $config.agents.defaults.model = @{}
     }
-    
+
     # 设置 AINFT Provider 配置
     $config.models.mode = "merge"
     $config.models.providers = @{
@@ -444,25 +421,25 @@ function Update-Config {
             models = Convert-ModelsToJson
         }
     }
-    
+
     # 设置默认模型
     $config.agents.defaults.model.primary = "ainft/$script:DefaultModel"
-    
+
     # 写入文件
     $config | ConvertTo-Json -Depth 10 | Out-File $script:OpenClawConfigFile -Encoding UTF8
-    
+
     Write-Success "$(Get-Message "CONFIG_UPDATED"): $script:OpenClawConfigFile"
 }
 
 # 重启 Gateway
 function Restart-Gateway {
     Write-Bold "`n=== $(Get-Message "RESTART_GATEWAY") ==="
-    
+
     if (-not (Test-Command "openclaw")) {
         Write-Error "$(Get-Message "OPENCLAW_NOT_FOUND")，$(Get-Message "GATEWAY_RESTART_FAILED")"
         return $false
     }
-    
+
     Write-Info "$(Get-Message "GATEWAY_RESTARTING")..."
     try {
         openclaw gateway restart 2>$null
@@ -479,7 +456,7 @@ function Restart-Gateway {
 # 验证配置
 function Test-Config {
     Write-Bold "`n=== $(Get-Message "VERIFY_CONFIG") ==="
-    
+
     Write-Info "$(Get-Message "GATEWAY_STATUS_CHECK")..."
     try {
         $status = openclaw gateway status 2>$null
@@ -488,7 +465,7 @@ function Test-Config {
     catch {
         Write-Warn (Get-Message "GATEWAY_STATUS_FAILED")
     }
-    
+
     Write-Info "$(Get-Message "TEST_COMMAND_HINT"):"
     Write-Info (Get-Message "TEST_COMMAND")
 }
@@ -525,31 +502,31 @@ function Main {
         Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor White
         Write-Host ""
     }
-    
+
     # 检查环境
     Test-Environment
-    
+
     # 询问 API Key
     Read-ApiKey
-    
+
     # 从 API 获取模型列表
     if (-not (Get-ModelsFromApi)) {
         Write-Error (Get-Message "CONFIG_ABORTED")
         exit 1
     }
-    
+
     # 选择默认模型
     Select-DefaultModel
-    
+
     # 更新配置
     Update-Config
-    
+
     # 重启 Gateway
     Restart-Gateway | Out-Null
-    
+
     # 验证配置
     Test-Config
-    
+
     Write-Bold "`n=== $(Get-Message "INSTALL_COMPLETE") ==="
     Write-Success (Get-Message "CONFIG_SUCCESS")
     Write-Host ""
