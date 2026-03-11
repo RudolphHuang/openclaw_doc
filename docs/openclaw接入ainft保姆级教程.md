@@ -4,11 +4,25 @@
 
 Linux && MacOS
 ```bash  
-curl https://dev.ainft.com/scripts/openclaw/install-ainft-provider.sh | bash
+curl https://www.ainft.com/scripts/openclaw/install-ainft-provider.sh | bash
 ```
 
 windows powershell
 
 ```bash  
-iwr https://dev.ainft.com/scripts/openclaw/install-ainft-provider.ps1 | iex
+iwr https://www.ainft.com/scripts/openclaw/install-ainft-provider.ps1 | iex
+```
+
+
+测试阶段
+
+Linux && MacOS
+```bash  
+curl https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/scripts/openclaw/install-ainft-provider.sh | bash
+```
+
+windows powershell
+
+```bash  
+iwr https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/scripts/openclaw/install-ainft-provider.ps1 | iex
 ```
