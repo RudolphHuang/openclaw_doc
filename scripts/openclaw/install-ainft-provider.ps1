@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     OpenClaw AINFT Provider 安装脚本 (Windows PowerShell)
