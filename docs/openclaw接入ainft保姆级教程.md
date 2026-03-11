@@ -83,11 +83,11 @@ iwr https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/
 
 ## 兼容性测试
 
-| 操作系统 | 状态 |
-|---------|------|
-| Ubuntu 24.04 | ✅ 通过 |
-| Windows 11 PowerShell | ✅ 通过 |
-| macOS 15 | 🔄 测试中 |
+| 操作系统             | 状态 |
+|------------------|------|
+| Ubuntu 24.04     | ✅ 通过 |
+| Windows 11 25H2  | ✅ 通过 |
+| macOS 24.6.0     | 🔄 测试中 |
 
 ---
 

@@ -309,18 +309,34 @@ check_environment() {
     print_success "$(get_msg ENV_CHECK_PASSED)"
 }
 
-# 从终端读取输入（即使脚本通过管道执行）
+# 检测是否在交互式终端中
+is_interactive() {
+    # 检查 stdin 是否是终端
+    if [ -t 0 ]; then
+        return 0
+    fi
+    return 1
+}
+
+# 从终端读取输入（支持交互式和非交互式环境）
 read_from_terminal() {
     local var_name="$1"
     local prompt="$2"
     
-    # 使用 /dev/tty 强制从终端读取
-    if [ -e /dev/tty ]; then
+    # 如果环境变量中已设置值，直接使用（用于 CI/自动化场景）
+    local env_var_name="INSTALL_${var_name^^}"
+    if [ -n "${!env_var_name:-}" ]; then
+        eval "$var_name='${!env_var_name}'"
+        return 0
+    fi
+    
+    # 如果是交互式终端，尝试使用 /dev/tty
+    if is_interactive && [ -e /dev/tty ] && [ -r /dev/tty ]; then
         printf "%s" "$prompt" > /dev/tty
         read -r "$var_name" < /dev/tty
     else
-        # 回退到普通读取
-        printf "%s" "$prompt"
+        # 非交互式环境：输出提示到 stderr，从 stdin 读取
+        printf "%s" "$prompt" >&2
         read -r "$var_name"
     fi
 }
