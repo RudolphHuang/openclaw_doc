@@ -142,8 +142,8 @@ function Write-Error($Message) {
     Write-Host "$prefix $Message" -ForegroundColor Red
 }
 
-function Write-Bold($Message) {
-    Write-Host $Message -ForegroundColor White -Bold
+function WriteBold($Message) {
+    Write-Host $Message -ForegroundColor White
 }
 
 # Run Node.js code for JSON processing
@@ -211,7 +211,7 @@ function Test-ConfigDir {
 
 # Environment check
 function Test-Environment {
-    Write-Bold "`n=== $(Get-Message "CHECK_ENV") ==="
+    WriteBold "`n=== $(Get-Message "CHECK_ENV") ==="
     Write-Info "$(Get-Message "DETECTED_OS"): Windows"
 
     $allPassed = $true
@@ -238,7 +238,7 @@ function Test-Environment {
 
 # Read API Key from user
 function Read-ApiKey {
-    Write-Bold "`n=== $(Get-Message "CONFIG_API_KEY") ==="
+    WriteBold "`n=== $(Get-Message "CONFIG_API_KEY") ==="
     Write-Info (Get-Message "API_KEY_PROMPT")
     Write-Host ""
 
@@ -340,7 +340,7 @@ req.end();
 
 # Select default model
 function Select-DefaultModel {
-    Write-Bold "`n=== $(Get-Message "SELECT_DEFAULT_MODEL") ==="
+    WriteBold "`n=== $(Get-Message "SELECT_DEFAULT_MODEL") ==="
 
     Write-Info "$(Get-Message "AVAILABLE_MODELS_LIST"):"
     for ($i = 0; $i -lt $script:AvailableModels.Count; $i++) {
@@ -374,7 +374,7 @@ function Convert-ModelsToJson {
 
 # Update config file using Node.js
 function Update-Config {
-    Write-Bold "`n=== $(Get-Message "UPDATE_CONFIG") ==="
+    WriteBold "`n=== $(Get-Message "UPDATE_CONFIG") ==="
 
     # Backup original config
     if (Test-Path $script:OpenClawConfigFile) {
@@ -436,7 +436,7 @@ console.log('Configuration updated successfully');
 
 # Restart Gateway
 function Restart-Gateway {
-    Write-Bold "`n=== $(Get-Message "RESTART_GATEWAY") ==="
+    WriteBold "`n=== $(Get-Message "RESTART_GATEWAY") ==="
 
     if (-not (Test-Command "openclaw")) {
         Write-Error "$(Get-Message "OPENCLAW_NOT_FOUND"), $(Get-Message "GATEWAY_RESTART_FAILED")"
@@ -458,7 +458,7 @@ function Restart-Gateway {
 
 # Verify config
 function Test-Config {
-    Write-Bold "`n=== $(Get-Message "VERIFY_CONFIG") ==="
+    WriteBold "`n=== $(Get-Message "VERIFY_CONFIG") ==="
 
     Write-Info "$(Get-Message "GATEWAY_STATUS_CHECK")..."
     try {
@@ -488,7 +488,7 @@ function Show-AvailableModels {
 
 # Main function
 function Main {
-    Write-Bold ""
+    WriteBold ""
     Write-Host "==============================================================" -ForegroundColor White
     Write-Host "          OpenClaw AINFT Provider Installation Script         " -ForegroundColor White
     Write-Host "          Supports Windows PowerShell                         " -ForegroundColor White
@@ -519,7 +519,7 @@ function Main {
     # Verify config
     Test-Config
 
-    Write-Bold "`n=== $(Get-Message "INSTALL_COMPLETE") ==="
+    WriteBold "`n=== $(Get-Message "INSTALL_COMPLETE") ==="
     Write-Success (Get-Message "CONFIG_SUCCESS")
     Write-Host ""
     Write-Info "$(Get-Message "DEFAULT_MODEL_LABEL"): ainft/$script:DefaultModel"
