@@ -321,7 +321,7 @@ req.end();
         }
 
         # Parse the JSON array from Node.js
-        $modelsArray = Invoke-NodeJson "const arr = $result; console.log(arr.map(m => JSON.stringify(m)).join(String.fromCharCode(10)))"
+        $modelsArray = Invoke-NodeJson "const arr = JSON.parse('$result'); console.log(arr.map(m => JSON.stringify(m)).join(String.fromCharCode(10)))"
         $script:AvailableModels = $modelsArray -split "`n" | Where-Object { $_ } | ForEach-Object { Invoke-NodeJson "console.log(JSON.parse('$_'))" }
 
         if ($script:AvailableModels.Count -eq 0) {

@@ -7,13 +7,13 @@
 ### Linux & macOS
 
 ```bash
-curl https://www.ainft.com/scripts/openclaw/install-ainft-provider.sh | bash
+curl https://api.ainft.com/scripts/openclaw/install-ainft-provider.sh | bash
 ```
 
 ### Windows PowerShell
 
 ```powershell
-iwr https://www.ainft.com/scripts/openclaw/install-ainft-provider.ps1 | iex
+iwr https://api.ainft.com/scripts/openclaw/install-ainft-provider.ps1 | iex
 ```
 
 ## 测试阶段命令
