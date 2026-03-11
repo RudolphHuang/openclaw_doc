@@ -87,7 +87,7 @@ iwr https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/
 |------------------|------|
 | Ubuntu 24.04     | ✅ 通过 |
 | Windows 11 25H2  | ✅ 通过 |
-| macOS 24.6.0     | 🔄 测试中 |
+| macOS 24.6.0     | ✅ 通过 |
 
 ---
 
