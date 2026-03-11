@@ -146,6 +146,11 @@ function Write-Bold($Message) {
     Write-Host $Message -ForegroundColor White -Bold
 }
 
+# Run Node.js code for JSON processing
+function Invoke-NodeJson($JsCode) {
+    return node -e $JsCode
+}
+
 # Check if command exists
 function Test-Command($Command) {
     return [bool](Get-Command -Name $Command -ErrorAction SilentlyContinue)
@@ -159,8 +164,8 @@ function Test-NodeVersion {
         return $false
     }
 
-    $nodeVersion = (node -v) -replace 'v', ''
-    $majorVersion = [int]($nodeVersion -split '\.')[0]
+    $nodeVersion = Invoke-NodeJson 'console.log(process.version.replace(/^v/, ""))'
+    $majorVersion = [int](Invoke-NodeJson 'console.log(process.version.replace(/^v/, "").split(".")[0])')
 
     if ($majorVersion -lt 22) {
         Write-Error "$(Get-Message "NODE_VERSION_LOW"): $nodeVersion"
@@ -261,24 +266,62 @@ function Read-ApiKey {
     Write-Success (Get-Message "API_KEY_RECEIVED")
 }
 
-# Fetch models from API
+# Fetch models from API using Node.js
 function Get-ModelsFromApi {
     Write-Info "$(Get-Message "FETCHING_MODELS")..."
 
-    $headers = @{
-        "Content-Type" = "application/json"
-        "Authorization" = "Bearer $script:AinftApiKey"
+    $jsCode = @"
+const https = require('https');
+const options = {
+    hostname: 'api.ainft.com',
+    path: '/v1/models',
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $script:AinftApiKey'
     }
+};
+
+const req = https.request(options, (res) => {
+    let data = '';
+    res.on('data', (chunk) => { data += chunk; });
+    res.on('end', () => {
+        try {
+            const obj = JSON.parse(data);
+            if (!obj.data || !Array.isArray(obj.data)) {
+                console.error('INVALID_RESPONSE');
+                process.exit(1);
+            }
+            console.log(JSON.stringify(obj.data.map(m => m.id)));
+        } catch (e) {
+            console.error('PARSE_ERROR');
+            process.exit(1);
+        }
+    });
+});
+
+req.on('error', (e) => {
+    console.error('REQUEST_ERROR');
+    process.exit(1);
+});
+
+req.end();
+"@
 
     try {
-        $response = Invoke-RestMethod -Uri $script:AinftModelsApi -Headers $headers -Method GET -ErrorAction Stop
-
-        if (-not $response.data) {
-            Write-Error (Get-Message "INVALID_RESPONSE_FORMAT")
+        $result = Invoke-NodeJson $jsCode 2>&1
+        
+        if ($result -match 'INVALID_RESPONSE|PARSE_ERROR|REQUEST_ERROR') {
+            if ($result -match 'INVALID_RESPONSE|PARSE_ERROR') {
+                Write-Error (Get-Message "INVALID_RESPONSE_FORMAT")
+            } else {
+                Write-Error (Get-Message "FETCH_MODELS_FAILED")
+            }
             return $false
         }
 
-        $script:AvailableModels = $response.data | ForEach-Object { $_.id }
+        # Parse the JSON array from Node.js
+        $script:AvailableModels = Invoke-NodeJson "console.log(JSON.parse('$result').join('\n'))" -split "`n" | Where-Object { $_ }
 
         if ($script:AvailableModels.Count -eq 0) {
             Write-Error (Get-Message "NO_MODELS")
@@ -287,15 +330,6 @@ function Get-ModelsFromApi {
 
         Write-Success "$(Get-Message "MODELS_FETCHED") $($script:AvailableModels.Count) $(Get-Message "MODELS_COUNT")"
         return $true
-    }
-    catch [System.Net.WebException] {
-        $statusCode = $_.Exception.Response.StatusCode.value__
-        Write-Error "$(Get-Message "FETCH_MODELS_FAILED") (HTTP $statusCode)"
-
-        if ($statusCode -eq 401) {
-            Write-Info (Get-Message "HTTP_401_HINT")
-        }
-        return $false
     }
     catch {
         Write-Error "$(Get-Message "FETCH_MODELS_FAILED"): $($_.Exception.Message)"
@@ -330,16 +364,17 @@ function Select-DefaultModel {
     Write-Success "$(Get-Message "DEFAULT_MODEL_SET"): $script:DefaultModel"
 }
 
-# Convert models to JSON
+# Convert models to JSON using Node.js
 function Convert-ModelsToJson {
-    $modelsArray = @()
-    foreach ($model in $script:AvailableModels) {
-        $modelsArray += @{ id = $model; name = $model }
-    }
-    return $modelsArray
+    $modelsList = $script:AvailableModels -join ','
+    $jsCode = @"
+const models = '$modelsList'.split(',');
+console.log(JSON.stringify(models.map(m => ({ id: m, name: m }))));
+"@
+    return Invoke-NodeJson $jsCode
 }
 
-# Update config file
+# Update config file using Node.js
 function Update-Config {
     Write-Bold "`n=== $(Get-Message "UPDATE_CONFIG") ==="
 
@@ -351,47 +386,46 @@ function Update-Config {
         Write-Info "$(Get-Message "CONFIG_BACKUP"): $backupFile"
     }
 
-    # Read existing config or create new
-    $config = @{}
+    # Read existing config or use empty object
+    $configContent = '{}'
     if (Test-Path $script:OpenClawConfigFile) {
-        try {
-            $config = Get-Content $script:OpenClawConfigFile -Raw | ConvertFrom-Json -AsHashtable
-        }
-        catch {
-            $config = @{}
+        $configContent = Get-Content $script:OpenClawConfigFile -Raw -ErrorAction SilentlyContinue
+        if ([string]::IsNullOrWhiteSpace($configContent)) {
+            $configContent = '{}'
         }
     }
 
-    # Ensure basic structure
-    if (-not $config.models) {
-        $config.models = @{}
-    }
-    if (-not $config.agents) {
-        $config.agents = @{ defaults = @{ model = @{ } } }
-    }
-    if (-not $config.agents.defaults) {
-        $config.agents.defaults = @{ model = @{ } }
-    }
-    if (-not $config.agents.defaults.model) {
-        $config.agents.defaults.model = @{}
-    }
+    # Build models JSON array
+    $modelsJsonArray = Convert-ModelsToJson
 
-    # Set AINFT Provider config
-    $config.models.mode = "merge"
-    $config.models.providers = @{
-        ainft = @{
-            baseUrl = $script:AinftBaseUrl
-            apiKey = $script:AinftApiKey
-            api = $script:AinftApi
-            models = Convert-ModelsToJson
-        }
-    }
+    $jsCode = @"
+const fs = require('fs');
+const path = '$($script:OpenClawConfigFile.Replace('\', '\\'))';
+let config;
+try {
+    config = JSON.parse(`$configContent`);
+} catch (e) {
+    config = {};
+}
+if (typeof config !== 'object' || config === null) config = {};
+if (!config.models) config.models = {};
+if (!config.models.providers) config.models.providers = {};
+config.models.mode = 'merge';
+config.models.providers.ainft = {
+    baseUrl: '$script:AinftBaseUrl',
+    apiKey: '$script:AinftApiKey',
+    api: '$script:AinftApi',
+    models: $modelsJsonArray
+};
+if (!config.agents) config.agents = {};
+if (!config.agents.defaults) config.agents.defaults = {};
+if (!config.agents.defaults.model) config.agents.defaults.model = {};
+config.agents.defaults.model.primary = 'ainft/$script:DefaultModel';
+fs.writeFileSync(path, JSON.stringify(config, null, 2));
+console.log('Configuration updated successfully');
+"@
 
-    # Set default model
-    $config.agents.defaults.model.primary = "ainft/$script:DefaultModel"
-
-    # Write to file
-    $config | ConvertTo-Json -Depth 10 | Out-File $script:OpenClawConfigFile -Encoding UTF8
+    Invoke-NodeJson $jsCode | Out-Null
 
     Write-Success "$(Get-Message "CONFIG_UPDATED"): $script:OpenClawConfigFile"
 }
