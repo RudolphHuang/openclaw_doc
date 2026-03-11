@@ -1,0 +1,135 @@
+name: Test AINFT Install Script
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_key:
+        description: 'AINFT API Key for testing'
+        required: true
+        type: string
+
+jobs:
+  test-ubuntu:
+    name: Test on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup test environment
+        run: |
+          echo "=== System Info ==="
+          uname -a
+          echo ""
+          echo "=== Install Node.js ==="
+          curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+          apt-get install -y nodejs
+          node -v
+          npm -v
+          echo ""
+          echo "=== Install OpenClaw ==="
+          curl -fsSL https://openclaw.bot/install.sh | bash
+          export PATH="$HOME/.openclaw/bin:$PATH"
+          which openclaw || echo "openclaw not in PATH, checking ~/.openclaw/bin/"
+          ls -la ~/.openclaw/bin/ 2>/dev/null || echo "No bin directory"
+          echo ""
+          echo "=== Initialize OpenClaw ==="
+          mkdir -p ~/.openclaw
+          echo '{}' > ~/.openclaw/openclaw.json
+
+      - name: Run install script
+        env:
+          AINFT_API_KEY: ${{ github.event.inputs.api_key }}
+        run: |
+          echo "=== Running AINFT Install Script ==="
+          echo ""
+          # Create expect script to handle interactive prompts
+          sudo apt-get update && sudo apt-get install -y expect
+          
+          cat > /tmp/run_install.sh << 'EOF'
+          #!/usr/bin/expect -f
+          set timeout 30
+          set api_key $env(AINFT_API_KEY)
+          
+          spawn bash -c "curl https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/scripts/openclaw/install-ainft-provider.sh | bash"
+          
+          expect "请输入您的 AINFT API Key" {
+              send "$api_key\r"
+          }
+          
+          expect "请输入模型编号" {
+              send "1\r"
+          }
+          
+          expect eof
+          EOF
+          
+          chmod +x /tmp/run_install.sh
+          export PATH="$HOME/.openclaw/bin:$PATH"
+          /tmp/run_install.sh 2>&1 || {
+              echo ""
+              echo "=== Script exited with code $? ==="
+          }
+          
+          echo ""
+          echo "=== Check final config ==="
+          cat ~/.openclaw/openclaw.json 2>/dev/null || echo "Config file not found"
+
+  test-macos:
+    name: Test on macOS
+    runs-on: macos-latest
+    steps:
+      - name: Setup test environment
+        run: |
+          echo "=== System Info ==="
+          uname -a
+          echo ""
+          echo "=== Check/Install Node.js ==="
+          if ! command -v node &> /dev/null; then
+            brew install node@22
+          fi
+          node -v
+          echo ""
+          echo "=== Install OpenClaw ==="
+          curl -fsSL https://openclaw.bot/install.sh | bash
+          export PATH="$HOME/.openclaw/bin:$PATH"
+          echo ""
+          echo "=== Initialize OpenClaw ==="
+          mkdir -p ~/.openclaw
+          echo '{}' > ~/.openclaw/openclaw.json
+
+      - name: Run install script
+        env:
+          AINFT_API_KEY: ${{ github.event.inputs.api_key }}
+        run: |
+          echo "=== Running AINFT Install Script ==="
+          echo ""
+          
+          # Install expect
+          brew install expect 2>/dev/null || true
+          
+          cat > /tmp/run_install.sh << 'EOF'
+          #!/usr/bin/expect -f
+          set timeout 30
+          set api_key $env(AINFT_API_KEY)
+          
+          spawn bash -c "curl https://raw.githubusercontent.com/RudolphHuang/openclaw_doc/refs/heads/main/scripts/openclaw/install-ainft-provider.sh | bash"
+          
+          expect "请输入您的 AINFT API Key" {
+              send "$api_key\r"
+          }
+          
+          expect "请输入模型编号" {
+              send "1\r"
+          }
+          
+          expect eof
+          EOF
+          
+          chmod +x /tmp/run_install.sh
+          export PATH="$HOME/.openclaw/bin:$PATH"
+          /tmp/run_install.sh 2>&1 || {
+              echo ""
+              echo "=== Script exited with code $? ==="
+          }
+          
+          echo ""
+          echo "=== Check final config ==="
+          cat ~/.openclaw/openclaw.json 2>/dev/null || echo "Config file not found"
