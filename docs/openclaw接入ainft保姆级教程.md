@@ -11,13 +11,13 @@
 **Linux & macOS:**
 
 ```bash
-curl https://api.ainft.com/scripts/openclaw-install-ainft-provider.sh | bash
+curl https://chat.ainft.com/scripts/openclaw-install-ainft-provider.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-iwr https://api.ainft.com/scripts/openclaw-install-ainft-provider.ps1 | iex
+iwr https://chat.ainft.com/scripts/openclaw-install-ainft-provider.ps1 | iex
 ```
 
 ---
@@ -27,13 +27,13 @@ iwr https://api.ainft.com/scripts/openclaw-install-ainft-provider.ps1 | iex
 **Linux & macOS:**
 
 ```bash
-curl https://api-dev.ainft.com/scripts/openclaw-install-ainft-provider.sh | bash
+curl https://chat-dev.ainft.com/scripts/openclaw-install-ainft-provider.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-iwr https://api-dev.ainft.com/scripts/openclaw-install-ainft-provider.ps1 | iex
+iwr https://chat-dev.ainft.com/scripts/openclaw-install-ainft-provider.ps1 | iex
 ```
 
 ---
