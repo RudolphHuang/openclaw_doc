@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 <#
 .SYNOPSIS
     OpenClaw AINFT Provider 安装脚本 (Windows PowerShell)
@@ -15,6 +15,10 @@
 
 [CmdletBinding()]
 param()
+
+# 设置输出编码为 UTF-8，防止中文乱码
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 # 错误处理
 $ErrorActionPreference = "Stop"
