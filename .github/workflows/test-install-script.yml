@@ -14,6 +14,7 @@ on:
         type: string
 
 jobs:
+
   test-macos:
     name: Test on macOS
     runs-on: macos-latest
@@ -29,9 +30,14 @@ jobs:
           fi
           node -v
           echo ""
-          echo "=== Install OpenClaw ==="
-          curl -fsSL https://openclaw.bot/install.sh | bash
+          echo "=== Install OpenClaw (non-interactive) ==="
+          # 使用 npm 直接安装，避免官方安装脚本的交互式提示
+          npm install -g openclaw
+          mkdir -p ~/.openclaw/bin
+          ln -sf $(which openclaw) ~/.openclaw/bin/openclaw 2>/dev/null || true
           export PATH="$HOME/.openclaw/bin:$PATH"
+          which openclaw
+          openclaw --version
           echo ""
           echo "=== Initialize OpenClaw ==="
           mkdir -p ~/.openclaw
