@@ -33,7 +33,7 @@ curl https://api-dev.ainft.com/scripts/openclaw-install-ainft-provider.sh | bash
 **Windows PowerShell:**
 
 ```powershell
-iwr https://chat-dev.ainft.com/scripts/openclaw-install-ainft-provider.ps1 | iex
+iwr https://api-dev.ainft.com/scripts/openclaw-install-ainft-provider.ps1 | iex
 ```
 
 ---
