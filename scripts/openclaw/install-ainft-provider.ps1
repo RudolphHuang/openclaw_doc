@@ -450,34 +450,56 @@ function Update-Config {
     $api = $script:AinftApi
     $defaultModel = $script:DefaultModel
     
-    $jsCode = @"
-const fs = require('fs');
-const path = '$configPath';
-let config;
-try {
-    config = $configContent;
-} catch (e) {
-    config = {};
-}
-if (typeof config !== 'object' || config === null) config = {};
-if (!config.models) config.models = {};
-if (!config.models.providers) config.models.providers = {};
-config.models.mode = 'merge';
-config.models.providers.ainft = {
-    baseUrl: '$baseUrl',
-    apiKey: '$apiKey',
-    api: '$api',
-    models: $modelsJsonArray
-};
-if (!config.agents) config.agents = {};
-if (!config.agents.defaults) config.agents.defaults = {};
-if (!config.agents.defaults.model) config.agents.defaults.model = {};
-config.agents.defaults.model.primary = 'ainft/$defaultModel';
-fs.writeFileSync(path, JSON.stringify(config, null, 2));
-console.log('Configuration updated successfully');
-"@
-
-    Invoke-NodeJson $jsCode | Out-Null
+    # Use stdin to pass config content and models JSON to avoid quoting issues
+    $jsCode = @'
+let data = '';
+process.stdin.on('data', chunk => { data += chunk; });
+process.stdin.on('end', () => {
+    try {
+        const fs = require('fs');
+        const parts = data.split('\n__MODELS_JSON__\n');
+        const configContent = parts[0];
+        const modelsJsonArray = parts[1];
+        const path = 'CONFIG_PATH_PLACEHOLDER';
+        
+        let config;
+        try {
+            config = JSON.parse(configContent);
+        } catch (e) {
+            config = {};
+        }
+        if (typeof config !== 'object' || config === null) config = {};
+        if (!config.models) config.models = {};
+        if (!config.models.providers) config.models.providers = {};
+        config.models.mode = 'merge';
+        config.models.providers.ainft = {
+            baseUrl: 'BASE_URL_PLACEHOLDER',
+            apiKey: 'API_KEY_PLACEHOLDER',
+            api: 'API_PLACEHOLDER',
+            models: JSON.parse(modelsJsonArray)
+        };
+        if (!config.agents) config.agents = {};
+        if (!config.agents.defaults) config.agents.defaults = {};
+        if (!config.agents.defaults.model) config.agents.defaults.model = {};
+        config.agents.defaults.model.primary = 'ainft/DEFAULT_MODEL_PLACEHOLDER';
+        fs.writeFileSync(path, JSON.stringify(config, null, 2));
+        console.log('Configuration updated successfully');
+    } catch (e) {
+        console.error('ERROR:', e.message);
+        process.exit(1);
+    }
+});
+'@
+    # Replace placeholders
+    $jsCode = $jsCode.Replace('CONFIG_PATH_PLACEHOLDER', $configPath)
+    $jsCode = $jsCode.Replace('BASE_URL_PLACEHOLDER', $baseUrl)
+    $jsCode = $jsCode.Replace('API_KEY_PLACEHOLDER', $apiKey)
+    $jsCode = $jsCode.Replace('API_PLACEHOLDER', $api)
+    $jsCode = $jsCode.Replace('DEFAULT_MODEL_PLACEHOLDER', $defaultModel)
+    
+    $inputData = "$configContent`n__MODELS_JSON__`n$modelsJsonArray"
+    
+    Invoke-NodeJsonWithInput $jsCode $inputData | Out-Null
 
     Write-Success "$(Get-Message "CONFIG_UPDATED"): $script:OpenClawConfigFile"
 }
