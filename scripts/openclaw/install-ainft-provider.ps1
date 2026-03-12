@@ -237,10 +237,11 @@ function Test-Environment {
 
     if (-not $allPassed) {
         Write-Error (Get-Message "ENV_CHECK_FAILED")
-        exit 1
     }
 
-    Write-Success (Get-Message "ENV_CHECK_PASSED")
+    if ($allPassed) {
+        Write-Success (Get-Message "ENV_CHECK_PASSED")
+    }
 }
 
 # Read API Key from user
@@ -309,7 +310,7 @@ req.end();
 
     try {
         $result = Invoke-NodeJson $jsCode 2>&1
-        
+
         # Check for request error
         if ($result -match 'REQUEST_ERROR') {
             Write-Error (Get-Message "FETCH_MODELS_FAILED")
@@ -323,7 +324,7 @@ req.end();
         if ($statusMatch) {
             $statusCode = [int]$statusMatch.Matches[0].Groups[1].Value
         }
-        
+
         $bodyMatch = $result | Select-String -Pattern '^BODY:(.+)$'
         if ($bodyMatch) {
             $body = $bodyMatch.Matches[0].Groups[1].Value
@@ -361,7 +362,7 @@ process.stdin.on('end', () => {
 });
 '@
         $result = Invoke-NodeJsonWithInput $jsParseCode $body
-        
+
         if ($result -match 'INVALID_RESPONSE|PARSE_ERROR') {
             Write-Error (Get-Message "INVALID_RESPONSE_FORMAT")
             return $false
@@ -382,7 +383,7 @@ process.stdin.on('end', () => {
 });
 '@
         $modelsArray = Invoke-NodeJsonWithInput $jsParseCode2 $result
-        
+
         # Parse each model name
         $jsParseLine = @'
 let data = '';
@@ -491,7 +492,7 @@ function Update-Config {
     $apiKey = $script:AinftApiKey
     $api = $script:AinftApi
     $defaultModel = $script:DefaultModel
-    
+
     # Use stdin to pass config content and models JSON to avoid quoting issues
     $jsCode = @'
 let data = '';
@@ -503,7 +504,7 @@ process.stdin.on('end', () => {
         const configContent = parts[0];
         const modelsJsonArray = parts[1];
         const path = 'CONFIG_PATH_PLACEHOLDER';
-        
+
         let config;
         try {
             config = JSON.parse(configContent);
@@ -538,9 +539,9 @@ process.stdin.on('end', () => {
     $jsCode = $jsCode.Replace('API_KEY_PLACEHOLDER', $apiKey)
     $jsCode = $jsCode.Replace('API_PLACEHOLDER', $api)
     $jsCode = $jsCode.Replace('DEFAULT_MODEL_PLACEHOLDER', $defaultModel)
-    
+
     $inputData = "$configContent`n__MODELS_JSON__`n$modelsJsonArray"
-    
+
     Invoke-NodeJsonWithInput $jsCode $inputData | Out-Null
 
     Write-Success "$(Get-Message "CONFIG_UPDATED"): $script:OpenClawConfigFile"
@@ -658,7 +659,6 @@ catch {
     Write-Host ""
     Write-Host "Press any key to exit..." -ForegroundColor Yellow
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-    exit 1
 }
 
 # Pause at the end if running by double-clicking (no parent console)
