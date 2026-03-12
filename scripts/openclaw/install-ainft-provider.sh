@@ -520,6 +520,15 @@ if (!config.agents) config.agents = {};
 if (!config.agents.defaults) config.agents.defaults = {};
 if (!config.agents.defaults.model) config.agents.defaults.model = {};
 config.agents.defaults.model.primary = 'ainft/$DEFAULT_MODEL';
+
+// 构建 agents.defaults.models 对象格式
+const modelsObj = {};
+const modelList = [$models_json];
+modelList.forEach(m => {
+    modelsObj['ainft/' + m.id] = { alias: m.id };
+});
+config.agents.defaults.models = modelsObj;
+
 fs.writeFileSync(path, JSON.stringify(config, null, 2));
 console.log('Configuration updated successfully');
 "
