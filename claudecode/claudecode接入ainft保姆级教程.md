@@ -302,11 +302,6 @@ A: 启动 Claude Code 后，在对话中输入：
 
 或查看启动时的系统信息。
 
----
-
-**Q: API Token 泄露了怎么办？**
-
-A: 立即登录 [AINFT 平台](https://chat.ainft.com/key) 删除泄露的 Token，并申请新的 Token 更新配置。
 
 ---
 
