@@ -2,6 +2,32 @@
 
 本文档详细介绍如何将 Claude Code CLI 工具配置为使用 AiNFT API 进行代理调用。
 
+
+
+## 使用方法
+
+### Windows (PowerShell)
+
+```powershell
+# 方式一: 直接远程执行
+iwr -useb https://chat.ainft.com/scripts/install-ainft-provider-claude.ps1 | iex
+
+# 方式二: 下载后执行
+.\install-ainft-provider.ps1
+```
+
+### Linux / macOS (Bash)
+
+```bash
+# 方式一: 直接远程执行
+curl -fsSL https://chat.ainft.com/scripts/install-ainft-provider-claude.sh | bash
+
+# 方式二: 下载后执行
+chmod +x install-ainft-provider.sh
+./install-ainft-provider.sh
+```
+
+
 ## 环境变量配置
 
 在使用 Claude Code 之前，需要设置以下环境变量：
