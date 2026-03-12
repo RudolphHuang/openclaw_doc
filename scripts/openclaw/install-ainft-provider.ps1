@@ -68,7 +68,9 @@ $script:Messages = @{
 
     FETCHING_MODELS = "Fetching available model list from AINFT API"
     FETCH_MODELS_FAILED = "Failed to fetch model list"
+    CHECK_API_KEY = "Please check if your API Key is correct"
     HTTP_401_HINT = "Hint: HTTP 401 indicates authentication failure, please check if API Key is valid"
+    HTTP_000_HINT = "Hint: Cannot connect to server, please check network connection"
     INVALID_RESPONSE_FORMAT = "API returned invalid data format"
     NO_MODELS = "No models retrieved"
     MODELS_FETCHED = "Successfully fetched"
@@ -291,17 +293,9 @@ const req = https.request(options, (res) => {
     let data = '';
     res.on('data', (chunk) => { data += chunk; });
     res.on('end', () => {
-        try {
-            const obj = JSON.parse(data);
-            if (!obj.data || !Array.isArray(obj.data)) {
-                console.error('INVALID_RESPONSE');
-                process.exit(1);
-            }
-            console.log(JSON.stringify(obj.data.map(m => m.id)));
-        } catch (e) {
-            console.error('PARSE_ERROR');
-            process.exit(1);
-        }
+        // Output status code and data separated by a delimiter
+        console.log('HTTP_STATUS:' + res.statusCode);
+        console.log('BODY:' + data);
     });
 });
 
@@ -316,17 +310,65 @@ req.end();
     try {
         $result = Invoke-NodeJson $jsCode 2>&1
         
-        if ($result -match 'INVALID_RESPONSE|PARSE_ERROR|REQUEST_ERROR') {
-            if ($result -match 'INVALID_RESPONSE|PARSE_ERROR') {
-                Write-Error (Get-Message "INVALID_RESPONSE_FORMAT")
-            } else {
-                Write-Error (Get-Message "FETCH_MODELS_FAILED")
+        # Check for request error
+        if ($result -match 'REQUEST_ERROR') {
+            Write-Error (Get-Message "FETCH_MODELS_FAILED")
+            return $false
+        }
+
+        # Parse HTTP status code and response body
+        $statusCode = 0
+        $body = ""
+        $statusMatch = $result | Select-String -Pattern '^HTTP_STATUS:(\d+)'
+        if ($statusMatch) {
+            $statusCode = [int]$statusMatch.Matches[0].Groups[1].Value
+        }
+        
+        $bodyMatch = $result | Select-String -Pattern '^BODY:(.+)$'
+        if ($bodyMatch) {
+            $body = $bodyMatch.Matches[0].Groups[1].Value
+        }
+
+        # Check HTTP status code
+        if ($statusCode -ne 200) {
+            Write-Error "$(Get-Message "FETCH_MODELS_FAILED") (HTTP $statusCode)"
+            Write-Info (Get-Message "CHECK_API_KEY")
+            if ($statusCode -eq 401) {
+                Write-Info (Get-Message "HTTP_401_HINT")
+            }
+            elseif ($statusCode -eq 0) {
+                Write-Info (Get-Message "HTTP_000_HINT")
             }
             return $false
         }
 
-        # Parse the JSON array from Node.js using stdin to avoid quoting issues
+        # Parse the response body
         $jsParseCode = @'
+let data = '';
+process.stdin.on('data', chunk => { data += chunk; });
+process.stdin.on('end', () => {
+    try {
+        const obj = JSON.parse(data);
+        if (!obj.data || !Array.isArray(obj.data)) {
+            console.error('INVALID_RESPONSE');
+            process.exit(1);
+        }
+        console.log(JSON.stringify(obj.data.map(m => m.id)));
+    } catch (e) {
+        console.error('PARSE_ERROR');
+        process.exit(1);
+    }
+});
+'@
+        $result = Invoke-NodeJsonWithInput $jsParseCode $body
+        
+        if ($result -match 'INVALID_RESPONSE|PARSE_ERROR') {
+            Write-Error (Get-Message "INVALID_RESPONSE_FORMAT")
+            return $false
+        }
+
+        # Parse the JSON array from Node.js using stdin to avoid quoting issues
+        $jsParseCode2 = @'
 let data = '';
 process.stdin.on('data', chunk => { data += chunk; });
 process.stdin.on('end', () => {
@@ -339,7 +381,7 @@ process.stdin.on('end', () => {
     }
 });
 '@
-        $modelsArray = Invoke-NodeJsonWithInput $jsParseCode $result
+        $modelsArray = Invoke-NodeJsonWithInput $jsParseCode2 $result
         
         # Parse each model name
         $jsParseLine = @'
