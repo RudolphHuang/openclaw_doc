@@ -610,13 +610,19 @@ function Main {
     # Check environment
     Test-Environment
 
-    # Read API Key
-    Read-ApiKey
+    # Read API Key and fetch models (with retry loop)
+    while ($true) {
+        Read-ApiKey
 
-    # Fetch models from API
-    if (-not (Get-ModelsFromApi)) {
+        # Fetch models from API
+        if (Get-ModelsFromApi) {
+            break
+        }
+
         Write-Error (Get-Message "CONFIG_ABORTED")
-        exit 1
+        Write-Host ""
+        Write-Info "Please re-enter your API Key or press Ctrl+C to exit"
+        Write-Host ""
     }
 
     # Select default model
