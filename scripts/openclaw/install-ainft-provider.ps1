@@ -525,6 +525,14 @@ process.stdin.on('end', () => {
         if (!config.agents.defaults) config.agents.defaults = {};
         if (!config.agents.defaults.model) config.agents.defaults.model = {};
         config.agents.defaults.model.primary = 'ainft/DEFAULT_MODEL_PLACEHOLDER';
+        
+        // 构建 agents.defaults.models 对象格式
+        const modelsObj = {};
+        JSON.parse(modelsJsonArray).forEach(m => {
+            modelsObj['ainft/' + m.id] = { alias: m.id };
+        });
+        config.agents.defaults.models = modelsObj;
+        
         fs.writeFileSync(path, JSON.stringify(config, null, 2));
         console.log('Configuration updated successfully');
     } catch (e) {
