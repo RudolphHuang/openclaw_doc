@@ -601,5 +601,21 @@ function Main {
     Write-Info "$(Get-Message "SWITCH_MODEL_CMD"): $(Get-Message "SWITCH_MODEL_CMD_EXAMPLE")"
 }
 
-# Run main function
-Main
+# Run main function with error handling to prevent window from closing
+try {
+    Main
+}
+catch {
+    Write-Error "An unexpected error occurred: $($_.Exception.Message)"
+    Write-Host ""
+    Write-Host "Press any key to exit..." -ForegroundColor Yellow
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit 1
+}
+
+# Pause at the end if running by double-clicking (no parent console)
+if ($Host.Name -eq "ConsoleHost") {
+    Write-Host ""
+    Write-Host "Press any key to exit..." -ForegroundColor Cyan
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+}
