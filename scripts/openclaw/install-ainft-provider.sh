@@ -344,8 +344,10 @@ read_from_terminal() {
     
     # 使用 eval 进行间接引用，兼容 Bash 3.2
     # 使用 :- 处理未定义变量，避免 set -u 报错
-    local env_value
-    eval "env_value=\"\${$env_var_name:-}\""
+    local env_value=""
+    if eval "[ -n \"\${$env_var_name+set}\" ]" 2>/dev/null; then
+        eval "env_value=\"\$$env_var_name\""
+    fi
     
     if [ -n "$env_value" ]; then
         eval "$var_name='\$env_value'"
