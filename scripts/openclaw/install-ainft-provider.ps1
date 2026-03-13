@@ -57,6 +57,8 @@ $script:Messages = @{
     CONFIG_DIR_NOT_FOUND = "OpenClaw configuration directory does not exist"
     CONFIG_DIR_PROMPT = "Please run 'openclaw onboard' first to complete initialization"
     CONFIG_DIR_OK = "Configuration directory check passed"
+    CONFIG_FILE_NOT_FOUND = "OpenClaw configuration file does not exist"
+    CONFIG_FILE_PROMPT = "Please run 'openclaw onboard' first to complete initialization"
 
     CONFIG_API_KEY = "Configuring AINFT API Key"
     API_KEY_PROMPT = "Please visit https://chat.ainft.com/key to apply for an API Key"
@@ -216,6 +218,16 @@ function Test-ConfigDir {
     return $true
 }
 
+# Check if config file exists
+function Test-ConfigFile {
+    if (-not (Test-Path $script:OpenClawConfigFile -PathType Leaf)) {
+        Write-Error "$(Get-Message "CONFIG_FILE_NOT_FOUND"): $script:OpenClawConfigFile"
+        Write-Info (Get-Message "CONFIG_FILE_PROMPT")
+        return $false
+    }
+    return $true
+}
+
 # Environment check
 function Test-Environment {
     WriteBold "`n=== $(Get-Message "CHECK_ENV") ==="
@@ -235,13 +247,15 @@ function Test-Environment {
         $allPassed = $false
     }
 
-    if (-not $allPassed) {
-        Write-Error (Get-Message "ENV_CHECK_FAILED")
+    if (-not (Test-ConfigFile)) {
+        $allPassed = $false
     }
 
-    if ($allPassed) {
-        Write-Success (Get-Message "ENV_CHECK_PASSED")
+    if (-not $allPassed) {
+        throw (Get-Message "ENV_CHECK_FAILED")
     }
+
+    Write-Success (Get-Message "ENV_CHECK_PASSED")
 }
 
 # Read API Key from user

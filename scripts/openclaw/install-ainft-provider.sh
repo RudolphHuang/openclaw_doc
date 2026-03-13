@@ -83,6 +83,8 @@ MESSAGES[OPENCLAW_INSTALLED]="OpenClaw 已安装|OpenClaw is installed"
 MESSAGES[CONFIG_DIR_NOT_FOUND]="OpenClaw 配置目录不存在|OpenClaw configuration directory does not exist"
 MESSAGES[CONFIG_DIR_PROMPT]="请先运行 'openclaw onboard' 完成初始化配置|Please run 'openclaw onboard' first to complete initialization"
 MESSAGES[CONFIG_DIR_OK]="配置目录检查通过|Configuration directory check passed"
+MESSAGES[CONFIG_FILE_NOT_FOUND]="OpenClaw 配置文件不存在|OpenClaw configuration file does not exist"
+MESSAGES[CONFIG_FILE_PROMPT]="请先运行 'openclaw onboard' 完成初始化配置|Please run 'openclaw onboard' first to complete initialization"
 
 # curl
 MESSAGES[CURL_NOT_INSTALLED]="curl 未安装，请先安装 curl|curl is not installed, please install curl first"
@@ -253,6 +255,16 @@ check_config_dir() {
     return 0
 }
 
+# 检查配置文件是否存在
+check_config_file() {
+    if [ ! -f "$OPENCLAW_CONFIG_FILE" ]; then
+        print_error "$(get_msg CONFIG_FILE_NOT_FOUND): $OPENCLAW_CONFIG_FILE"
+        print_info "$(get_msg CONFIG_FILE_PROMPT)"
+        return 1
+    fi
+    return 0
+}
+
 # 使用 Node.js 执行 JavaScript 代码处理 JSON
 # 参数: $1 = JavaScript 代码字符串
 run_node_json() {
@@ -293,6 +305,11 @@ check_environment() {
 
     # 检查配置目录
     if ! check_config_dir; then
+        all_passed=false
+    fi
+
+    # 检查配置文件
+    if ! check_config_file; then
         all_passed=false
     fi
 
