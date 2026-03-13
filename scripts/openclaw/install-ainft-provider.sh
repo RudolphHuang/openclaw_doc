@@ -332,14 +332,22 @@ check_environment() {
 }
 
 # 从终端读取输入（支持交互式和非交互式环境）
+# 兼容 Bash 3.2，不使用 ${var^^} 和 ${!var} 语法
 read_from_terminal() {
     local var_name="$1"
     local prompt="$2"
     
     # 如果环境变量中已设置值，直接使用（用于 CI/自动化场景）
-    local env_var_name="INSTALL_${var_name^^}"
-    if [ -n "${!env_var_name:-}" ]; then
-        eval "$var_name='${!env_var_name}'"
+    # 使用 tr 进行大写转换，兼容 Bash 3.2
+    local env_var_name
+    env_var_name=$(echo "INSTALL_$var_name" | tr '[:lower:]' '[:upper:]')
+    
+    # 使用 eval 进行间接引用，兼容 Bash 3.2
+    local env_value
+    eval "env_value=\"\$$env_var_name\""
+    
+    if [ -n "$env_value" ]; then
+        eval "$var_name='\$env_value'"
         return 0
     fi
     
