@@ -16,7 +16,7 @@ on:
 jobs:
 
   test-macos:
-    name: Test on macOS
+    name: Test on macOS (Bash)
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -74,3 +74,139 @@ jobs:
           cat ~/.openclaw/openclaw.json 2>/dev/null || echo "Config file not found"
           
           exit $exit_code
+
+  test-ubuntu:
+    name: Test on Ubuntu (Bash)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup test environment
+        run: |
+          echo "=== System Info ==="
+          uname -a
+          echo ""
+          echo "=== Check Bash Version ==="
+          bash --version
+          echo ""
+          echo "=== Check/Install Node.js ==="
+          if ! command -v node &> /dev/null; then
+            curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+          fi
+          node -v
+          echo ""
+          echo "=== Install OpenClaw (non-interactive) ==="
+          npm install -g openclaw
+          mkdir -p ~/.openclaw/bin
+          ln -sf $(which openclaw) ~/.openclaw/bin/openclaw 2>/dev/null || true
+          export PATH="$HOME/.openclaw/bin:$PATH"
+          which openclaw
+          openclaw --version
+          echo ""
+          echo "=== Initialize OpenClaw ==="
+          mkdir -p ~/.openclaw
+          echo '{}' > ~/.openclaw/openclaw.json
+
+      - name: Run install script
+        env:
+          INSTALL_API_KEY: ${{ github.event.inputs.api_key }}
+          INSTALL_DEFAULT_MODEL: ${{ github.event.inputs.default_model_index }}
+        run: |
+          echo "=== Running AINFT Install Script ==="
+          echo ""
+          export PATH="$HOME/.openclaw/bin:$PATH"
+          
+          # 使用本地脚本（当前仓库中的版本）
+          SCRIPT_PATH="${{ github.workspace }}/scripts/openclaw/install-ainft-provider.sh"
+          echo "Using local script: $SCRIPT_PATH"
+          
+          # 使用系统默认的 Bash 运行脚本
+          printf '%s\n%s\n' "$INSTALL_API_KEY" "$INSTALL_DEFAULT_MODEL" | \
+            bash "$SCRIPT_PATH" 2>&1
+          
+          exit_code=$?
+          echo ""
+          echo "=== Script exited with code $exit_code ==="
+          
+          echo ""
+          echo "=== Check final config ==="
+          cat ~/.openclaw/openclaw.json 2>/dev/null || echo "Config file not found"
+          
+          exit $exit_code
+
+  test-windows:
+    name: Test on Windows (PowerShell)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup test environment
+        shell: pwsh
+        run: |
+          Write-Host "=== System Info ==="
+          Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory
+          Write-Host ""
+          Write-Host "=== Check PowerShell Version ==="
+          $PSVersionTable.PSVersion
+          Write-Host ""
+          Write-Host "=== Check/Install Node.js ==="
+          if (!(Get-Command node -ErrorAction SilentlyContinue)) {
+            Write-Host "Installing Node.js..."
+            Invoke-WebRequest -Uri "https://nodejs.org/dist/v22.11.0/node-v22.11.0-x64.msi" -OutFile "$env:TEMP\node.msi"
+            Start-Process msiexec.exe -ArgumentList "/i", "$env:TEMP\node.msi", "/quiet", "/norestart" -Wait
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+          }
+          node -v
+          Write-Host ""
+          Write-Host "=== Install OpenClaw (non-interactive) ==="
+          npm install -g openclaw
+          $openclawDir = "$env:USERPROFILE\.openclaw\bin"
+          New-Item -ItemType Directory -Force -Path $openclawDir | Out-Null
+          $openclawPath = (Get-Command openclaw).Source
+          Copy-Item $openclawPath $openclawDir -Force -ErrorAction SilentlyContinue
+          $env:Path = "$openclawDir;$env:Path"
+          Get-Command openclaw
+          openclaw --version
+          Write-Host ""
+          Write-Host "=== Initialize OpenClaw ==="
+          $configDir = "$env:USERPROFILE\.openclaw"
+          New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+          '{}' | Out-File "$configDir\openclaw.json" -Encoding UTF8
+
+      - name: Run install script
+        shell: pwsh
+        env:
+          INSTALL_API_KEY: ${{ github.event.inputs.api_key }}
+          INSTALL_DEFAULT_MODEL: ${{ github.event.inputs.default_model_index }}
+        run: |
+          Write-Host "=== Running AINFT Install Script ==="
+          Write-Host ""
+          $env:Path = "$env:USERPROFILE\.openclaw\bin;$env:Path"
+          
+          # 使用本地脚本（当前仓库中的版本）
+          $scriptPath = "${{ github.workspace }}\scripts\openclaw\install-ainft-provider.ps1"
+          Write-Host "Using local script: $scriptPath"
+          
+          # 准备输入数据
+          $inputData = "$env:INSTALL_API_KEY`n$env:INSTALL_DEFAULT_MODEL"
+          
+          # 运行 PowerShell 脚本
+          $inputData | & $scriptPath 2>&1
+          
+          $exitCode = $LASTEXITCODE
+          Write-Host ""
+          Write-Host "=== Script exited with code $exitCode ==="
+          
+          Write-Host ""
+          Write-Host "=== Check final config ==="
+          $configPath = "$env:USERPROFILE\.openclaw\openclaw.json"
+          if (Test-Path $configPath) {
+            Get-Content $configPath
+          } else {
+            Write-Host "Config file not found"
+          }
+          
+          exit $exitCode
