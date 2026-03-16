@@ -7,10 +7,10 @@
     Automatically configure BANKOFAI as OpenClaw model provider on Windows
 
 .EXAMPLE
-    iwr -useb https://chat.ainft.com/scripts/install-ainft-provider.ps1 | iex
+    iwr -useb https://chat.bankofai.com/scripts/install-bankofai-provider.ps1 | iex
 
     Or download and execute:
-    .\install-ainft-provider.ps1
+    .\install-bankofai-provider.ps1
 #>
 
 [CmdletBinding()]
@@ -24,9 +24,9 @@ $script:OpenClawConfigDir = Join-Path $env:USERPROFILE ".openclaw"
 $script:OpenClawConfigFile = Join-Path $script:OpenClawConfigDir "openclaw.json"
 
 # BANKOFAI Provider config
-$script:AinftBaseUrl = "https://api.ainft.com/v1/"
+$script:AinftBaseUrl = "https://api.bankofai.com/v1/"
 $script:AinftApi = "openai-completions"
-$script:AinftModelsApi = "https://api.ainft.com/v1/models"
+$script:AinftModelsApi = "https://api.bankofai.com/v1/models"
 
 # Store fetched models
 $script:AvailableModels = @()
@@ -61,7 +61,7 @@ $script:Messages = @{
     CONFIG_FILE_PROMPT = "Please run 'openclaw onboard' first to complete initialization"
 
     CONFIG_API_KEY = "Configuring BANKOFAI API Key"
-    API_KEY_PROMPT = "Please visit https://chat.ainft.com/key to apply for an API Key"
+    API_KEY_PROMPT = "Please visit https://chat.bankofai.com/key to apply for an API Key"
     ENTER_API_KEY = "Please enter your BANKOFAI API Key"
     API_KEY_EMPTY = "API Key cannot be empty"
     API_KEY_FORMAT_WARN = "API Key format looks unusual, please verify"
@@ -106,7 +106,7 @@ $script:Messages = @{
     DEFAULT = "default"
     SWITCH_MODEL_HINT = "To switch models, please edit"
     SWITCH_MODEL_CMD = "Or use command"
-    SWITCH_MODEL_CMD_EXAMPLE = "openclaw models set ainft/<model-name>"
+    SWITCH_MODEL_CMD_EXAMPLE = "openclaw models set bankofai/<model-name>"
 
     INSTALL_COMPLETE = "Installation Complete"
     CONFIG_SUCCESS = "BANKOFAI Provider configured successfully!"
@@ -295,7 +295,7 @@ function Get-ModelsFromApi {
     $jsCode = @"
 const https = require('https');
 const options = {
-    hostname: 'api.ainft.com',
+    hostname: 'api.bankofai.com',
     path: '/v1/models',
     method: 'GET',
     headers: {
@@ -529,7 +529,7 @@ process.stdin.on('end', () => {
         if (!config.models) config.models = {};
         if (!config.models.providers) config.models.providers = {};
         config.models.mode = 'merge';
-        config.models.providers.ainft = {
+        config.models.providers.bankofai = {
             baseUrl: 'BASE_URL_PLACEHOLDER',
             apiKey: 'API_KEY_PLACEHOLDER',
             api: 'API_PLACEHOLDER',
@@ -538,12 +538,12 @@ process.stdin.on('end', () => {
         if (!config.agents) config.agents = {};
         if (!config.agents.defaults) config.agents.defaults = {};
         if (!config.agents.defaults.model) config.agents.defaults.model = {};
-        config.agents.defaults.model.primary = 'ainft/DEFAULT_MODEL_PLACEHOLDER';
+        config.agents.defaults.model.primary = 'bankofai/DEFAULT_MODEL_PLACEHOLDER';
 
         // 构建 agents.defaults.models 对象格式
         const modelsObj = {};
         JSON.parse(modelsJsonArray).forEach(m => {
-            modelsObj['ainft/' + m.id] = { alias: m.id };
+            modelsObj['bankofai/' + m.id] = { alias: m.id };
         });
         config.agents.defaults.models = modelsObj;
 
@@ -613,10 +613,10 @@ function Show-AvailableModels {
     Write-Info "$(Get-Message "CONFIGURED_MODELS"):"
     foreach ($model in $script:AvailableModels) {
         if ($model -eq $script:DefaultModel) {
-            Write-Host "  - ainft/$model ($(Get-Message "DEFAULT"))"
+            Write-Host "  - bankofai/$model ($(Get-Message "DEFAULT"))"
         }
         else {
-            Write-Host "  - ainft/$model"
+            Write-Host "  - bankofai/$model"
         }
     }
 }
@@ -663,7 +663,7 @@ function Main {
     WriteBold "`n=== $(Get-Message "INSTALL_COMPLETE") ==="
     Write-Success (Get-Message "CONFIG_SUCCESS")
     Write-Host ""
-    Write-Info "$(Get-Message "DEFAULT_MODEL_LABEL"): ainft/$script:DefaultModel"
+    Write-Info "$(Get-Message "DEFAULT_MODEL_LABEL"): bankofai/$script:DefaultModel"
     Write-Info "$(Get-Message "CONFIG_FILE"): $script:OpenClawConfigFile"
     Write-Host ""
     Show-AvailableModels
