@@ -17,9 +17,9 @@ OPENCLAW_CONFIG_DIR="${HOME}/.openclaw"
 OPENCLAW_CONFIG_FILE="${OPENCLAW_CONFIG_DIR}/openclaw.json"
 
 # BANKOFAI Provider 配置
-BANKOFAI_BASE_URL="https://api.bankofai.com/v1/"
+BANKOFAI_BASE_URL="https://chat.bankofai.io/v1/"
 BANKOFAI_API="openai-completions"
-BANKOFAI_MODELS_API="https://api.bankofai.com/v1/models"
+BANKOFAI_MODELS_API="https://api.bankofai.io/v1/models"
 
 # 存储获取到的模型列表
 AVAILABLE_MODELS=""
@@ -93,7 +93,7 @@ msg_CURL_INSTALL_LINUX_RPM() { echo "CentOS/RHEL|CentOS/RHEL"; }
 
 # API Key
 msg_CONFIG_API_KEY() { echo "配置 BANKOFAI API Key|Configuring BANKOFAI API Key"; }
-msg_API_KEY_PROMPT() { echo "请前往 https://chat.bankofai.com/key 申请 API Key|Please visit https://chat.bankofai.com/key to apply for an API Key"; }
+msg_API_KEY_PROMPT() { echo "请前往 https://chat.bankofai.io/key 申请 API Key|Please visit https://chat.bankofai.io/key to apply for an API Key"; }
 msg_ENTER_API_KEY() { echo "请输入您的 BANKOFAI API Key|Please enter your BANKOFAI API Key"; }
 msg_API_KEY_EMPTY() { echo "API Key 不能为空|API Key cannot be empty"; }
 msg_API_KEY_FORMAT_WARN() { echo "API Key 格式看起来不太常见，请确认是否正确|API Key format looks unusual, please verify"; }

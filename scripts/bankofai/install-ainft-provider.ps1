@@ -7,7 +7,7 @@
     Automatically configure BANKOFAI as OpenClaw model provider on Windows
 
 .EXAMPLE
-    iwr -useb https://chat.bankofai.com/scripts/install-bankofai-provider.ps1 | iex
+    iwr -useb https://chat.bankofai.io/scripts/install-bankofai-provider.ps1 | iex
 
     Or download and execute:
     .\install-bankofai-provider.ps1
@@ -24,9 +24,9 @@ $script:OpenClawConfigDir = Join-Path $env:USERPROFILE ".openclaw"
 $script:OpenClawConfigFile = Join-Path $script:OpenClawConfigDir "openclaw.json"
 
 # BANKOFAI Provider config
-$script:AinftBaseUrl = "https://api.bankofai.com/v1/"
+$script:AinftBaseUrl = "https://chat.bankofai.io/v1/"
 $script:AinftApi = "openai-completions"
-$script:AinftModelsApi = "https://api.bankofai.com/v1/models"
+$script:AinftModelsApi = "https://chat.bankofai.io/v1/models"
 
 # Store fetched models
 $script:AvailableModels = @()
@@ -61,7 +61,7 @@ $script:Messages = @{
     CONFIG_FILE_PROMPT = "Please run 'openclaw onboard' first to complete initialization"
 
     CONFIG_API_KEY = "Configuring BANKOFAI API Key"
-    API_KEY_PROMPT = "Please visit https://chat.bankofai.com/key to apply for an API Key"
+    API_KEY_PROMPT = "Please visit https://chat.bankofai.io/key to apply for an API Key"
     ENTER_API_KEY = "Please enter your BANKOFAI API Key"
     API_KEY_EMPTY = "API Key cannot be empty"
     API_KEY_FORMAT_WARN = "API Key format looks unusual, please verify"
@@ -295,7 +295,7 @@ function Get-ModelsFromApi {
     $jsCode = @"
 const https = require('https');
 const options = {
-    hostname: 'api.bankofai.com',
+    hostname: 'chat.bankofai.io',
     path: '/v1/models',
     method: 'GET',
     headers: {
