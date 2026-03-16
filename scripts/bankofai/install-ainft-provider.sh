@@ -19,7 +19,7 @@ OPENCLAW_CONFIG_FILE="${OPENCLAW_CONFIG_DIR}/openclaw.json"
 # BANKOFAI Provider 配置
 BANKOFAI_BASE_URL="https://chat.bankofai.io/v1/"
 BANKOFAI_API="openai-completions"
-BANKOFAI_MODELS_API="https://api.bankofai.io/v1/models"
+BANKOFAI_MODELS_API="https://chat.bankofai.io/v1/models"
 
 # 存储获取到的模型列表
 AVAILABLE_MODELS=""

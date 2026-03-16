@@ -3,13 +3,13 @@
 **Linux & macOS:**
 
 ```bash
-curl https://chat.bankofai.io/scripts/bankofai-openclaw-install-ainft-provider.sh | bash
+curl https://chat.bankofai.io/scripts/openclaw-install-bankofai-provider.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-iwr https://chat.bankofai.io/scripts/bankofai-openclaw-install-ainft-provider.ps1 | iex
+iwr https://chat.bankofai.io/scripts/openclaw-install-bankofai-provider.ps1 | iex
 ```
 
 ---
@@ -20,13 +20,13 @@ iwr https://chat.bankofai.io/scripts/bankofai-openclaw-install-ainft-provider.ps
 **Linux & macOS:**
 
 ```bash
-curl https://chat-dev.bankofai.io/scripts/bankofai-openclaw-install-ainft-provider.sh | bash
+curl https://chat-dev.ainft.io/scripts/openclaw-install-bankofai-provider.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-iwr https://chat-dev.bankofai.io/scripts/bankofai-openclaw-install-ainft-provider.ps1 | iex
+iwr https://chat-dev.bankofai.io/scripts/openclaw-install-bankofai-provider.ps1 | iex
 ```
 
 ---
