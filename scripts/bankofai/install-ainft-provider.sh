@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# OpenClaw AINFT Provider 安装脚本
+# OpenClaw BANKOFAI Provider 安装脚本
 # 支持 Linux 和 macOS
 
 # 颜色定义
@@ -16,10 +16,10 @@ NC='\033[0m'
 OPENCLAW_CONFIG_DIR="${HOME}/.openclaw"
 OPENCLAW_CONFIG_FILE="${OPENCLAW_CONFIG_DIR}/openclaw.json"
 
-# AINFT Provider 配置
-AINFT_BASE_URL="https://api.ainft.com/v1/"
-AINFT_API="openai-completions"
-AINFT_MODELS_API="https://api.ainft.com/v1/models"
+# BANKOFAI Provider 配置
+BANKOFAI_BASE_URL="https://api.bankofai.com/v1/"
+BANKOFAI_API="openai-completions"
+BANKOFAI_MODELS_API="https://api.bankofai.com/v1/models"
 
 # 存储获取到的模型列表
 AVAILABLE_MODELS=""
@@ -49,7 +49,7 @@ LANG_CODE=$(detect_language)
 # 格式: 每个 key 对应一个函数，返回 "zh_message|en_message"
 
 # 标题和通用
-msg_TITLE() { echo "OpenClaw AINFT Provider 安装脚本|OpenClaw AINFT Provider Installation Script"; }
+msg_TITLE() { echo "OpenClaw BANKOFAI Provider 安装脚本|OpenClaw BANKOFAI Provider Installation Script"; }
 msg_SUPPORT() { echo "支持 Linux / macOS|Supports Linux / macOS"; }
 msg_INFO_PREFIX() { echo "[INFO]|[INFO]"; }
 msg_SUCCESS_PREFIX() { echo "[SUCCESS]|[SUCCESS]"; }
@@ -92,16 +92,16 @@ msg_CURL_INSTALL_LINUX_DEB() { echo "Ubuntu/Debian|Ubuntu/Debian"; }
 msg_CURL_INSTALL_LINUX_RPM() { echo "CentOS/RHEL|CentOS/RHEL"; }
 
 # API Key
-msg_CONFIG_API_KEY() { echo "配置 AINFT API Key|Configuring AINFT API Key"; }
-msg_API_KEY_PROMPT() { echo "请前往 https://chat.ainft.com/key 申请 API Key|Please visit https://chat.ainft.com/key to apply for an API Key"; }
-msg_ENTER_API_KEY() { echo "请输入您的 AINFT API Key|Please enter your AINFT API Key"; }
+msg_CONFIG_API_KEY() { echo "配置 BANKOFAI API Key|Configuring BANKOFAI API Key"; }
+msg_API_KEY_PROMPT() { echo "请前往 https://chat.bankofai.com/key 申请 API Key|Please visit https://chat.bankofai.com/key to apply for an API Key"; }
+msg_ENTER_API_KEY() { echo "请输入您的 BANKOFAI API Key|Please enter your BANKOFAI API Key"; }
 msg_API_KEY_EMPTY() { echo "API Key 不能为空|API Key cannot be empty"; }
 msg_API_KEY_FORMAT_WARN() { echo "API Key 格式看起来不太常见，请确认是否正确|API Key format looks unusual, please verify"; }
 msg_API_KEY_CONFIRM() { echo "是否继续使用此 API Key?|Continue with this API Key?"; }
 msg_API_KEY_RECEIVED() { echo "API Key 已接收|API Key received"; }
 
 # 模型相关
-msg_FETCHING_MODELS() { echo "正在从 AINFT API 获取可用模型列表|Fetching available model list from AINFT API"; }
+msg_FETCHING_MODELS() { echo "正在从 BANKOFAI API 获取可用模型列表|Fetching available model list from BANKOFAI API"; }
 msg_FETCH_MODELS_FAILED() { echo "获取模型列表失败|Failed to fetch model list"; }
 msg_CHECK_API_KEY() { echo "请检查您的 API Key 是否正确|Please check if your API Key is correct"; }
 msg_HTTP_401_HINT() { echo "提示: HTTP 401 表示认证失败，请检查 API Key 是否有效|Hint: HTTP 401 indicates authentication failure, please check if API Key is valid"; }
@@ -143,11 +143,11 @@ msg_CONFIGURED_MODELS() { echo "已配置的模型|Configured Models"; }
 msg_DEFAULT() { echo "默认|default"; }
 msg_SWITCH_MODEL_HINT() { echo "如需切换模型，请编辑|To switch models, please edit"; }
 msg_SWITCH_MODEL_CMD() { echo "或使用命令|Or use command"; }
-msg_SWITCH_MODEL_CMD_EXAMPLE() { echo "openclaw models set ainft/<model-name>|openclaw models set ainft/<model-name>"; }
+msg_SWITCH_MODEL_CMD_EXAMPLE() { echo "openclaw models set bankofai/<model-name>|openclaw models set bankofai/<model-name>"; }
 
 # 完成
 msg_INSTALL_COMPLETE() { echo "安装完成|Installation Complete"; }
-msg_CONFIG_SUCCESS() { echo "AINFT Provider 配置成功！|AINFT Provider configured successfully!"; }
+msg_CONFIG_SUCCESS() { echo "BANKOFAI Provider 配置成功！|BANKOFAI Provider configured successfully!"; }
 msg_DEFAULT_MODEL_LABEL() { echo "默认模型|Default Model"; }
 
 # 获取本地化消息
@@ -336,24 +336,24 @@ check_environment() {
 read_from_terminal() {
     local var_name="$1"
     local prompt="$2"
-    
+
     # 如果环境变量中已设置值，直接使用（用于 CI/自动化场景）
     # 使用 tr 进行大写转换，兼容 Bash 3.2
     local env_var_name
     env_var_name=$(echo "INSTALL_$var_name" | tr '[:lower:]' '[:upper:]')
-    
+
     # 使用 eval 进行间接引用，兼容 Bash 3.2
     # 使用 :- 处理未定义变量，避免 set -u 报错
     local env_value=""
     if eval "[ -n \"\${$env_var_name+set}\" ]" 2>/dev/null; then
         eval "env_value=\"\$$env_var_name\""
     fi
-    
+
     if [ -n "$env_value" ]; then
         eval "$var_name='\$env_value'"
         return 0
     fi
-    
+
     # 检查 /dev/tty 是否可用（真正的交互式终端）
     if [ -e /dev/tty ] && [ -r /dev/tty ] && [ -w /dev/tty ]; then
         # 测试 /dev/tty 是否真的可用
@@ -363,7 +363,7 @@ read_from_terminal() {
             return 0
         fi
     fi
-    
+
     # 回退：输出提示到 stderr，从 stdin 读取
     printf "%s" "$prompt" >&2
     read -r "$var_name"
@@ -398,7 +398,7 @@ ask_api_key() {
         break
     done
 
-    AINFT_API_KEY="$api_key"
+    BANKOFAI_API_KEY="$api_key"
     print_success "$(get_msg API_KEY_RECEIVED)"
 }
 
@@ -415,7 +415,7 @@ fetch_models_from_api() {
     response=$(curl -s -w "\n%{http_code}" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${api_key}" \
-        "${AINFT_MODELS_API}" 2>/dev/null || echo -e "\n000")
+        "${BANKOFAI_MODELS_API}" 2>/dev/null || echo -e "\n000")
 
     http_code=$(echo "$response" | run_node_json 'const fs=require("fs"); const lines=fs.readFileSync(0,"utf-8").trim().split("\n"); console.log(lines.pop());')
     body=$(echo "$response" | run_node_json 'const fs=require("fs"); const lines=fs.readFileSync(0,"utf-8").trim().split("\n"); lines.pop(); console.log(lines.join("\n"));')
@@ -543,22 +543,22 @@ if (typeof config !== 'object' || config === null) config = {};
 if (!config.models) config.models = {};
 if (!config.models.providers) config.models.providers = {};
 config.models.mode = 'merge';
-config.models.providers.ainft = {
-    baseUrl: '$AINFT_BASE_URL',
+config.models.providers.bankofai = {
+    baseUrl: '$BANKOFAI_BASE_URL',
     apiKey: '$api_key',
-    api: '$AINFT_API',
+    api: '$BANKOFAI_API',
     models: [$models_json]
 };
 if (!config.agents) config.agents = {};
 if (!config.agents.defaults) config.agents.defaults = {};
 if (!config.agents.defaults.model) config.agents.defaults.model = {};
-config.agents.defaults.model.primary = 'ainft/$DEFAULT_MODEL';
+config.agents.defaults.model.primary = 'bankofai/$DEFAULT_MODEL';
 
 // 构建 agents.defaults.models 对象格式
 const modelsObj = {};
 const modelList = [$models_json];
 modelList.forEach(m => {
-    modelsObj['ainft/' + m.id] = { alias: m.id };
+    modelsObj['bankofai/' + m.id] = { alias: m.id };
 });
 config.agents.defaults.models = modelsObj;
 
@@ -579,7 +579,7 @@ update_config() {
     fi
 
     # 使用 Node.js 更新配置
-    update_config_with_node "$OPENCLAW_CONFIG_FILE" "$AINFT_API_KEY"
+    update_config_with_node "$OPENCLAW_CONFIG_FILE" "$BANKOFAI_API_KEY"
 
     print_success "$(get_msg CONFIG_UPDATED): $OPENCLAW_CONFIG_FILE"
 }
@@ -623,9 +623,9 @@ print_available_models() {
     print_info "$(get_msg CONFIGURED_MODELS):"
     while IFS= read -r model; do
         if [ "$model" = "$DEFAULT_MODEL" ]; then
-            echo "  - ainft/$model ($(get_msg DEFAULT))"
+            echo "  - bankofai/$model ($(get_msg DEFAULT))"
         else
-            echo "  - ainft/$model"
+            echo "  - bankofai/$model"
         fi
     done <<< "$AVAILABLE_MODELS"
 }
@@ -636,14 +636,14 @@ main() {
     if [ "$LANG_CODE" = "zh" ]; then
         echo -e "${BOLD}"
         echo "╔══════════════════════════════════════════════════════════════╗"
-        echo "║          OpenClaw AINFT Provider 安装脚本                    ║"
+        echo "║          OpenClaw BANKOFAI Provider 安装脚本                    ║"
         echo "║          支持 Linux / macOS                                  ║"
         echo "╚══════════════════════════════════════════════════════════════╝"
         echo -e "${NC}"
     else
         echo -e "${BOLD}"
         echo "╔══════════════════════════════════════════════════════════════╗"
-        echo "║          OpenClaw AINFT Provider Installation Script         ║"
+        echo "║          OpenClaw BANKOFAI Provider Installation Script         ║"
         echo "║          Supports Linux / macOS                              ║"
         echo "╚══════════════════════════════════════════════════════════════╝"
         echo -e "${NC}"
@@ -656,7 +656,7 @@ main() {
     ask_api_key
 
     # 从 API 获取模型列表
-    if ! fetch_models_from_api "$AINFT_API_KEY"; then
+    if ! fetch_models_from_api "$BANKOFAI_API_KEY"; then
         print_error "$(get_msg CONFIG_ABORTED)"
         exit 1
     fi
@@ -676,7 +676,7 @@ main() {
     print_bold "\n=== $(get_msg INSTALL_COMPLETE) ==="
     print_success "$(get_msg CONFIG_SUCCESS)"
     echo ""
-    print_info "$(get_msg DEFAULT_MODEL_LABEL): ainft/$DEFAULT_MODEL"
+    print_info "$(get_msg DEFAULT_MODEL_LABEL): bankofai/$DEFAULT_MODEL"
     print_info "$(get_msg CONFIG_FILE): $OPENCLAW_CONFIG_FILE"
     echo ""
     print_available_models

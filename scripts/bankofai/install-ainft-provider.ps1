@@ -1,10 +1,10 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    OpenClaw AINFT Provider Installation Script (Windows PowerShell)
+    OpenClaw BANKOFAI Provider Installation Script (Windows PowerShell)
 
 .DESCRIPTION
-    Automatically configure AINFT as OpenClaw model provider on Windows
+    Automatically configure BANKOFAI as OpenClaw model provider on Windows
 
 .EXAMPLE
     iwr -useb https://chat.ainft.com/scripts/install-ainft-provider.ps1 | iex
@@ -23,7 +23,7 @@ $ErrorActionPreference = "Stop"
 $script:OpenClawConfigDir = Join-Path $env:USERPROFILE ".openclaw"
 $script:OpenClawConfigFile = Join-Path $script:OpenClawConfigDir "openclaw.json"
 
-# AINFT Provider config
+# BANKOFAI Provider config
 $script:AinftBaseUrl = "https://api.ainft.com/v1/"
 $script:AinftApi = "openai-completions"
 $script:AinftModelsApi = "https://api.ainft.com/v1/models"
@@ -60,15 +60,15 @@ $script:Messages = @{
     CONFIG_FILE_NOT_FOUND = "OpenClaw configuration file does not exist"
     CONFIG_FILE_PROMPT = "Please run 'openclaw onboard' first to complete initialization"
 
-    CONFIG_API_KEY = "Configuring AINFT API Key"
+    CONFIG_API_KEY = "Configuring BANKOFAI API Key"
     API_KEY_PROMPT = "Please visit https://chat.ainft.com/key to apply for an API Key"
-    ENTER_API_KEY = "Please enter your AINFT API Key"
+    ENTER_API_KEY = "Please enter your BANKOFAI API Key"
     API_KEY_EMPTY = "API Key cannot be empty"
     API_KEY_FORMAT_WARN = "API Key format looks unusual, please verify"
     API_KEY_CONFIRM = "Continue with this API Key?"
     API_KEY_RECEIVED = "API Key received"
 
-    FETCHING_MODELS = "Fetching available model list from AINFT API"
+    FETCHING_MODELS = "Fetching available model list from BANKOFAI API"
     FETCH_MODELS_FAILED = "Failed to fetch model list"
     CHECK_API_KEY = "Please check if your API Key is correct"
     HTTP_401_HINT = "Hint: HTTP 401 indicates authentication failure, please check if API Key is valid"
@@ -109,10 +109,10 @@ $script:Messages = @{
     SWITCH_MODEL_CMD_EXAMPLE = "openclaw models set ainft/<model-name>"
 
     INSTALL_COMPLETE = "Installation Complete"
-    CONFIG_SUCCESS = "AINFT Provider configured successfully!"
+    CONFIG_SUCCESS = "BANKOFAI Provider configured successfully!"
     DEFAULT_MODEL_LABEL = "Default Model"
 
-    TITLE = "OpenClaw AINFT Provider Installation Script"
+    TITLE = "OpenClaw BANKOFAI Provider Installation Script"
     SUPPORT = "Supports Windows PowerShell"
 }
 
@@ -539,14 +539,14 @@ process.stdin.on('end', () => {
         if (!config.agents.defaults) config.agents.defaults = {};
         if (!config.agents.defaults.model) config.agents.defaults.model = {};
         config.agents.defaults.model.primary = 'ainft/DEFAULT_MODEL_PLACEHOLDER';
-        
+
         // 构建 agents.defaults.models 对象格式
         const modelsObj = {};
         JSON.parse(modelsJsonArray).forEach(m => {
             modelsObj['ainft/' + m.id] = { alias: m.id };
         });
         config.agents.defaults.models = modelsObj;
-        
+
         fs.writeFileSync(path, JSON.stringify(config, null, 2));
         console.log('Configuration updated successfully');
     } catch (e) {
@@ -625,7 +625,7 @@ function Show-AvailableModels {
 function Main {
     WriteBold ""
     Write-Host "==============================================================" -ForegroundColor White
-    Write-Host "          OpenClaw AINFT Provider Installation Script         " -ForegroundColor White
+    Write-Host "          OpenClaw BANKOFAI Provider Installation Script         " -ForegroundColor White
     Write-Host "          Supports Windows PowerShell                         " -ForegroundColor White
     Write-Host "==============================================================" -ForegroundColor White
     Write-Host ""
