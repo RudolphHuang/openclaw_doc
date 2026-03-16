@@ -24,9 +24,9 @@ $script:OpenClawConfigDir = Join-Path $env:USERPROFILE ".openclaw"
 $script:OpenClawConfigFile = Join-Path $script:OpenClawConfigDir "openclaw.json"
 
 # BANKOFAI Provider config
-$script:AinftBaseUrl = "https://chat.bankofai.io/v1/"
+$script:AinftBaseUrl = "https://api.bankofai.io/v1/"
 $script:AinftApi = "openai-completions"
-$script:AinftModelsApi = "https://chat.bankofai.io/v1/models"
+$script:AinftModelsApi = "https://api.bankofai.io/v1/models"
 
 # Store fetched models
 $script:AvailableModels = @()

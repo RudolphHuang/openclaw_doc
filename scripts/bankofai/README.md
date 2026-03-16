@@ -26,7 +26,7 @@ curl https://chat-dev.ainft.com/scripts/openclaw-install-bankofai-provider.sh | 
 **Windows PowerShell:**
 
 ```powershell
-iwr https://chat-dev.bankofai.com/scripts/openclaw-install-bankofai-provider.ps1 | iex
+iwr https://chat-dev.ainft.com/scripts/openclaw-install-bankofai-provider.ps1 | iex
 ```
 
 ---
