@@ -20,13 +20,13 @@ iwr https://chat.bankofai.io/scripts/openclaw-install-bankofai-provider.ps1 | ie
 **Linux & macOS:**
 
 ```bash
-curl https://chat-dev.ainft.io/scripts/openclaw-install-bankofai-provider.sh | bash
+curl https://chat-dev.ainft.com/scripts/openclaw-install-bankofai-provider.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-iwr https://chat-dev.bankofai.io/scripts/openclaw-install-bankofai-provider.ps1 | iex
+iwr https://chat-dev.bankofai.com/scripts/openclaw-install-bankofai-provider.ps1 | iex
 ```
 
 ---
