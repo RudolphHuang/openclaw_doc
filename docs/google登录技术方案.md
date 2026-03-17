@@ -374,7 +374,7 @@ flowchart LR
     GName -->|映射为| UUsername
     GEmail -->|映射为| UEmail
     GPicture -->|映射为| UAvatar
-    GVerified -->|验证邮箱|
+    GVerified -.->|验证| UEmail
 ```
 
 ---
