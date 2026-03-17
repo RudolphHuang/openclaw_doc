@@ -497,7 +497,14 @@ erDiagram
 - **级联操作**: `onDelete: 'cascade'` - 删除用户时自动删除关联的 OAuth 账户
 - **联合主键**: (`provider`, `providerAccountId`) 确保同一提供商账户只能绑定一个用户
 
-**2. users 表与 t_user_wallet 表**
+**2. nextauth_accounts 表索引**
+
+| 索引名称 | 类型 | 字段 | 说明 |
+|----------|------|------|------|
+| `compositePk` | 联合主键 | (`provider`, `providerAccountId`) | 确保同一提供商的同一账户只能绑定一个用户 |
+
+
+**3. users 表与 t_user_wallet 表**
 
 - **关联字段**: `t_user_wallet.userId` → `users.id`
 - **关联类型**: 一对多（一个用户可绑定多个链的钱包）
