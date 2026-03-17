@@ -434,41 +434,105 @@ sequenceDiagram
 
 ### 数据模型关系
 
+#### 表结构说明
+
+| 表名 | 物理表名 | 说明 |
+|------|----------|------|
+| `users` | `users` | 用户主表，存储用户基本信息 |
+| `nextauth_accounts` | `nextauth_accounts` | NextAuth 账户表，存储 OAuth 提供商关联信息 |
+| `userWallet` | `t_user_wallet` | 用户钱包表，存储绑定的区块链钱包地址 |
+
+#### ER 关系图
+
 ```mermaid
 erDiagram
     users {
-        string id PK
-        string email
-        string username
-        string avatar
-        timestamp created_at
-        timestamp updated_at
+        string id PK "用户唯一标识，格式：user_xxx"
+        string username "用户名"
+        string email "邮箱地址"
+        string avatar "头像 URL"
+        string phone "手机号"
+        string firstName "名"
+        string lastName "姓"
+        string fullName "全名"
+        boolean isOnboarded "是否完成引导"
+        timestamp emailVerifiedAt "邮箱验证时间"
+        timestamp createdAt "创建时间"
+        timestamp updatedAt "更新时间"
     }
     
     nextauth_accounts {
-        string userId FK
-        string type
-        string provider
-        string providerAccountId
-        string refresh_token
-        string access_token
-        int expires_at
-        string token_type
-        string scope
-        string id_token
-        string session_state
+        string userId FK "关联 users.id，级联删除"
+        string type "账户类型：oauth"
+        string provider "提供商：google, tronlink, binance..."
+        string providerAccountId "提供商账户ID"
+        string access_token "访问令牌"
+        string refresh_token "刷新令牌"
+        int expires_at "令牌过期时间戳"
+        string token_type "令牌类型"
+        string scope "权限范围"
+        string id_token "ID 令牌"
+        string session_state "会话状态"
     }
     
-    userWallet {
-        string userId FK
-        string chain
-        string address
-        timestamp createdAt
+    t_user_wallet {
+        int id PK "自增主键"
+        string userId FK "关联 users.id"
+        string chain "链类型：tron, bnb, eth..."
+        string address "钱包地址"
+        timestamp createdAt "创建时间"
+        timestamp updatedAt "更新时间"
     }
 
-    users ||--o{ nextauth_accounts : "has many"
-    users ||--o{ userWallet : "has many"
+    users ||--o{ nextauth_accounts : "一个用户可有多个 OAuth 账户"
+    users ||--o{ t_user_wallet : "一个用户可绑定多个钱包"
 ```
+
+#### 关联关系详解
+
+**1. users 表与 nextauth_accounts 表**
+
+- **关联字段**: `nextauth_accounts.userId` → `users.id`
+- **关联类型**: 一对多（一个用户可有多个 OAuth 账户）
+- **级联操作**: `onDelete: 'cascade'` - 删除用户时自动删除关联的 OAuth 账户
+- **联合主键**: (`provider`, `providerAccountId`) 确保同一提供商账户只能绑定一个用户
+
+**2. users 表与 t_user_wallet 表**
+
+- **关联字段**: `t_user_wallet.userId` → `users.id`
+- **关联类型**: 一对多（一个用户可绑定多个链的钱包）
+- **唯一约束**: 
+  - `(userId, chain)` - 每个用户在每个链上只能绑定一个地址
+  - `(address, chain)` - 同一地址在同一链上只能被一个用户绑定
+
+#### 典型数据示例
+
+**场景：用户通过钱包登录后绑定 Google**
+
+```
+users 表:
+┌─────────────────┬───────────┬──────────────────┐
+│ id              │ username  │ email            │
+├─────────────────┼───────────┼──────────────────┤
+│ user_abc123     │ john_doe  │ john@gmail.com   │
+└─────────────────┴───────────┴──────────────────┘
+
+nextauth_accounts 表（2条记录）:
+┌─────────────┬───────────┬─────────────────────────┬─────────────────────────┐
+│ userId      │ provider  │ providerAccountId       │ type                    │
+├─────────────┼───────────┼─────────────────────────┼─────────────────────────┤
+│ user_abc123 │ tronlink  │ tron:TXxxxxx...         │ oauth                   │
+│ user_abc123 │ google    │ 123456789               │ oauth                   │
+└─────────────┴───────────┴─────────────────────────┴─────────────────────────┘
+
+t_user_wallet 表:
+┌────┬─────────────┬───────┬────────────────────────────────────────┐
+│ id │ userId      │ chain │ address                                │
+├────┼─────────────┼───────┼────────────────────────────────────────┤
+│ 1  │ user_abc123 │ tron  │ TXxxxxx...                             │
+└────┴─────────────┴───────┴────────────────────────────────────────┘
+```
+
 
 ## 相关资源
 
