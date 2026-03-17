@@ -470,45 +470,6 @@ erDiagram
     users ||--o{ userWallet : "has many"
 ```
 
-### 绑定状态管理
-
-```mermaid
-flowchart LR
-    subgraph States["绑定状态"]
-        Loading["加载中"]
-        NoGoogle["未绑定 Google"]
-        Bound["已绑定 Google"]
-        Multiple["多提供商绑定"]
-    end
-
-    subgraph Actions["用户操作"]
-        Bind["点击绑定"]
-        Unlink["点击解绑"]
-        Refresh["刷新列表"]
-    end
-
-    subgraph Conditions["校验条件"]
-        CheckCount["检查提供商数量 >= 2"]
-        CheckAccount["校验账户归属"]
-    end
-
-    Loading --> NoGoogle
-    Loading --> Bound
-    NoGoogle --> Bind
-    Bind --> OAuthFlow["OAuth 流程"]
-    OAuthFlow --> Bound
-    Bound --> Unlink
-    Unlink --> CheckCount
-    CheckCount -->|允许| CheckAccount
-    CheckCount -->|拒绝| Bound
-    CheckAccount --> NoGoogle
-    
-    Bound --> Multiple
-    Multiple --> Unlink
-```
-
-
-
 ## 相关资源
 
 - [Google OAuth 文档](https://developers.google.com/identity/protocols/oauth2)
