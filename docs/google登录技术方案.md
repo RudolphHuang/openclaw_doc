@@ -17,6 +17,60 @@
 
 ---
 
+## 配置要求
+
+### 1. 创建 Google OAuth 应用
+
+访问 [Google Cloud Console](https://console.cloud.google.com/)：
+
+1. **创建或选择项目**
+   - 登录 Google Cloud Console
+   - 点击项目选择器，创建新项目或选择现有项目
+
+2. **启用 Google+ API**
+   - 转到 **API 和服务** → **库**
+   - 搜索 "Google+ API" 或 "Google People API"
+   - 点击启用
+
+3. **配置 OAuth 同意屏幕**
+   - 转到 **API 和服务** → **OAuth 同意屏幕**
+   - 选择用户类型（外部或内部）
+   - 填写应用信息：
+     - 应用名称
+     - 用户支持邮箱
+     - 开发者联系信息
+   - 添加应用域名和隐私政策链接（生产环境必需）
+
+4. **创建 OAuth 2.0 客户端 ID**
+   - 转到 **凭据** → **创建凭据** → **OAuth 2.0 客户端 ID**
+   - 选择应用类型：**Web 应用**
+   - 填写应用名称
+   - 配置授权重定向 URI（见下文）
+
+### 2. 配置回调 URL
+
+在 Google Cloud Console 中添加授权重定向 URI：
+
+```
+开发环境：
+http://localhost:3000/api/auth/callback/google
+
+测试环境：
+https://chat-dev.ainft.com/api/auth/callback/google
+
+生产环境：
+https://chat.ainft.com/api/auth/callback/google
+```
+
+> ⚠️ **注意**：回调 URL 必须与 NextAuth.js 配置中的 `NEXTAUTH_URL` 一致，包括协议、域名和端口。
+
+### 3. 获取客户端凭据
+
+创建 OAuth 客户端后，获取以下信息：
+
+- **Client ID**: `xxx.apps.googleusercontent.com`
+- **Client Secret**: `GOCSPX-xxx`
+
 ## 系统架构
 
 ### 整体架构图
