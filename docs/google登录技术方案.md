@@ -13,6 +13,7 @@
 - ✅ **快速便捷**：一键登录，无需填写表单
 - ✅ **自动同步**：自动获取用户头像、昵称、邮箱
 - ✅ **跨平台**：支持 Web、移动端
+- ✅ **账户绑定**：支持钱包登录用户绑定/解绑 Google 账户
 
 ---
 
@@ -379,6 +380,291 @@ flowchart LR
 
 ---
 
+## 钱包用户绑定/解绑 Google 账户
+
+### 功能概述
+
+支持已使用钱包登录的用户绑定 Google 账户，实现多方式登录。用户可以在个人资料页面管理已绑定的 SSO 提供商。
+
+### 绑定流程架构
+
+```mermaid
+flowchart TB
+    subgraph WalletUser["钱包登录用户"]
+        direction TB
+        WalletLogin["钱包登录状态"]
+        ProfilePage["个人资料页"]
+    end
+
+    subgraph BindFlow["绑定流程"]
+        direction TB
+        ClickBind["点击绑定 Google"]
+        OAuthFlow["OAuth 授权流程"]
+        LinkAccount["linkAccount 关联账户"]
+    end
+
+    subgraph DataLayer["数据层"]
+        UserTable["users 表"]
+        AccountTable["nextauth_accounts 表"]
+    end
+
+    WalletLogin --> ProfilePage
+    ProfilePage --> ClickBind
+    ClickBind --> OAuthFlow
+    OAuthFlow --> LinkAccount
+    LinkAccount --> AccountTable
+    AccountTable --> UserTable
+```
+
+### 绑定流程时序图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 用户(已钱包登录)
+    participant Profile as 个人资料页
+    participant NextAuth as NextAuth.js
+    participant Google as Google OAuth
+    participant Adapter as Adapter API
+    participant Service as NextAuthUserService
+    participant DB as 数据库
+
+    User->>Profile: 点击"绑定 Google"
+    Profile->>NextAuth: signIn('google', { redirect: false })
+    Note over NextAuth: 设置 redirect: false<br/>保持在当前页面
+    
+    NextAuth->>Google: 重定向到授权页
+    Google->>User: 选择 Google 账号
+    User->>Google: 授权
+    Google->>NextAuth: 回调 /api/auth/callback/google
+    
+    NextAuth->>Google: 获取用户信息
+    Google-->>NextAuth: 返回用户资料
+    
+    NextAuth->>Adapter: getUserByAccount
+    Adapter->>Service: getUserByAccount
+    Service->>DB: 查询是否已存在
+    DB-->>Service: 返回查询结果
+    
+    alt Google 账户未绑定
+        NextAuth->>Adapter: linkAccount
+        Adapter->>Service: linkAccount
+        Service->>DB: 插入 nextauth_accounts 记录
+        DB-->>Service: 返回成功
+        Service-->>Adapter: 返回 AdapterAccount
+        Adapter-->>NextAuth: 完成
+        NextAuth-->>Profile: 返回 { ok: true }
+        Profile-->>User: 显示绑定成功
+    else Google 账户已绑定其他用户
+        NextAuth-->>Profile: 返回错误
+        Profile-->>User: 显示"该 Google 账户已被绑定"
+    end
+```
+
+### 解绑流程时序图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 用户
+    participant Profile as 个人资料页
+    participant UserService as UserService
+    participant UserRouter as UserRouter
+    participant NextAuthService as NextAuthUserService
+    participant DB as 数据库
+
+    User->>Profile: 点击解绑 Google
+    Profile->>Profile: 检查 SSO 提供商数量
+    
+    alt 至少保留一个登录方式
+        Profile->>UserService: unlinkSSOProvider(provider, providerAccountId)
+        UserService->>UserRouter: unlinkSSOProvider.mutate
+        UserRouter->>NextAuthService: unlinkAccount
+        NextAuthService->>DB: DELETE FROM nextauth_accounts
+        DB-->>NextAuthService: 返回成功
+        NextAuthService-->>UserRouter: 完成
+        UserRouter-->>UserService: 返回成功
+        UserService-->>Profile: 返回成功
+        Profile-->>User: 显示解绑成功
+    else 只有一个登录方式
+        Profile-->>User: 显示"至少保留一个登录方式"
+    end
+```
+
+### 数据模型关系
+
+```mermaid
+erDiagram
+    users {
+        string id PK
+        string email
+        string username
+        string avatar
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    nextauth_accounts {
+        string userId FK
+        string type
+        string provider
+        string providerAccountId
+        string refresh_token
+        string access_token
+        int expires_at
+        string token_type
+        string scope
+        string id_token
+        string session_state
+    }
+    
+    userWallet {
+        string userId FK
+        string chain
+        string address
+        timestamp createdAt
+    }
+
+    users ||--o{ nextauth_accounts : "has many"
+    users ||--o{ userWallet : "has many"
+```
+
+### 关键接口设计
+
+#### 1. 获取已绑定的 SSO 提供商
+
+**接口**: `user.getUserSSOProviders`
+
+**说明**: 查询当前用户已绑定的所有 SSO 提供商列表（包括钱包和 Google 等 OAuth 提供商）
+
+**返回数据**:
+```typescript
+Array<{
+  provider: string;           // 提供商名称，如 "google", "tronlink"
+  providerAccountId: string;  // 提供商账户 ID
+  type: string;               // 账户类型，如 "oauth"
+  expires_at?: number;        // 过期时间戳
+}>
+```
+
+#### 2. 解绑 SSO 提供商
+
+**接口**: `user.unlinkSSOProvider`
+
+**输入参数**:
+```typescript
+{
+  provider: string;           // 提供商名称
+  providerAccountId: string;  // 提供商账户 ID
+}
+```
+
+**安全校验**:
+- 验证账户是否属于当前用户
+- 确保至少保留一个登录方式（防止用户无法登录）
+
+#### 3. 绑定 Google 账户
+
+**接口**: 复用 NextAuth.js 的 `signIn('google')` 方法
+
+**特殊配置**:
+```typescript
+// 绑定模式下使用 redirect: false，避免页面跳转
+await signIn('google', { 
+  redirect: false,
+  // 可选：传递当前用户 ID 用于关联
+  authorization: {
+    params: {
+      state: JSON.stringify({ bindMode: true, userId: currentUserId })
+    }
+  }
+})
+```
+
+### 前端组件架构
+
+```mermaid
+flowchart TB
+    subgraph ProfilePage["个人资料页"]
+        SSOProvidersList["SSOProvidersList 组件"]
+    end
+
+    subgraph SSOProvidersListComponent["SSOProvidersList"]
+        ProviderItem["ProviderItem"]
+        BindButton["绑定按钮"]
+        UnlinkButton["解绑按钮"]
+    end
+
+    subgraph Hooks["Hooks"]
+        useSession["useSession"]
+        useUserStore["useUserStore"]
+    end
+
+    subgraph Services["Services"]
+        getUserSSOProviders["getUserSSOProviders"]
+        unlinkSSOProvider["unlinkSSOProvider"]
+        signIn["signIn (NextAuth)"]
+    end
+
+    ProfilePage --> SSOProvidersList
+    SSOProvidersList --> ProviderItem
+    SSOProvidersList --> BindButton
+    SSOProvidersList --> UnlinkButton
+    
+    BindButton --> signIn
+    UnlinkButton --> unlinkSSOProvider
+    SSOProvidersList --> getUserSSOProviders
+    
+    signIn --> useSession
+    unlinkSSOProvider --> useUserStore
+```
+
+### 绑定状态管理
+
+```mermaid
+flowchart LR
+    subgraph States["绑定状态"]
+        Loading["加载中"]
+        NoGoogle["未绑定 Google"]
+        Bound["已绑定 Google"]
+        Multiple["多提供商绑定"]
+    end
+
+    subgraph Actions["用户操作"]
+        Bind["点击绑定"]
+        Unlink["点击解绑"]
+        Refresh["刷新列表"]
+    end
+
+    subgraph Conditions["校验条件"]
+        CheckCount["检查提供商数量 >= 2"]
+        CheckAccount["校验账户归属"]
+    end
+
+    Loading --> NoGoogle
+    Loading --> Bound
+    NoGoogle --> Bind
+    Bind --> OAuthFlow["OAuth 流程"]
+    OAuthFlow --> Bound
+    Bound --> Unlink
+    Unlink --> CheckCount
+    CheckCount -->|允许| CheckAccount
+    CheckCount -->|拒绝| Bound
+    CheckAccount --> NoGoogle
+    
+    Bound --> Multiple
+    Multiple --> Unlink
+```
+
+### 安全考虑
+
+1. **账户归属验证**: 解绑时必须验证 providerAccountId 属于当前用户
+2. **最少登录方式**: 至少保留一个 SSO 提供商，防止用户被锁定
+3. **重复绑定检查**: 一个 Google 账户只能绑定到一个用户
+4. **会话保持**: 绑定过程中保持当前登录会话
+
+---
+
 ## 配置管理
 
 ### 环境变量配置
@@ -438,6 +724,12 @@ flowchart TB
             Secure["Secure Flag"]
             SameSite["SameSite 策略"]
         end
+        
+        subgraph BindSecurity["绑定安全"]
+            AccountOwner["账户归属验证"]
+            MinProvider["最少提供商限制"]
+            DuplicateCheck["重复绑定检查"]
+        end
     end
 
     StateParam --> OAuthFlow
@@ -450,6 +742,10 @@ flowchart TB
     HttpOnly --> Session
     Secure --> Session
     SameSite --> Session
+    
+    AccountOwner --> BindFlow
+    MinProvider --> BindFlow
+    DuplicateCheck --> BindFlow
 ```
 
 ---
@@ -494,6 +790,8 @@ flowchart LR
     subgraph Events["追踪事件"]
         Signup["user_signup"]
         Login["user_login"]
+        Bind["sso_bind"]
+        Unlink["sso_unlink"]
     end
 
     subgraph Metadata["事件属性"]
@@ -502,6 +800,7 @@ flowchart LR
         Device["device_type"]
         Browser["browser"]
         Wallet["wallet_name"]
+        Provider["provider"]
         UTM["utm_source/medium/campaign"]
     end
 
@@ -512,6 +811,8 @@ flowchart LR
 
     Signup --> Metadata
     Login --> Metadata
+    Bind --> Metadata
+    Unlink --> Metadata
     Metadata --> PostHog
 ```
 
@@ -530,6 +831,8 @@ flowchart TB
         I2["无法获取用户信息"]
         I3["会话未创建"]
         I4["CORS 错误"]
+        I5["Google 账户已被绑定"]
+        I6["无法解绑最后一个提供商"]
     end
 
     subgraph Solutions["解决方案"]
@@ -537,12 +840,16 @@ flowchart TB
         S2["确认 scope 配置和 Google+ API 启用"]
         S3["检查 NEXT_AUTH_SECRET 是否设置"]
         S4["配置 next.config.js headers"]
+        S5["检查该 Google 账户是否已绑定其他用户"]
+        S6["确保至少保留一个登录方式"]
     end
 
     I1 --> S1
     I2 --> S2
     I3 --> S3
     I4 --> S4
+    I5 --> S5
+    I6 --> S6
 ```
 
 ---
@@ -553,6 +860,7 @@ flowchart TB
 - [Google Cloud Console](https://console.cloud.google.com/)
 - [NextAuth.js Google 提供商](https://next-auth.js.org/providers/google)
 - [认证方式概览](../api/RESTful/auth-overview.md)
+- [Wallet 钱包管理接口](../api/tRPC/lambda/wallet.md)
 
 ---
 
