@@ -299,7 +299,6 @@ flowchart LR
     subgraph GoogleData["Google 返回数据"]
         GSub["sub"]
         GName["name"]
-        GEmail["email"]
         GPicture["picture"]
         GVerified["email_verified"]
     end
@@ -309,14 +308,12 @@ flowchart LR
         UUsername["username"]
         UEmail["email"]
         UAvatar["avatar"]
-        UProvider["provider"]
     end
 
     GSub -->|映射为| UId
     GName -->|映射为| UUsername
-    GEmail -->|映射为| UEmail
     GPicture -->|映射为| UAvatar
-    GVerified -.->|验证| UEmail
+    GVerified -->|映射为| UEmail
 ```
 
 ---
