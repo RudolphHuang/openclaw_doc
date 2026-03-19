@@ -6,7 +6,7 @@
 |--------|------|------|--------|------|------|
 | `id` | `integer` | NO |  | PK | 自增主键 |
 | `user_id` | `character varying(64)` | NO |  | FK → users.id | 用户ID |
-| `amount` | `bigint` | NO |  |  | 积分变动量（正数为入账，负数为消耗） |
+| `amount` | `bigint` | NO |  |  | 积分变动量（绝对值，始终为正数。区分消耗/入账需结合 `source_type`：消耗类型为 `api`/`web`/`chat`，入账类型为 `recharge`） |
 | `source_type` | `character varying(32)` | NO |  |  | 积分来源类型，如 `api`/`web`/`recharge` |
 | `source_id` | `character varying(128)` | YES |  |  | 来源记录ID（如消息ID、充值记录ID） |
 | `created_at` | `timestamp with time zone` | NO | now() |  | 创建时间 |
@@ -38,3 +38,30 @@
 | `idx_user_point_flows_user_amount_created_at` | `CREATE INDEX idx_user_point_flows_user_amount_created_at ON public.t_user_point_flows USING btree (user_id, amount, created_at)` |
 | `idx_user_point_flows_user_request_id` | `CREATE INDEX idx_user_point_flows_user_request_id ON public.t_user_point_flows USING btree (user_id, request_id)` |
 | `idx_user_point_flows_user_source_unique` | `CREATE UNIQUE INDEX idx_user_point_flows_user_source_unique ON public.t_user_point_flows USING btree (user_id, source_type, source_id)` |
+
+## 常见查询示例
+
+### 统计用户积分消耗
+
+```sql
+-- 统计总消耗（API/Web/聊天）
+SELECT SUM(amount) AS total_consumed
+FROM t_user_point_flows
+WHERE user_id = 'xxx'
+  AND source_type IN ('api', 'web', 'chat');
+
+-- 统计总入账（充值）
+SELECT SUM(amount) AS total_recharged
+FROM t_user_point_flows
+WHERE user_id = 'xxx'
+  AND source_type = 'recharge';
+
+-- 按类型分组统计
+SELECT
+  source_type,
+  SUM(amount) AS total_amount,
+  COUNT(*) AS record_count
+FROM t_user_point_flows
+WHERE user_id = 'xxx'
+GROUP BY source_type;
+```
