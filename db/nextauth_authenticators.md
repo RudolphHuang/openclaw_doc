@@ -4,14 +4,14 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `counter` | `integer` | NO |  |  |  |
-| `credentialBackedUp` | `boolean` | NO |  |  |  |
-| `credentialDeviceType` | `text` | NO |  |  |  |
-| `credentialID` | `text` | NO |  | PK, UQ |  |
-| `credentialPublicKey` | `text` | NO |  |  |  |
-| `providerAccountId` | `text` | NO |  |  |  |
-| `transports` | `text` | YES |  |  |  |
-| `userId` | `text` | NO |  | PK, FK → users.id |  |
+| `counter` | `integer` | NO |  |  | WebAuthn认证器使用计数（防重放攻击） |
+| `credentialBackedUp` | `boolean` | NO |  |  | 凭证是否已备份 |
+| `credentialDeviceType` | `text` | NO |  |  | 认证器设备类型（single/multi-device） |
+| `credentialID` | `text` | NO |  | PK, UQ | WebAuthn凭证唯一标识 |
+| `credentialPublicKey` | `text` | NO |  |  | 公钥（CBOR格式） |
+| `providerAccountId` | `text` | NO |  |  | 关联的OAuth账号ID |
+| `transports` | `text` | YES |  |  | 支持的传输方式（usb/nfc/ble等） |
+| `userId` | `text` | NO |  | PK, FK → users.id | 关联的用户ID |
 
 ## 外键关系
 

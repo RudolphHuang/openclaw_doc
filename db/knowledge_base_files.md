@@ -4,10 +4,10 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `knowledge_base_id` | `text` | NO |  | PK, FK → knowledge_bases.id |  |
-| `file_id` | `text` | NO |  | PK, FK → files.id |  |
-| `created_at` | `timestamp with time zone` | NO | now() |  |  |
-| `user_id` | `text` | NO |  | FK → users.id |  |
+| `knowledge_base_id` | `text` | NO |  | PK, FK → knowledge_bases.id | 关联的知识库ID |
+| `file_id` | `text` | NO |  | PK, FK → files.id | 关联的文件ID |
+| `created_at` | `timestamp with time zone` | NO | now() |  | 创建时间 |
+| `user_id` | `text` | NO |  | FK → users.id | 所属用户ID |
 
 ## 外键关系
 

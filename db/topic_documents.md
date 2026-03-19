@@ -4,10 +4,10 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `document_id` | `text` | NO |  | PK, FK → documents.id |  |
-| `topic_id` | `text` | NO |  | PK, FK → topics.id |  |
-| `user_id` | `text` | NO |  | FK → users.id |  |
-| `created_at` | `timestamp with time zone` | NO | now() |  |  |
+| `document_id` | `text` | NO |  | PK, FK → documents.id | 关联的文档ID |
+| `topic_id` | `text` | NO |  | PK, FK → topics.id | 关联的话题ID |
+| `user_id` | `text` | NO |  | FK → users.id | 所属用户ID |
+| `created_at` | `timestamp with time zone` | NO | now() |  | 创建时间 |
 
 ## 外键关系
 

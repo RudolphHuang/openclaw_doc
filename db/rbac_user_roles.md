@@ -4,10 +4,10 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `user_id` | `text` | NO |  | PK, FK → users.id |  |
-| `role_id` | `integer` | NO |  | PK, FK → rbac_roles.id |  |
-| `created_at` | `timestamp with time zone` | NO | now() |  |  |
-| `expires_at` | `timestamp with time zone` | YES |  |  |  |
+| `user_id` | `text` | NO |  | PK, FK → users.id | 用户ID |
+| `role_id` | `integer` | NO |  | PK, FK → rbac_roles.id | 角色ID |
+| `created_at` | `timestamp with time zone` | NO | now() |  | 关联创建时间 |
+| `expires_at` | `timestamp with time zone` | YES |  |  | 角色有效期（null表示永久，支持临时角色） |
 
 ## 外键关系
 

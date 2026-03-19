@@ -4,9 +4,9 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `role_id` | `integer` | NO |  | PK, FK → rbac_roles.id |  |
-| `permission_id` | `integer` | NO |  | PK, FK → rbac_permissions.id |  |
-| `created_at` | `timestamp with time zone` | NO | now() |  |  |
+| `role_id` | `integer` | NO |  | PK, FK → rbac_roles.id | 角色ID |
+| `permission_id` | `integer` | NO |  | PK, FK → rbac_permissions.id | 权限ID |
+| `created_at` | `timestamp with time zone` | NO | now() |  | 关联创建时间 |
 
 ## 外键关系
 

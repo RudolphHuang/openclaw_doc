@@ -4,13 +4,13 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `id` | `integer` | NO |  | PK |  |
-| `merchant_id` | `character varying(16)` | NO |  | UQ |  |
-| `name` | `character varying(64)` | NO |  |  |  |
-| `enabled` | `boolean` | YES | true |  |  |
-| `last_used_at` | `timestamp with time zone` | YES |  |  |  |
-| `created_at` | `timestamp with time zone` | NO | now() |  |  |
-| `updated_at` | `timestamp with time zone` | NO | now() |  |  |
+| `id` | `integer` | NO |  | PK | 自增主键 |
+| `merchant_id` | `character varying(16)` | NO |  | UQ | 商户唯一标识（16字符） |
+| `name` | `character varying(64)` | NO |  |  | 商户名称 |
+| `enabled` | `boolean` | YES | true |  | 是否启用 |
+| `last_used_at` | `timestamp with time zone` | YES |  |  | 最近使用时间 |
+| `created_at` | `timestamp with time zone` | NO | now() |  | 创建时间 |
+| `updated_at` | `timestamp with time zone` | NO | now() |  | 最近更新时间 |
 
 ## 索引
 

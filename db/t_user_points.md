@@ -4,9 +4,9 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `user_id` | `character varying(64)` | NO |  | PK, FK → users.id |  |
-| `balance` | `bigint` | NO | 0 |  |  |
-| `updated_at` | `timestamp without time zone` | NO | now() |  |  |
+| `user_id` | `character varying(64)` | NO |  | PK, FK → users.id | 用户ID（主键） |
+| `balance` | `bigint` | NO | 0 |  | 当前积分余额 |
+| `updated_at` | `timestamp without time zone` | NO | now() |  | 最近更新时间 |
 
 ## 外键关系
 

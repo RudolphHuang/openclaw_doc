@@ -4,14 +4,14 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `id` | `text` | NO |  | PK |  |
-| `name` | `text` | NO |  |  |  |
-| `sort` | `integer` | YES |  |  |  |
-| `user_id` | `text` | NO |  | FK → users.id |  |
-| `created_at` | `timestamp with time zone` | NO | now() |  |  |
-| `updated_at` | `timestamp with time zone` | NO | now() |  |  |
-| `client_id` | `text` | YES |  |  |  |
-| `accessed_at` | `timestamp with time zone` | NO | now() |  |  |
+| `id` | `text` | NO |  | PK | 会话分组ID，格式 `sgrp_xxx` |
+| `name` | `text` | NO |  |  | 分组名称 |
+| `sort` | `integer` | YES |  |  | 排序权重 |
+| `user_id` | `text` | NO |  | FK → users.id | 所属用户ID |
+| `created_at` | `timestamp with time zone` | NO | now() |  | 创建时间 |
+| `updated_at` | `timestamp with time zone` | NO | now() |  | 最近更新时间 |
+| `client_id` | `text` | YES |  |  | 客户端本地ID |
+| `accessed_at` | `timestamp with time zone` | NO | now() |  | 最近访问时间 |
 
 ## 外键关系
 

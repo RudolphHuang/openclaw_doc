@@ -4,12 +4,12 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `id` | `uuid` | NO | gen_random_uuid() | PK |  |
-| `chunk_id` | `uuid` | YES |  | UQ, FK → chunks.id |  |
-| `embeddings` | `USER-DEFINED` | YES |  |  |  |
-| `model` | `text` | YES |  |  |  |
-| `user_id` | `text` | YES |  | FK → users.id |  |
-| `client_id` | `text` | YES |  |  |  |
+| `id` | `uuid` | NO | gen_random_uuid() | PK | UUID主键 |
+| `chunk_id` | `uuid` | YES |  | UQ, FK → chunks.id | 关联的文本块ID（唯一，一块一向量） |
+| `embeddings` | `USER-DEFINED` | YES |  |  | 1024维向量（pgvector类型） |
+| `model` | `text` | YES |  |  | 生成该向量使用的嵌入模型名称 |
+| `user_id` | `text` | YES |  | FK → users.id | 所属用户ID |
+| `client_id` | `text` | YES |  |  | 客户端本地ID |
 
 ## 外键关系
 

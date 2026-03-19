@@ -4,19 +4,19 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `id` | `bigint` | NO |  | PK |  |
-| `user_id` | `character varying(64)` | NO |  | FK → users.id |  |
-| `user_address` | `character varying(64)` | NO |  |  |  |
-| `receiver_address` | `character varying(64)` | NO |  |  |  |
-| `chain` | `character varying(16)` | NO |  |  |  |
-| `token_name` | `character varying(16)` | NO |  |  |  |
-| `amount` | `bigint` | NO |  |  |  |
-| `usd_amount` | `integer` | YES |  |  |  |
-| `tx_hash` | `character varying(128)` | NO |  |  |  |
-| `block_number` | `bigint` | NO |  |  |  |
-| `confirmed_at` | `timestamp without time zone` | YES |  |  |  |
-| `created_at` | `timestamp without time zone` | NO | now() |  |  |
-| `merchant_id` | `character varying(64)` | YES |  |  |  |
+| `id` | `bigint` | NO |  | PK | 自增bigint主键 |
+| `user_id` | `character varying(64)` | NO |  | FK → users.id | 关联的用户ID |
+| `user_address` | `character varying(64)` | NO |  |  | 用户的链上钱包地址 |
+| `receiver_address` | `character varying(64)` | NO |  |  | 接收方平台地址 |
+| `chain` | `character varying(16)` | NO |  |  | 区块链网络标识，如 `tron`/`bnb` |
+| `token_name` | `character varying(16)` | NO |  |  | 代币名称，如 `USDT` |
+| `amount` | `bigint` | NO |  |  | 转账金额（最小单位，如USDT的6位精度） |
+| `usd_amount` | `integer` | YES |  |  | 对应USD金额（整数，美分） |
+| `tx_hash` | `character varying(128)` | NO |  |  | 链上交易哈希 |
+| `block_number` | `bigint` | NO |  |  | 交易所在区块号 |
+| `confirmed_at` | `timestamp without time zone` | YES |  |  | 链上确认时间 |
+| `created_at` | `timestamp without time zone` | NO | now() |  | 记录创建时间 |
+| `merchant_id` | `character varying(64)` | YES |  |  | WebAPI充值时关联的商户ID，非webapi或历史订单为null |
 
 ## 外键关系
 

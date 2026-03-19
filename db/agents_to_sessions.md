@@ -4,9 +4,9 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `agent_id` | `text` | NO |  | PK, FK → agents.id |  |
-| `session_id` | `text` | NO |  | PK, FK → sessions.id |  |
-| `user_id` | `text` | NO |  | FK → users.id |  |
+| `agent_id` | `text` | NO |  | PK, FK → agents.id | 关联的Agent ID |
+| `session_id` | `text` | NO |  | PK, FK → sessions.id | 关联的会话ID |
+| `user_id` | `text` | NO |  | FK → users.id | 所属用户ID |
 
 ## 外键关系
 

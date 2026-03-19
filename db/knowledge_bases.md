@@ -4,18 +4,18 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `id` | `text` | NO |  | PK |  |
-| `name` | `text` | NO |  |  |  |
-| `description` | `text` | YES |  |  |  |
-| `avatar` | `text` | YES |  |  |  |
-| `type` | `text` | YES |  |  |  |
-| `user_id` | `text` | NO |  | FK → users.id |  |
-| `is_public` | `boolean` | YES | false |  |  |
-| `settings` | `jsonb` | YES |  |  |  |
-| `created_at` | `timestamp with time zone` | NO | now() |  |  |
-| `updated_at` | `timestamp with time zone` | NO | now() |  |  |
-| `accessed_at` | `timestamp with time zone` | NO | now() |  |  |
-| `client_id` | `text` | YES |  |  |  |
+| `id` | `text` | NO |  | PK | 知识库ID，格式 `kb_xxx` |
+| `name` | `text` | NO |  |  | 知识库名称 |
+| `description` | `text` | YES |  |  | 知识库描述 |
+| `avatar` | `text` | YES |  |  | 知识库头像 |
+| `type` | `text` | YES |  |  | 知识库类型，区分不同用途 |
+| `user_id` | `text` | NO |  | FK → users.id | 所属用户ID |
+| `is_public` | `boolean` | YES | false |  | 是否公开（其他用户可访问） |
+| `settings` | `jsonb` | YES |  |  | 知识库配置，JSON |
+| `created_at` | `timestamp with time zone` | NO | now() |  | 创建时间 |
+| `updated_at` | `timestamp with time zone` | NO | now() |  | 最近更新时间 |
+| `accessed_at` | `timestamp with time zone` | NO | now() |  | 最近访问时间 |
+| `client_id` | `text` | YES |  |  | 客户端本地ID |
 
 ## 外键关系
 

@@ -4,17 +4,17 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `id` | `uuid` | NO | gen_random_uuid() | PK |  |
-| `text` | `text` | YES |  |  |  |
-| `abstract` | `text` | YES |  |  |  |
-| `metadata` | `jsonb` | YES |  |  |  |
-| `index` | `integer` | YES |  |  |  |
-| `type` | `character varying` | YES |  |  |  |
-| `created_at` | `timestamp with time zone` | NO | now() |  |  |
-| `updated_at` | `timestamp with time zone` | NO | now() |  |  |
-| `user_id` | `text` | YES |  | FK → users.id |  |
-| `accessed_at` | `timestamp with time zone` | NO | now() |  |  |
-| `client_id` | `text` | YES |  |  |  |
+| `id` | `uuid` | NO | gen_random_uuid() | PK | UUID主键 |
+| `text` | `text` | YES |  |  | 分块的原始文本内容 |
+| `abstract` | `text` | YES |  |  | 分块内容的摘要/抽象描述 |
+| `metadata` | `jsonb` | YES |  |  | 分块元数据（页码、来源等），JSON |
+| `index` | `integer` | YES |  |  | 在原文档中的块序号 |
+| `type` | `character varying` | YES |  |  | 分块类型（text/table/image等） |
+| `created_at` | `timestamp with time zone` | NO | now() |  | 创建时间 |
+| `updated_at` | `timestamp with time zone` | NO | now() |  | 最近更新时间 |
+| `user_id` | `text` | YES |  | FK → users.id | 所属用户ID |
+| `accessed_at` | `timestamp with time zone` | NO | now() |  | 最近访问时间 |
+| `client_id` | `text` | YES |  |  | 客户端本地ID |
 
 ## 外键关系
 

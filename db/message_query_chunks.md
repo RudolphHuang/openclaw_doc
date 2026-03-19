@@ -4,11 +4,11 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `id` | `text` | NO |  | PK, FK → messages.id |  |
-| `query_id` | `uuid` | NO |  | PK, FK → message_queries.id |  |
-| `chunk_id` | `uuid` | NO |  | PK, FK → chunks.id |  |
-| `similarity` | `numeric` | YES |  |  |  |
-| `user_id` | `text` | NO |  | FK → users.id |  |
+| `id` | `text` | NO |  | PK, FK → messages.id | 关联的消息ID |
+| `query_id` | `uuid` | NO |  | PK, FK → message_queries.id | 关联的查询ID |
+| `chunk_id` | `uuid` | NO |  | PK, FK → chunks.id | 召回的文本块ID |
+| `similarity` | `numeric` | YES |  |  | 查询与该块的余弦相似度（0-1） |
+| `user_id` | `text` | NO |  | FK → users.id | 所属用户ID |
 
 ## 外键关系
 

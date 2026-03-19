@@ -4,13 +4,13 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `id` | `uuid` | NO | gen_random_uuid() | PK |  |
-| `message_id` | `text` | NO |  | FK → messages.id |  |
-| `rewrite_query` | `text` | YES |  |  |  |
-| `user_query` | `text` | YES |  |  |  |
-| `embeddings_id` | `uuid` | YES |  | FK → embeddings.id |  |
-| `user_id` | `text` | NO |  | FK → users.id |  |
-| `client_id` | `text` | YES |  |  |  |
+| `id` | `uuid` | NO | gen_random_uuid() | PK | UUID主键 |
+| `message_id` | `text` | NO |  | FK → messages.id | 关联的消息ID（该消息触发了RAG查询） |
+| `rewrite_query` | `text` | YES |  |  | RAG查询改写后的查询文本 |
+| `user_query` | `text` | YES |  |  | 用户原始查询文本 |
+| `embeddings_id` | `uuid` | YES |  | FK → embeddings.id | 查询向量的embedding ID |
+| `user_id` | `text` | NO |  | FK → users.id | 所属用户ID |
+| `client_id` | `text` | YES |  |  | 客户端本地ID |
 
 ## 外键关系
 

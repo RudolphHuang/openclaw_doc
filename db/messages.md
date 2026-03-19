@@ -4,34 +4,34 @@
 
 | 字段名 | 类型 | 可空 | 默认值 | 约束 | 说明 |
 |--------|------|------|--------|------|------|
-| `id` | `text` | NO |  | PK |  |
-| `role` | `character varying(255)` | NO |  |  |  |
-| `content` | `text` | YES |  |  |  |
-| `model` | `text` | YES |  |  |  |
-| `provider` | `text` | YES |  |  |  |
-| `favorite` | `boolean` | YES | false |  |  |
-| `error` | `jsonb` | YES |  |  |  |
-| `tools` | `jsonb` | YES |  |  |  |
-| `trace_id` | `text` | YES |  |  |  |
-| `observation_id` | `text` | YES |  |  |  |
-| `user_id` | `text` | NO |  | FK → users.id |  |
-| `session_id` | `text` | YES |  | FK → sessions.id |  |
-| `topic_id` | `text` | YES |  | FK → topics.id |  |
-| `parent_id` | `text` | YES |  | FK → messages.id |  |
-| `quota_id` | `text` | YES |  | FK → messages.id |  |
-| `agent_id` | `text` | YES |  | FK → agents.id |  |
-| `created_at` | `timestamp with time zone` | NO | now() |  |  |
-| `updated_at` | `timestamp with time zone` | NO | now() |  |  |
-| `client_id` | `text` | YES |  |  |  |
-| `accessed_at` | `timestamp with time zone` | NO | now() |  |  |
-| `thread_id` | `text` | YES |  | FK → threads.id |  |
-| `reasoning` | `jsonb` | YES |  |  |  |
-| `search` | `jsonb` | YES |  |  |  |
-| `metadata` | `jsonb` | YES |  |  |  |
-| `group_id` | `text` | YES |  | FK → chat_groups.id |  |
-| `target_id` | `text` | YES |  |  |  |
-| `message_group_id` | `character varying(255)` | YES |  | FK → message_groups.id |  |
-| `source_type` | `character varying(32)` | YES |  |  |  |
+| `id` | `text` | NO |  | PK | 消息ID，格式 `msg_xxx` |
+| `role` | `character varying(255)` | NO |  |  | 消息角色：`user`/`assistant`/`system`/`tool` |
+| `content` | `text` | YES |  |  | 消息文本内容 |
+| `model` | `text` | YES |  |  | 生成该消息使用的模型ID |
+| `provider` | `text` | YES |  |  | 生成该消息使用的提供商ID |
+| `favorite` | `boolean` | YES | false |  | 是否收藏该消息 |
+| `error` | `jsonb` | YES |  |  | 消息生成错误信息，JSON |
+| `tools` | `jsonb` | YES |  |  | 工具调用列表，JSON |
+| `trace_id` | `text` | YES |  |  | Langfuse追踪ID（可观测性） |
+| `observation_id` | `text` | YES |  |  | Langfuse观测ID |
+| `user_id` | `text` | NO |  | FK → users.id | 所属用户ID |
+| `session_id` | `text` | YES |  | FK → sessions.id | 所属会话ID |
+| `topic_id` | `text` | YES |  | FK → topics.id | 所属话题ID |
+| `parent_id` | `text` | YES |  | FK → messages.id | 父消息ID（消息树结构，编辑/分支） |
+| `quota_id` | `text` | YES |  | FK → messages.id | 引用的消息ID（消息引用功能） |
+| `agent_id` | `text` | YES |  | FK → agents.id | 生成该消息的Agent ID（群聊场景） |
+| `created_at` | `timestamp with time zone` | NO | now() |  | 创建时间 |
+| `updated_at` | `timestamp with time zone` | NO | now() |  | 最近更新时间 |
+| `client_id` | `text` | YES |  |  | 客户端本地ID，用于多端同步 |
+| `accessed_at` | `timestamp with time zone` | NO | now() |  | 最近访问时间 |
+| `thread_id` | `text` | YES |  | FK → threads.id | 所属线程ID |
+| `reasoning` | `jsonb` | YES |  |  | 模型推理过程（ModelReasoning类型，CoT思考链），JSON |
+| `search` | `jsonb` | YES |  |  | 网络搜索结果（GroundingSearch类型），JSON |
+| `metadata` | `jsonb` | YES |  |  | 消息扩展元数据，JSON |
+| `group_id` | `text` | YES |  | FK → chat_groups.id | 所属聊天组ID（多Agent群聊） |
+| `target_id` | `text` | YES |  |  | 消息目标ID（Agent ID、"user"或null，群聊@功能） |
+| `message_group_id` | `character varying(255)` | YES |  | FK → message_groups.id | 所属消息组ID（多模型并行回复） |
+| `source_type` | `character varying(32)` | YES |  |  | 消息来源类型（32字符） |
 
 ## 外键关系
 
