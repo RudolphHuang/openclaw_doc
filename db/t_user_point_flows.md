@@ -64,4 +64,64 @@ SELECT
 FROM t_user_point_flows
 WHERE user_id = 'xxx'
 GROUP BY source_type;
-```
+
+-- 按天统计消耗趋势
+SELECT
+  DATE(created_at) AS date,
+  SUM(amount) AS daily_consumed,
+  COUNT(*) AS request_count
+FROM t_user_point_flows
+WHERE user_id = 'xxx'
+  AND source_type IN ('api', 'web', 'chat')
+  AND created_at >= NOW() - INTERVAL '30 days'
+GROUP BY DATE(created_at)
+ORDER BY date DESC;
+
+-- 按模型统计消耗
+SELECT
+  model,
+  provider,
+  SUM(amount) AS total_amount,
+  SUM(total_tokens) AS total_tokens,
+  COUNT(*) AS request_count
+FROM t_user_point_flows
+WHERE user_id = 'xxx'
+  AND source_type IN ('api', 'web', 'chat')
+GROUP BY model, provider
+ORDER BY total_amount DESC;
+
+-- 查询最近一次余额变动
+SELECT
+  user_id,
+  amount,
+  source_type,
+  before_balance,
+  after_balance,
+  created_at
+FROM t_user_point_flows
+WHERE user_id = 'xxx'
+ORDER BY created_at DESC
+LIMIT 1;
+
+-- 统计有消耗的原始记录（排除 amount=0 的占位记录）
+SELECT
+  user_id,
+  SUM(amount) AS total_consumed,
+  COUNT(*) AS record_count
+FROM t_user_point_flows
+WHERE user_id = 'xxx'
+  AND source_type IN ('api', 'web', 'chat')
+  AND amount > 0;
+
+-- 按请求链路追踪扣费
+SELECT
+  request_id,
+  amount,
+  source_type,
+  model,
+  total_tokens,
+  duration,
+  created_at
+FROM t_user_point_flows
+WHERE request_id = 'xxx'
+ORDER BY created_at;
