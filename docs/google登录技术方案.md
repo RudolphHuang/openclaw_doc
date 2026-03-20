@@ -701,7 +701,7 @@ const handleGoogleLogin = () => {
 | `message`        | 必填 | 可选 | Google 用户不传            |
 | `signature`      | 必填 | 可选 | Google 用户不传            |
 | `version`        | 可选 | 可选 | 不变                     |
-| `type`           | 无  | 新增 | oauth:google or wallet |
+| `type`           | 无  | 必填 | oauth:google or wallet |
 
 改后 TypeScript 类型：
 
@@ -713,7 +713,7 @@ const handleGoogleLogin = () => {
   message?: string;
   signature?: string;
   version?: string;
-  type?: 'oauth:google' | 'wallet';  // 新增，标识登录类型
+  type: 'oauth:google' | 'wallet';  // 新增，标识登录类型
 }
 ```
 
