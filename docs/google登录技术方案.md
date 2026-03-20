@@ -693,14 +693,15 @@ const handleGoogleLogin = () => {
 
 #### 1. 输入参数变更
 
-| 字段 | 原来 | 改后 | 说明 |
-|------|------|------|------|
-| `address` | 必填 | 可选 | Google 用户不传 |
-| `chain` | 必填 | 可选 | Google 用户不传 |
-| `encryptedToken` | 必填 | 可选 | Google 用户不传 |
-| `message` | 必填 | 可选 | Google 用户不传 |
-| `signature` | 必填 | 可选 | Google 用户不传 |
-| `version` | 可选 | 可选 | 不变 |
+| 字段               | 原来 | 改后 | 说明                     |
+|------------------|----|----|------------------------|
+| `address`        | 必填 | 可选 | Google 用户不传            |
+| `chain`          | 必填 | 可选 | Google 用户不传            |
+| `encryptedToken` | 必填 | 可选 | 这是之前的安全机制，保留不变         |
+| `message`        | 必填 | 可选 | Google 用户不传            |
+| `signature`      | 必填 | 可选 | Google 用户不传            |
+| `version`        | 可选 | 可选 | 不变                     |
+| `type`           | 无  | 新增 | oauth:google or wallet |
 
 改后 TypeScript 类型：
 
@@ -712,26 +713,29 @@ const handleGoogleLogin = () => {
   message?: string;
   signature?: string;
   version?: string;
+  type?: 'oauth:google' | 'wallet';  // 新增，标识登录类型
 }
 ```
 
 #### 2. 服务端逻辑
 
 ```
-if (用户没有绑定任何钱包，且不是通过钱包注册的用户) {
-  // 跳过签名验证
-  // 直接走奖励发放逻辑
+if (type === 'oauth:google') {
+  // 验证用户确实绑定了 Google 账户
+  // 查询 nextauth_accounts 表，确认该 userId 存在 provider = 'google' 的记录
+  if (未绑定 Google 账户) {
+    抛出 BAD_REQUEST: 该账户未绑定 Google
+  }
+  // 跳过签名验证，直接走奖励发放逻辑
 } else {
   // 钱包用户：原有签名校验流程不变
   验证 address / message / signature / encryptedToken
 }
 ```
 
-判断"无钱包用户"的依据：
-- `t_user_wallet` 表中不存在该 `userId` 的钱包记录（未绑定任何钱包）
-- `nextauth_accounts` 表中不存在该 `userId` 对应的钱包 provider 记录（非钱包注册）
+> **说明**：服务端不信任前端传入的 `type`，必须主动查库验证用户是否真实绑定了对应的 OAuth 提供商，防止绕过签名校验。
 
-两个条件同时满足，则跳过签名验证。
+> **扩展性**：当前支持 `oauth:google`，未来将陆续支持 `oauth:github`、`oauth:apple` 等更多 OAuth 登录方式，扩展时仅需在此分支中增加相应的绑定校验逻辑。
 
 #### 3. 安全保证
 
@@ -748,20 +752,22 @@ if (用户没有绑定任何钱包，且不是通过钱包注册的用户) {
 #### 4. Google 用户调用示例
 
 ```bash
-# Google 用户无需传签名字段，入参为空对象即可
+# Google 用户传 type: oauth:google，无需传签名字段
 curl --location 'https://chat-dev.ainft.com/trpc/lambda/user.claimSignupBonus?batch=1' \
   -H 'Content-Type: application/json' \
   -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
   --data '{
     "0": {
-      "json": {}
+      "json": {
+        "type": "oauth:google"
+      }
     }
   }'
 ```
 
 ```typescript
-// 前端调用
-const result = await trpc.user.claimSignupBonus.mutate({});
+// 前端调用（Google 用户）
+const result = await trpc.user.claimSignupBonus.mutate({ type: 'oauth:google' });
 
 if (result.success) {
   console.log(`成功领取 ${result.amount} 积分`);
@@ -772,9 +778,10 @@ if (result.success) {
 
 在原有错误码基础上新增：
 
-| 错误码 | 说明             |
-|--------|----------------|
-| `BAD_REQUEST` | 钱包用户调用时缺少签名字段  |
+| 错误码 | 说明 |
+|--------|------|
+| `BAD_REQUEST` | 钱包用户调用时缺少签名字段 |
+| `BAD_REQUEST` | 传入 `type: oauth:google` 但该账户未绑定 Google |
 
 #### 6. 流程图
 
@@ -786,10 +793,13 @@ flowchart TB
     CheckClaimed -->|是| Err2["BAD_REQUEST: 已领取"]
     CheckClaimed -->|否| CheckIP{"IP 限制"}
     CheckIP -->|超限| Err3["BAD_REQUEST: IP 限制"]
-    CheckIP -->|未超限| CheckUserType{"用户类型"}
+    CheckIP -->|未超限| CheckType{"type 字段"}
 
-    CheckUserType -->|"无钱包用户"| SkipSig["跳过签名验证"]
-    CheckUserType -->|"钱包用户"| CheckSigFields{"签名字段完整?"}
+    CheckType -->|"oauth:google"| VerifyGoogleBound{"查库: 该用户是否\n绑定过 Google?"}
+    CheckType -->|"wallet / 未传"| CheckSigFields{"签名字段完整?"}
+
+    VerifyGoogleBound -->|"未绑定"| Err6["BAD_REQUEST: 未绑定 Google"]
+    VerifyGoogleBound -->|"已绑定"| SkipSig["跳过签名验证"]
 
     CheckSigFields -->|否| Err4["BAD_REQUEST: 缺少签名字段"]
     CheckSigFields -->|是| VerifySig{"签名验证"}
