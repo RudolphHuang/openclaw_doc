@@ -538,6 +538,128 @@ t_user_wallet 表:
 ```
 
 
+## 接口列表
+
+### 1. 获取用户 SSO 提供商列表
+
+获取当前登录用户绑定的所有 SSO 提供商信息（包括 Google、钱包等）。
+
+**接口信息**
+- **类型**: tRPC Query
+- **路径**: `user.getUserSSOProviders`
+- **权限**: 需要登录
+
+**返回数据**
+```typescript
+interface SSOProvider {
+  provider: string;           // 提供商名称: 'google', 'tronlink', 'binance', etc.
+  providerAccountId: string;  // 提供商账户唯一标识
+  type: string;               // 账户类型: 'oauth'
+  email?: string;             // 邮箱地址 
+  name?: string;              // 用户名称
+  image?: string;             // 头像 URL
+}
+```
+
+
+---
+
+### 2. 绑定 Google 账号
+
+为当前已登录用户绑定 Google OAuth 账号。
+
+**接口信息**
+- **类型**: tRPC Mutation
+- **路径**: `user.linkGoogleAccount`
+- **权限**: 需要登录
+
+**请求参数**
+```typescript
+interface LinkGoogleAccountInput {
+  code: string;  // Google OAuth authorization code
+}
+```
+
+**返回数据**
+```typescript
+interface LinkGoogleAccountOutput {
+  success: boolean;
+  account: {
+    userId: string;
+    provider: 'google';
+    providerAccountId: string;  // 格式: google-{email}
+    email: string;
+    name: string;
+    googleId: string;
+    image?: string;
+  };
+}
+```
+
+**错误码**
+| 错误码 | 说明 |
+|--------|------|
+| `UNAUTHORIZED` | 用户未登录 |
+| `INTERNAL_SERVER_ERROR` | 缺少 Google OAuth 配置 |
+| `BAD_REQUEST` | 授权码无效或已过期 |
+| `CONFLICT` | 该 Google 账号已被其他用户绑定 |
+| `BAD_REQUEST` | 当前用户已绑定 Google 账号 |
+
+---
+
+### 3. 解绑 Google 账号
+
+为当前已登录用户解绑指定的 Google OAuth 账号。
+
+**接口信息**
+- **类型**: tRPC Mutation
+- **路径**: `user.unlinkGoogleAccount`
+- **权限**: 需要登录
+
+**请求参数**
+```typescript
+interface UnlinkGoogleAccountInput {
+  providerAccountId: string;  // Google 用户 ID (格式: google-{email})
+}
+```
+
+**返回数据**
+```typescript
+interface UnlinkGoogleAccountOutput {
+  success: boolean;
+  message: string;
+}
+```
+
+**错误码**
+| 错误码 | 说明 |
+|--------|------|
+| `UNAUTHORIZED` | 用户未登录 |
+| `NOT_FOUND` | 未找到该 Google 账号绑定记录 |
+| `BAD_REQUEST` | 必须至少保留一个登录方式 |
+
+
+---
+
+### 4. Google 登录
+
+使用 NextAuth.js 的 Google Provider 进行登录。
+
+**接口信息**
+- **类型**: NextAuth.js 内置
+- **路径**: `/api/auth/signin/google`
+- **回调地址**: `/api/auth/callback/google`
+
+
+**登录流程**
+```typescript
+import { signIn } from 'next-auth/react';
+const handleGoogleLogin = () => {
+  signIn('google', { callbackUrl: '/chat' });
+};
+```
+
+
 ## 相关资源
 
 - [Google OAuth 文档](https://developers.google.com/identity/protocols/oauth2)
@@ -548,4 +670,4 @@ t_user_wallet 表:
 
 ---
 
-最后更新: 2026-03-17
+最后更新: 2026-03-20
