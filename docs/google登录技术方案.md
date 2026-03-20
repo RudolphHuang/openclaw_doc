@@ -538,6 +538,27 @@ t_user_wallet 表:
 ```
 
 
+## 关键全局变量与环境变量
+
+### 环境变量配置
+
+Google 登录功能依赖以下环境变量，需要在不同环境的 `.env` 文件中正确配置：
+
+#### 1. 基础配置变量
+
+| 变量名 | 类型 | 说明                  | 示例值                              |
+|--------|------|---------------------|----------------------------------|
+| `AUTH_GOOGLE_CLIENT_ID` | 必填 | Google OAuth 客户端 ID | `xxx.apps.googleusercontent.com` |
+| `AUTH_GOOGLE_CLIENT_SECRET` | 必填 | Google OAuth 客户端密钥  | `GOCSPX-xxx`                     |
+| `NEXT_AUTH_SSO_PROVIDERS` | 必填 | 支持的登录方式             | `...,google`                     |
+
+#### 2. 前端暴露变量
+
+| 变量名  | 说明 | 配置位置 |
+|-------|------|----------|
+| `NEXT_PUBLIC_AUTH_GOOGLE_CLIENT_ID` | 前端使用的 Google Client ID | `next.config.ts` 自动映射 |
+| `NEXT_AUTH_SSO_PROVIDERS` | 必填                   | 支持的登录方式             | `...,google`                     |
+
 ## 接口列表
 
 ### 1. 获取用户 SSO 提供商列表
