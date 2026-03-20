@@ -697,7 +697,7 @@ const handleGoogleLogin = () => {
 |------------------|----|----|------------------------|
 | `address`        | 必填 | 可选 | Google 用户不传            |
 | `chain`          | 必填 | 可选 | Google 用户不传            |
-| `encryptedToken` | 必填 | 可选 | 这是之前的安全机制，保留不变         |
+| `encryptedToken` | 必填 | 必填 | 这是之前的安全机制，保留不变         |
 | `message`        | 必填 | 可选 | Google 用户不传            |
 | `signature`      | 必填 | 可选 | Google 用户不传            |
 | `version`        | 可选 | 可选 | 不变                     |
@@ -709,7 +709,7 @@ const handleGoogleLogin = () => {
 {
   address?: string;
   chain?: string;
-  encryptedToken?: string;
+  encryptedToken: string;
   message?: string;
   signature?: string;
   version?: string;
