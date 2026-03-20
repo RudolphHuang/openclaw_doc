@@ -718,7 +718,7 @@ const handleGoogleLogin = () => {
 #### 2. 服务端逻辑
 
 ```
-if (用户是纯 Google 用户，即 nextauth_accounts 中只有 google provider) {
+if (用户没有绑定任何钱包，且不是通过钱包注册的用户) {
   // 跳过签名验证
   // 直接走奖励发放逻辑
 } else {
@@ -727,7 +727,11 @@ if (用户是纯 Google 用户，即 nextauth_accounts 中只有 google provider
 }
 ```
 
-判断"纯 Google 用户"的依据：查询 `nextauth_accounts` 表，`userId` 对应的记录中不存在 `provider = 'tronlink'`（或其他钱包 provider）的记录，且存在 `provider = 'google'` 的记录。
+判断"无钱包用户"的依据：
+- `t_user_wallet` 表中不存在该 `userId` 的钱包记录（未绑定任何钱包）
+- `nextauth_accounts` 表中不存在该 `userId` 对应的钱包 provider 记录（非钱包注册）
+
+两个条件同时满足，则跳过签名验证。
 
 #### 3. 安全保证
 
