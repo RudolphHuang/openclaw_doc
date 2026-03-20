@@ -681,6 +681,124 @@ const handleGoogleLogin = () => {
 ```
 
 
+## Google 用户领取注册奖励（claimSignupBonus 无签名方案）
+
+### 背景
+
+`user.claimSignupBonus` 接口原设计面向钱包用户，要求提供 TronLink 签名（`address`、`message`、`signature` 等字段）。Google 登录用户无钱包地址，无法完成签名，需要走无签名路径。
+
+### 改动方案
+
+**核心思路**：将签名相关字段改为可选，服务端根据用户身份类型决定是否做签名校验。
+
+#### 1. 输入参数变更
+
+| 字段 | 原来 | 改后 | 说明 |
+|------|------|------|------|
+| `address` | 必填 | 可选 | Google 用户不传 |
+| `chain` | 必填 | 可选 | Google 用户不传 |
+| `encryptedToken` | 必填 | 可选 | Google 用户不传 |
+| `message` | 必填 | 可选 | Google 用户不传 |
+| `signature` | 必填 | 可选 | Google 用户不传 |
+| `version` | 可选 | 可选 | 不变 |
+
+改后 TypeScript 类型：
+
+```typescript
+{
+  address?: string;
+  chain?: string;
+  encryptedToken?: string;
+  message?: string;
+  signature?: string;
+  version?: string;
+}
+```
+
+#### 2. 服务端逻辑
+
+```
+if (用户是纯 Google 用户，即 nextauth_accounts 中只有 google provider) {
+  // 跳过签名验证
+  // 直接走奖励发放逻辑
+} else {
+  // 钱包用户：原有签名校验流程不变
+  验证 address / message / signature / encryptedToken
+}
+```
+
+判断"纯 Google 用户"的依据：查询 `nextauth_accounts` 表，`userId` 对应的记录中不存在 `provider = 'tronlink'`（或其他钱包 provider）的记录，且存在 `provider = 'google'` 的记录。
+
+#### 3. 安全保证
+
+无签名路径并非无保护，保留以下安全机制：
+
+| 机制 | 说明 |
+|------|------|
+| Session 认证 | 仍需 `x-ainft-chat-auth`，确认用户已登录 |
+| 身份绑定校验 | 服务端从 session 取 `userId`，无法伪造 |
+| 幂等保护 | 每个用户只能领取一次，重复调用返回错误 |
+| IP 限制 | 1 小时内单 IP 最多赠送 5 次，保持不变 |
+| 总量限制 | 全局 600,000 次上限，保持不变 |
+
+#### 4. Google 用户调用示例
+
+```bash
+# Google 用户无需传签名字段，入参为空对象即可
+curl --location 'https://chat-dev.ainft.com/trpc/lambda/user.claimSignupBonus?batch=1' \
+  -H 'Content-Type: application/json' \
+  -H 'x-ainft-chat-auth: YOUR_AUTH_TOKEN' \
+  --data '{
+    "0": {
+      "json": {}
+    }
+  }'
+```
+
+```typescript
+// 前端调用
+const result = await trpc.user.claimSignupBonus.mutate({});
+
+if (result.success) {
+  console.log(`成功领取 ${result.amount} 积分`);
+}
+```
+
+#### 5. 错误码补充
+
+在原有错误码基础上新增：
+
+| 错误码 | 说明 |
+|--------|------|
+| `BAD_REQUEST` | 钱包用户调用时缺少签名字段 |
+| `BAD_REQUEST` | 非 Google 用户且未传签名，无法确认身份 |
+
+#### 6. 流程图
+
+```mermaid
+flowchart TB
+    Start(["claimSignupBonus"]) --> Auth{"Session 认证"}
+    Auth -->|未认证| Err1["UNAUTHORIZED"]
+    Auth -->|已认证| CheckClaimed{"已领取?"}
+    CheckClaimed -->|是| Err2["BAD_REQUEST: 已领取"]
+    CheckClaimed -->|否| CheckIP{"IP 限制"}
+    CheckIP -->|超限| Err3["BAD_REQUEST: IP 限制"]
+    CheckIP -->|未超限| CheckUserType{"用户类型"}
+
+    CheckUserType -->|"纯 Google 用户\n(无钱包 provider)"| SkipSig["跳过签名验证"]
+    CheckUserType -->|"钱包用户"| CheckSigFields{"签名字段完整?"}
+
+    CheckSigFields -->|否| Err4["BAD_REQUEST: 缺少签名字段"]
+    CheckSigFields -->|是| VerifySig{"签名验证"}
+    VerifySig -->|失败| Err5["BAD_REQUEST: 签名无效"]
+    VerifySig -->|成功| Grant["发放奖励积分"]
+
+    SkipSig --> Grant
+    Grant --> End(["返回 success + amount"])
+```
+
+---
+
 ## 相关资源
 
 - [Google OAuth 文档](https://developers.google.com/identity/protocols/oauth2)
