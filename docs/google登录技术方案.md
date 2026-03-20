@@ -772,10 +772,9 @@ if (result.success) {
 
 在原有错误码基础上新增：
 
-| 错误码 | 说明 |
-|--------|------|
-| `BAD_REQUEST` | 钱包用户调用时缺少签名字段 |
-| `BAD_REQUEST` | 非 Google 用户且未传签名，无法确认身份 |
+| 错误码 | 说明             |
+|--------|----------------|
+| `BAD_REQUEST` | 钱包用户调用时缺少签名字段  |
 
 #### 6. 流程图
 
@@ -789,7 +788,7 @@ flowchart TB
     CheckIP -->|超限| Err3["BAD_REQUEST: IP 限制"]
     CheckIP -->|未超限| CheckUserType{"用户类型"}
 
-    CheckUserType -->|"纯 Google 用户\n(无钱包 provider)"| SkipSig["跳过签名验证"]
+    CheckUserType -->|"无钱包用户"| SkipSig["跳过签名验证"]
     CheckUserType -->|"钱包用户"| CheckSigFields{"签名字段完整?"}
 
     CheckSigFields -->|否| Err4["BAD_REQUEST: 缺少签名字段"]
