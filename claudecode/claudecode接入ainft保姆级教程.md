@@ -6,10 +6,7 @@
 
 ## 目录
 
-- [方式一：自动配置（推荐）](#方式一自动配置推荐)
-    - [正式环境](#正式环境)
-    - [测试环境](#测试环境)
-    - [自动配置流程](#自动配置流程)
+
 - [方式二：手动配置](#方式二手动配置)
     - [1. 申请 API Token](#1-申请-api-token)
     - [2. 配置环境变量](#2-配置环境变量)
@@ -20,97 +17,6 @@
 
 ---
 
-## 方式一：自动配置（推荐）
-
-使用一键安装脚本，自动完成环境检查、API Token 配置和模型选择。
-
-### 正式环境
-
-**Linux & macOS:**
-
-```bash
-curl -fsSL https://chat.ainft.com/scripts/install-ainft-provider-claude.sh | bash
-```
-
-**Windows PowerShell:**
-
-```powershell
-iwr -useb https://chat.ainft.com/scripts/install-ainft-provider-claude.ps1 | iex
-```
-
----
-
-### 测试环境
-
-**Linux & macOS:**
-
-```bash
-curl -fsSL https://chat-dev.ainft.com/scripts/install-ainft-provider-claude.sh | bash
-```
-
-**Windows PowerShell:**
-
-```powershell
-iwr -useb https://chat-dev.ainft.com/scripts/install-ainft-provider-claude.ps1 | iex
-```
-
----
-
-### 自动配置流程
-
-脚本会自动执行以下步骤：
-
-#### 1. 环境检查
-- 检测操作系统和 Shell 类型
-- 检查 Claude Code 是否已安装
-- 检查 curl 是否已安装
-
-#### 2. 输入 API Token
-根据提示输入从 AINFT 平台申请的 API Token：
-
-```
-=== 配置 AINFT API Token ===
-[INFO] 请前往 https://chat.ainft.com/key 申请 API Token
-
-请输入您的 AINFT API Token: ak-xxxxxxxxxxxxxxxx
-[SUCCESS] API Token 已接收
-```
-
-#### 3. 选择默认模型
-验证 API Token 有效后，脚本会获取可用模型列表并让你选择默认模型：
-
-```
-=== 选择默认模型 ===
-[INFO] 可用模型列表:
-  1) gpt-5-nano
-  2) gpt-5-mini
-  3) gpt-5
-
-[INFO] 推荐默认模型: gpt-5-nano
-是否使用推荐模型作为默认? (Y/n): 
-```
-
-#### 4. 完成配置
-选择完成后，脚本会自动：
-- 备份原有的 Shell 配置文件
-- 写入 AINFT Provider 环境变量配置
-- 显示配置摘要和生效命令
-
-```
-=== 安装完成 ===
-[SUCCESS] AINFT Provider 配置成功！
-
-[INFO] 默认模型: gpt-5-nano
-[INFO] API 基础地址: https://api.ainft.com/
-[INFO] Shell 配置文件: ~/.bashrc
-
-[INFO] 已配置的模型:
-  - gpt-5-nano (默认)
-  - gpt-5-mini
-  - gpt-5
-```
-
----
 
 ## 方式二：手动配置
 
