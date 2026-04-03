@@ -526,7 +526,7 @@ nextauth_accounts 表（2条记录）:
 │ userId      │ provider  │ providerAccountId       │ type                    │
 ├─────────────┼───────────┼─────────────────────────┼─────────────────────────┤
 │ user_abc123 │ tronlink  │ tron:TXxxxxx...         │ oauth                   │
-│ user_abc123 │ google    │ john@gmail.com          │ oauth                   │
+│ user_abc123 │ google    │ google-john@gmail.com   │ oauth                   │
 └─────────────┴───────────┴─────────────────────────┴─────────────────────────┘
 
 t_user_wallet 表:
