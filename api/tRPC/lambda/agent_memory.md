@@ -22,9 +22,12 @@
 ```typescript
 import { api } from '@/services/api';
 
-// 查询记忆列表
-const { data: memories } = api.agentMemory.getMemories.useQuery({
-  category: 'user',
+// 获取记忆索引（列表展示）
+const { data: index } = api.agentMemory.getMemoryIndex.useQuery();
+
+// 获取单个记忆详情
+const { data: memory } = api.agentMemory.getMemory.useQuery({
+  id: 'agent_memory_xxx',
 });
 
 // 创建记忆
@@ -38,51 +41,44 @@ createMutation.mutate({
 
 ## 接口列表
 
-### 1. getMemories - 查询记忆列表
+### 1. getMemoryIndex - 获取记忆索引
 
-获取当前用户的记忆列表，支持分类筛选和搜索。
+获取轻量级的记忆索引列表，用于列表展示。只包含标题和描述，不包含完整 content。
 
-**输入参数:**
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| category | `'user' \| 'feedback' \| 'project' \| 'reference'` | 否 | 按分类筛选 |
-| search | `string` | 否 | 按标题搜索关键词 |
-| isActive | `boolean` | 否 | 按激活状态筛选 |
+**输入参数:** 无
 
 **前端调用:**
 ```typescript
-const { data: memories, isLoading } = api.agentMemory.getMemories.useQuery({
-  category: 'feedback',
-  search: '偏好',
-});
+const { data: index, isLoading } = api.agentMemory.getMemoryIndex.useQuery();
 ```
 
 **返回数据:**
 ```typescript
-AgentMemoryItem[]
+AgentMemoryIndexItem[]
 ```
 
 ```json
 [
   {
-    "id": "agent_memory_01HQ1234567890",
-    "category": "feedback",
+    "id": "agent_mem_idx_01HQ1234567890",
+    "entryId": "agent_memory_01HQ1234567890",
+    "category": "user",
     "title": "用户偏好简洁回答",
-    "content": "用户明确表示不喜欢冗长的解释...",
-    "description": "用户喜欢简洁直接的回答风格",
+    "description": "用户明确表示不喜欢冗长的解释",
     "isActive": true,
+    "accessCount": 5,
+    "lastAccessedAt": "2024-01-16T10:30:00Z",
     "createdAt": "2024-01-15T08:30:00Z",
-    "updatedAt": "2024-01-15T08:30:00Z"
+    "updatedAt": "2024-01-16T10:30:00Z"
   }
 ]
 ```
 
 ---
 
-### 2. getMemory - 获取单个记忆
+### 2. getMemory - 获取记忆详情
 
-根据 ID 获取记忆详情。
+根据 ID 获取记忆的完整内容。
 
 **输入参数:**
 
@@ -116,48 +112,7 @@ AgentMemoryItem | null
 
 ---
 
-### 3. getMemoryIndex - 获取记忆索引
-
-获取记忆索引列表（供 LLM 使用），只包含标题和描述，不包含完整内容。
-
-**输入参数:** 无
-
-**前端调用:**
-```typescript
-const { data: index } = api.agentMemory.getMemoryIndex.useQuery();
-```
-
-**返回数据:**
-```typescript
-AgentMemoryIndexItem[]
-```
-
-```json
-[
-  {
-    "id": "agent_mem_idx_01HQ1234567890",
-    "entryId": "agent_memory_01HQ1234567890",
-    "category": "user",
-    "title": "用户偏好简洁回答",
-    "description": "用户明确表示不喜欢冗长的解释",
-    "accessCount": 5,
-    "lastAccessedAt": "2024-01-16T10:30:00Z"
-  },
-  {
-    "id": "agent_mem_idx_01HQ1234567891",
-    "entryId": "agent_memory_01HQ1234567891",
-    "category": "feedback",
-    "title": "避免使用表情符号",
-    "description": "用户反馈不喜欢在回答中使用表情符号",
-    "accessCount": 3,
-    "lastAccessedAt": "2024-01-15T16:45:00Z"
-  }
-]
-```
-
----
-
-### 4. createMemory - 创建记忆
+### 3. createMemory - 创建记忆
 
 创建新的记忆条目。
 
@@ -197,21 +152,9 @@ createMutation.mutate({
 AgentMemoryItem
 ```
 
-```json
-{
-  "id": "agent_memory_01HQ1234567894",
-  "category": "feedback",
-  "title": "用户偏好简洁回答",
-  "content": "用户明确表示不喜欢冗长的解释...",
-  "isActive": true,
-  "createdAt": "2024-01-17T09:00:00Z",
-  "updatedAt": "2024-01-17T09:00:00Z"
-}
-```
-
 ---
 
-### 5. updateMemory - 更新记忆
+### 4. updateMemory - 更新记忆
 
 更新已有的记忆条目。
 
@@ -246,7 +189,7 @@ AgentMemoryItem
 
 ---
 
-### 6. deleteMemory - 删除记忆
+### 5. deleteMemory - 删除记忆
 
 删除单个记忆条目。
 
@@ -261,7 +204,7 @@ AgentMemoryItem
 const deleteMutation = api.agentMemory.deleteMemory.useMutation({
   onSuccess: () => {
     // 删除成功后刷新列表
-    utils.agentMemory.getMemories.invalidate();
+    utils.agentMemory.getMemoryIndex.invalidate();
   },
 });
 
@@ -273,16 +216,9 @@ deleteMutation.mutate({ id: 'agent_memory_01HQ1234567890' });
 { success: boolean; deletedId: string }
 ```
 
-```json
-{
-  "success": true,
-  "deletedId": "agent_memory_01HQ1234567890"
-}
-```
-
 ---
 
-### 7. batchDeleteMemories - 批量删除记忆
+### 6. batchDeleteMemories - 批量删除记忆
 
 批量删除多个记忆条目。
 
@@ -309,20 +245,9 @@ batchDeleteMutation.mutate({
 { success: boolean; deletedCount: number; deletedIds: string[] }
 ```
 
-```json
-{
-  "success": true,
-  "deletedCount": 2,
-  "deletedIds": [
-    "agent_memory_01HQ1234567890",
-    "agent_memory_01HQ1234567891"
-  ]
-}
-```
-
 ---
 
-### 8. countMemories - 统计记忆数量
+### 7. countMemories - 统计记忆数量
 
 统计当前用户的记忆数量，可按分类筛选。
 
@@ -347,24 +272,69 @@ number
 
 ---
 
+### 8. getSettings - 获取记忆设置
+
+获取当前用户的记忆系统设置。
+
+**输入参数:** 无
+
+**前端调用:**
+```typescript
+const { data: settings } = api.agentMemory.getSettings.useQuery();
+```
+
+**返回数据:**
+```typescript
+AgentMemorySettings
+```
+
+```json
+{
+  "enabled": true,
+  "maxEntriesPerUser": 200,
+  "defaultReadEnabled": true,
+  "defaultWriteEnabled": true,
+  "categories": ["user", "feedback", "project", "reference", "general"]
+}
+```
+
+---
+
+### 9. updateSettings - 更新记忆设置
+
+更新记忆系统设置。
+
+**输入参数:**
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| enabled | `boolean` | 否 | 是否启用记忆系统 |
+| maxEntriesPerUser | `number` | 否 | 每用户最大记忆数 |
+| defaultReadEnabled | `boolean` | 否 | 默认开启记忆读取 |
+| defaultWriteEnabled | `boolean` | 否 | 默认开启记忆写入 |
+
+**前端调用:**
+```typescript
+const updateSettings = api.agentMemory.updateSettings.useMutation();
+
+updateSettings.mutate({
+  enabled: true,
+  defaultReadEnabled: true,
+  defaultWriteEnabled: false,
+});
+```
+
+**返回数据:**
+```typescript
+AgentMemorySettings
+```
+
+---
+
 ## 类型定义
 
 ```typescript
-// 记忆条目
-interface AgentMemoryItem {
-  id: string;
-  category: 'user' | 'feedback' | 'project' | 'reference';
-  title: string;
-  content: string;
-  description?: string;
-  sourceSessionId?: string;
-  sourceMessageIds?: string[];
-  isActive: boolean;
-  createdAt: string; // ISO 8601 格式
-  updatedAt: string; // ISO 8601 格式
-}
-
-// 记忆索引（供 LLM 使用）
+// 记忆索引（列表展示用）
 interface AgentMemoryIndexItem {
   id: string;
   entryId: string;  // 关联的记忆条目ID
@@ -376,6 +346,29 @@ interface AgentMemoryIndexItem {
   lastAccessedAt: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// 记忆条目（详情用）
+interface AgentMemoryItem {
+  id: string;
+  category: 'user' | 'feedback' | 'project' | 'reference';
+  title: string;
+  content: string;  // 完整 Markdown 内容
+  description?: string;
+  sourceSessionId?: string;
+  sourceMessageIds?: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 记忆设置
+interface AgentMemorySettings {
+  enabled: boolean;
+  maxEntriesPerUser: number;
+  defaultReadEnabled: boolean;
+  defaultWriteEnabled: boolean;
+  categories: string[];
 }
 ```
 
@@ -392,80 +385,92 @@ import { api } from '@/services/api';
 import { useState } from 'react';
 
 export function MemoryManager() {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<'user' | 'feedback' | 'project' | 'reference' | undefined>();
+  const [category, setCategory] = useState<AgentMemoryIndexItem['category'] | undefined>();
   
-  // 查询记忆列表
-  const { data: memories, isLoading } = api.agentMemory.getMemories.useQuery({
-    search: search || undefined,
-    category,
-  });
+  // 获取索引列表（轻量）
+  const { data: index, isLoading } = api.agentMemory.getMemoryIndex.useQuery();
+  
+  // 获取选中记忆的详情
+  const { data: selectedMemory } = api.agentMemory.getMemory.useQuery(
+    { id: selectedId! },
+    { enabled: !!selectedId }
+  );
   
   // 删除记忆
   const deleteMutation = api.agentMemory.deleteMemory.useMutation({
     onSuccess: () => {
-      // 自动刷新列表
+      setSelectedId(null);
     },
   });
   
-  // 创建记忆
-  const createMutation = api.agentMemory.createMemory.useMutation();
-  
-  const handleCreate = async (values: {
-    category: 'user' | 'feedback' | 'project' | 'reference';
-    title: string;
-    content: string;
-  }) => {
-    await createMutation.mutateAsync({
-      ...values,
-      description: values.content.slice(0, 100),
-    });
-  };
+  // 筛选逻辑
+  const filteredIndex = index?.filter((item) => {
+    if (category && item.category !== category) return false;
+    if (search && !item.title.includes(search) && !item.description?.includes(search)) return false;
+    return true;
+  });
   
   if (isLoading) return <div>加载中...</div>;
   
   return (
-    <div>
-      {/* 筛选和搜索 */}
-      <div className="filters">
-        <select value={category} onChange={(e) => setCategory(e.target.value as any)}>
-          <option value="">全部分类</option>
-          <option value="user">用户画像</option>
-          <option value="feedback">行为反馈</option>
-          <option value="project">项目上下文</option>
-          <option value="reference">外部引用</option>
-        </select>
-        <input
-          type="text"
-          placeholder="搜索记忆..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+    <div className="memory-manager">
+      {/* 左侧：索引列表 */}
+      <div className="index-list">
+        <div className="filters">
+          <select value={category} onChange={(e) => setCategory(e.target.value as any)}>
+            <option value="">全部分类</option>
+            <option value="user">用户画像</option>
+            <option value="feedback">行为反馈</option>
+            <option value="project">项目上下文</option>
+            <option value="reference">外部引用</option>
+          </select>
+          <input
+            type="text"
+            placeholder="搜索记忆..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        
+        {filteredIndex?.map((item) => (
+          <div
+            key={item.id}
+            className={`index-item ${selectedId === item.entryId ? 'active' : ''}`}
+            onClick={() => setSelectedId(item.entryId)}
+          >
+            <span className="category">{item.category}</span>
+            <h4>{item.title}</h4>
+            <p>{item.description}</p>
+          </div>
+        ))}
       </div>
       
-      {/* 记忆列表 */}
-      <div className="memory-list">
-        {memories?.map((memory) => (
-          <div key={memory.id} className="memory-card">
-            <div className="memory-header">
-              <span className="category">{memory.category}</span>
-              <h3>{memory.title}</h3>
+      {/* 右侧：详情面板 */}
+      <div className="detail-panel">
+        {selectedMemory ? (
+          <>
+            <div className="detail-header">
+              <h2>{selectedMemory.title}</h2>
               <button
-                onClick={() => deleteMutation.mutate({ id: memory.id })}
+                onClick={() => deleteMutation.mutate({ id: selectedMemory.id })}
                 disabled={deleteMutation.isPending}
               >
                 删除
               </button>
             </div>
-            <p className="description">{memory.description}</p>
-            <div className="memory-content">
-              {memory.content}
+            <div className="detail-content">
+              <pre>{selectedMemory.content}</pre>
             </div>
-            <div className="memory-meta">
-              <span>更新于: {new Date(memory.updatedAt).toLocaleString()}</span>
+            <div className="detail-meta">
+              <span>更新于: {new Date(selectedMemory.updatedAt).toLocaleString()}</span>
+              <span>访问次数: {selectedMemory.accessCount || 0}</span>
             </div>
-          </div>
-        ))}
+          </>
+        ) : (
+          <div className="empty">选择一个记忆查看详情</div>
+        )}
       </div>
     </div>
   );
@@ -479,11 +484,9 @@ export function MemoryManager() {
 
 import { api } from '@/services/api';
 
-export function MemoryToggle() {
+export function MemoryToggle({ sessionId }: { sessionId: string }) {
   // 获取当前会话配置
-  const { data: config } = api.agent.getAgentConfig.useQuery({
-    sessionId: 'current_session_id',
-  });
+  const { data: config } = api.agent.getAgentConfig.useQuery({ sessionId });
   
   // 更新会话配置
   const updateConfig = api.session.updateSessionChatConfig.useMutation();
@@ -499,7 +502,7 @@ export function MemoryToggle() {
           checked={memoryReadEnabled}
           onChange={(e) => {
             updateConfig.mutate({
-              id: 'session_id',
+              id: sessionId,
               value: { memoryReadEnabled: e.target.checked },
             });
           }}
@@ -512,7 +515,7 @@ export function MemoryToggle() {
           checked={memoryWriteEnabled}
           onChange={(e) => {
             updateConfig.mutate({
-              id: 'session_id',
+              id: sessionId,
               value: { memoryWriteEnabled: e.target.checked },
             });
           }}
@@ -528,20 +531,15 @@ export function MemoryToggle() {
 
 ## HTTP 请求示例
 
-### 查询记忆列表
+### 获取记忆索引
 
 ```http
-POST /api/trpc/agentMemory.getMemories HTTP/1.1
+POST /api/trpc/agentMemory.getMemoryIndex HTTP/1.1
 Host: api.example.com
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 
-{
-  "json": {
-    "category": "user",
-    "search": "偏好"
-  }
-}
+{}
 ```
 
 **返回:**
@@ -551,15 +549,52 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
     "data": {
       "json": [
         {
-          "id": "agent_memory_01HQ1234567890",
+          "id": "agent_mem_idx_01HQ1234567890",
+          "entryId": "agent_memory_01HQ1234567890",
           "category": "user",
           "title": "用户偏好简洁回答",
-          "content": "用户明确表示不喜欢冗长的解释...",
+          "description": "用户明确表示不喜欢冗长的解释",
           "isActive": true,
+          "accessCount": 5,
+          "lastAccessedAt": "2024-01-16T10:30:00Z",
           "createdAt": "2024-01-15T08:30:00Z",
-          "updatedAt": "2024-01-15T08:30:00Z"
+          "updatedAt": "2024-01-16T10:30:00Z"
         }
       ]
+    }
+  }
+}
+```
+
+### 获取记忆详情
+
+```http
+POST /api/trpc/agentMemory.getMemory HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+
+{
+  "json": {
+    "id": "agent_memory_01HQ1234567890"
+  }
+}
+```
+
+**返回:**
+```json
+{
+  "result": {
+    "data": {
+      "json": {
+        "id": "agent_memory_01HQ1234567890",
+        "category": "feedback",
+        "title": "用户偏好简洁回答",
+        "content": "用户明确表示不喜欢冗长的解释...",
+        "isActive": true,
+        "createdAt": "2024-01-15T08:30:00Z",
+        "updatedAt": "2024-01-15T08:30:00Z"
+      }
     }
   }
 }
