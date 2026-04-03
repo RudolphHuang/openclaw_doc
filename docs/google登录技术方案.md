@@ -516,9 +516,9 @@ erDiagram
 ```
 users 表:
 ┌─────────────────┬───────────┬──────────────────┐
-│ id              │ username  │ email            │
+│ id              │ username  │                  │
 ├─────────────────┼───────────┼──────────────────┤
-│ user_abc123     │ john_doe  │ john@gmail.com   │
+│ user_abc123     │ john_doe  │                  │
 └─────────────────┴───────────┴──────────────────┘
 
 nextauth_accounts 表（2条记录）:
@@ -526,7 +526,7 @@ nextauth_accounts 表（2条记录）:
 │ userId      │ provider  │ providerAccountId       │ type                    │
 ├─────────────┼───────────┼─────────────────────────┼─────────────────────────┤
 │ user_abc123 │ tronlink  │ tron:TXxxxxx...         │ oauth                   │
-│ user_abc123 │ google    │ 123456789               │ oauth                   │
+│ user_abc123 │ google    │ john@gmail.com          │ oauth                   │
 └─────────────┴───────────┴─────────────────────────┴─────────────────────────┘
 
 t_user_wallet 表:
