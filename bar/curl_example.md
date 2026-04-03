@@ -323,7 +323,7 @@ curl --location 'https://api.ainft.com/v1/chat/completions' \
   "messages": [
     {
       "role": "system",
-      "content": "# Agent Memory\n\nYou have a persistent memory system..."
+      "content": "# Agent Memory\n\nYou have a persistent memory system.\n\n## Types of memory\n\n- **user**: Information about the user'\''s role, goals, and preferences\n- **feedback**: Guidance on what to avoid or continue doing\n- **project**: Context about ongoing work and initiatives\n- **reference**: Pointers to external resources\n\n## Available Memories\n\n- [user] 用户偏好简洁回答 — 用户明确表示不喜欢冗长的解释\n- [feedback] 避免使用表情符号 — 用户反馈不喜欢在回答中使用表情符号\n\n## Memory Tools\n\nYou can use the following tools to manage memories:\n\n- agent_memory_read(entryId) - Load full content of a memory when needed\n- agent_memory_create(category, title, content) - Create new memory\n- agent_memory_update(entryId, content) - Update existing memory\n- agent_memory_delete(entryId) - Delete memory\n\n## When to use memories\n\n- When memories seem relevant to the current conversation\n- When the user references prior work or preferences\n- When you need to recall specific guidance from the user"
     },
     {
       "role": "user",
@@ -424,7 +424,7 @@ curl --location 'https://api.ainft.com/v1/chat/completions' \
   "messages": [
     {
       "role": "system",
-      "content": "# Agent Memory..."
+      "content": "# Agent Memory\n\nYou have a persistent memory system.\n\n## Types of memory\n\n- **user**: Information about the user'\''s role, goals, and preferences\n- **feedback**: Guidance on what to avoid or continue doing\n- **project**: Context about ongoing work and initiatives\n- **reference**: Pointers to external resources\n\n## Available Memories\n\n- [user] 用户偏好简洁回答 — 用户明确表示不喜欢冗长的解释\n- [feedback] 避免使用表情符号 — 用户反馈不喜欢在回答中使用表情符号\n\n## Memory Tools\n\nYou can use the following tools to manage memories:\n\n- agent_memory_read(entryId) - Load full content of a memory when needed\n- agent_memory_create(category, title, content) - Create new memory\n- agent_memory_update(entryId, content) - Update existing memory\n- agent_memory_delete(entryId) - Delete memory\n\n## When to use memories\n\n- When memories seem relevant to the current conversation\n- When the user references prior work or preferences\n- When you need to recall specific guidance from the user"
     },
     {
       "role": "user",
