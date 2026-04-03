@@ -95,7 +95,9 @@ You can use the following tools to manage memories:
 - When you need to recall specific guidance from the user
 ```
 
-### 2.3 第三步：发送带记忆的对话请求
+### 2.3 第三步：发送带记忆的对话请求（强制使用工具）
+
+使用 `tool_choice` 强制指定要调用的工具，确保 LLM 一定会返回工具调用：
 
 ```bash
 curl --location 'https://api.ainft.com/v1/chat/completions' \
@@ -109,7 +111,7 @@ curl --location 'https://api.ainft.com/v1/chat/completions' \
     },
     {
       "role": "user",
-      "content": "介绍一下你自己"
+      "content": "请读取我的记忆偏好，然后介绍一下你自己"
     }
   ],
   "model": "claude-sonnet-4.5",
@@ -196,11 +198,18 @@ curl --location 'https://api.ainft.com/v1/chat/completions' \
       }
     }
   ],
-  "tool_choice": "auto",
+  "tool_choice": {
+    "type": "function",
+    "function": {
+      "name": "agent_memory_read"
+    }
+  },
   "stream": false,
   "temperature": 0.7
 }'
 ```
+
+**注意：** 使用 `tool_choice: { "type": "function", "function": { "name": "agent_memory_read" } }` 强制 LLM 调用 `agent_memory_read` 工具。这样可以确保一定能收到 `tool_calls` 响应。
 
 ## 3. 处理工具调用
 
@@ -272,11 +281,11 @@ curl --location 'https://api.ainft.com/v1/chat/completions' \
   "messages": [
     {
       "role": "system",
-      "content": "# Agent Memory..."
+      "content": "# Agent Memory\n\nYou have a persistent memory system.\n\n## Types of memory\n\n- **user**: Information about the user'\''s role, goals, and preferences\n- **feedback**: Guidance on what to avoid or continue doing\n- **project**: Context about ongoing work and initiatives\n- **reference**: Pointers to external resources\n\n## Available Memories\n\n- [user] 用户偏好简洁回答 — 用户明确表示不喜欢冗长的解释\n- [feedback] 避免使用表情符号 — 用户反馈不喜欢在回答中使用表情符号\n\n## Memory Tools\n\nYou can use the following tools to manage memories:\n\n- agent_memory_read(entryId) - Load full content of a memory when needed\n- agent_memory_create(category, title, content) - Create new memory\n- agent_memory_update(entryId, content) - Update existing memory\n- agent_memory_delete(entryId) - Delete memory\n\n## When to use memories\n\n- When memories seem relevant to the current conversation\n- When the user references prior work or preferences\n- When you need to recall specific guidance from the user"
     },
     {
       "role": "user",
-      "content": "介绍一下你自己"
+      "content": "请读取我的记忆偏好，然后介绍一下你自己"
     },
     {
       "role": "assistant",
@@ -293,7 +302,7 @@ curl --location 'https://api.ainft.com/v1/chat/completions' \
     {
       "role": "tool",
       "tool_call_id": "call_xxx",
-      "content": "{\"id\":\"agent_memory_01HQ1234567890\",\"category\":\"user\",\"title\":\"用户偏好简洁回答\",\"content\":\"用户明确表示不喜欢冗长的解释...\"}"
+      "content": "{\"id\":\"agent_memory_01HQ1234567890\",\"category\":\"user\",\"title\":\"用户偏好简洁回答\",\"content\":\"用户明确表示不喜欢冗长的解释，希望回答简洁直接。\\n\\n**Why:** 用户认为过多的技术细节会分散注意力\\n\\n**How to apply:** 先给出简洁答案，再根据需要补充细节\",\"isActive\":true,\"createdAt\":\"2024-01-15T08:30:00Z\",\"updatedAt\":\"2024-01-15T08:30:00Z\"}""
     }
   ],
   "model": "claude-sonnet-4.5",
@@ -396,7 +405,7 @@ curl --location 'https://api.ainft.com/api/trpc/chatAgentMemory.create' \
         "id": "agent_memory_01HQ1234567892",
         "category": "feedback",
         "title": "用户偏好简洁回答",
-        "content": "用户喜欢简洁的回答，不要太多技术细节...",
+        "content": "用户喜欢简洁的回答，不要太多技术细节\n\n**Why:** 用户认为过多的技术细节会分散注意力\n\n**How to apply:** 先给出简洁答案，再根据需要补充细节",
         "isActive": true,
         "createdAt": "2024-01-17T09:00:00Z"
       }
@@ -429,7 +438,7 @@ curl --location 'https://api.ainft.com/v1/chat/completions' \
         "type": "function",
         "function": {
           "name": "agent_memory_create",
-          "arguments": "{...}"
+          "arguments": "{\"category\":\"feedback\",\"title\":\"用户偏好简洁回答\",\"content\":\"用户喜欢简洁的回答，不要太多技术细节\\n\\n**Why:** 用户认为过多的技术细节会分散注意力\\n\\n**How to apply:** 先给出简洁答案，再根据需要补充细节\"}"
         }
       }]
     },
